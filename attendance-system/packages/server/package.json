@@ -1,0 +1,11 @@
+{
+  "name": "@attendance/server",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@attendance/shared": "workspace:*"
+  },
+  "scripts": {
+    "dev": "echo \"Starting server...\""
+  }
+}

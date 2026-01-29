@@ -1,0 +1,10 @@
+{
+  "name": "@attendance/app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@attendance/shared": "workspace:*"
+  },
+  "scripts": {
+    "dev": "echo \"Starting app...\""
+  }
+}

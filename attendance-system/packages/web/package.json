@@ -1,0 +1,10 @@
+{
+  "name": "@attendance/web",
+  "version": "1.0.0",
+  "dependencies": {
+    "@attendance/shared": "workspace:*"
+  },
+  "scripts": {
+    "dev": "echo \"Starting web...\""
+  }
+}

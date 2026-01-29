@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@attendance/shared/*": ["packages/shared/src/*"],
+      "@attendance/server/*": ["packages/server/src/*"],
+      "@attendance/web/*": ["packages/web/src/*"],
+      "@attendance/app/*": ["packages/app/src/*"]
+    }
+  }
+}

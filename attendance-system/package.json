@@ -1,0 +1,17 @@
+{
+  "name": "attendance-system-monorepo",
+  "private": true,
+  "description": "Attendance System Monorepo",
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
