@@ -13,114 +13,6 @@ description: 执行Git操作（提交、分支等），遵循提交规范，每�
 
 ---
 
-## ⚠️ 强制规则（必须遵守）
-
-### 规则 1: 全中文描述
-
-**所有 commit message 必须使用中文**，禁止出现英文动词。
-
-| 禁止 ❌ | 使用 ✅ |
-|---------|---------|
-| Update | 更新、调整、完善 |
-| Fix | 修复、解决 |
-| Add | 新增、添加 |
-| Remove | 移除、删除 |
-| Refactor | 重构、优化 |
-| Improve | 改进、增强 |
-
-### 规则 2: 禁止模糊描述
-
-```
-❌ docs: Update xxx documentation
-✅ docs(api): 补充接口参数说明和返回值示例
-
-❌ fix: Fix bug in parser
-✅ fix(parser): 修复嵌套 JSON 中转义字符导致的解析失败
-
-❌ feat: Add new feature
-✅ feat(attendance): 新增 GPS 打卡的位置校验功能
-```
-
-### 规则 3: 标题必须具体
-
-标题行必须回答：**做了什么 + 为什么/解决什么问题**
-
-```
-❌ 修复 bug
-✅ 修复并发请求时数据竞争导致的结果丢失问题
-
-❌ 更新文档
-✅ 补充考勤接口的请求参数和错误码说明
-```
-
-### 规则 4: 冲突处理策略
-
-**预防优先**：
-- 通过模块分工避免冲突
-- 开始改文件前先沟通
-- 频繁 push，减少本地积压
-- 每次开始工作前先 `git pull`
-
-**冲突发生时**：
-- AI 分析冲突并提出解决方案
-- **AI 判断必须完全基于 `.trae/specs/{feature}/requirements.md` 文档**
-- 禁止无依据猜测或推演
-- 用户确认后执行
-
-| 冲突类型 | 处理方式 |
-|----------|----------|
-| 简单冲突（互不影响） | AI 自动合并，用户确认 |
-| 复杂冲突（同行修改） | AI 列出选项，用户选择 |
-| 无法判断（需求文档未覆盖） | 暂停，请求用户补充需求 |
-
-**禁止用户自行解决代码冲突**
-
-### 规则 5: 非交互式执行
-
-在自动化执行 Git 命令时，必须使用 `--no-pager` 参数：
-
-```bash
-git --no-pager status
-git --no-pager diff
-git --no-pager log
-```
-
-### 规则 6: Push 前必须编译通过
-
-**禁止推送编译失败的代码**。Push 前必须执行：
-
-```bash
-npm run build
-```
-
-| 检查项 | 要求 |
-|--------|------|
-| 编译 | 必须通过，无错误 |
-| 类型检查 | 必须通过，无 TS 错误 |
-| Lint | 建议通过，警告可接受 |
-
----
-
-## 提交前自检清单
-
-在生成 commit message 前，必须自检：
-
-### 语言检查
-- [ ] 标题行是否全中文？
-- [ ] 是否包含 Update/Fix/Add 等英文动词？→ 如有，必须改为中文
-
-### 内容检查
-- [ ] 标题是否具体描述了「做了什么」？
-- [ ] 标题是否说明了「为什么做」或「解决什么问题」？
-- [ ] scope 是否准确反映变更的模块？
-
-### 格式检查
-- [ ] 标题长度是否不超过 50 字符？
-- [ ] 重要变更是否有正文说明？
-- [ ] 正文是否包含背景、变更内容、影响范围？
-
----
-
 ## 激活方式
 
 ### 触发场景
@@ -455,93 +347,24 @@ npm run build
 
 ### 提交规范
 
-**格式**: `<类型>(<范围>): <中文描述>`
+**格式**: `<类型>(<范围>): <描述>`
 
 | 类型 | 说明 | 示例 |
 |------|------|------|
-| feat | 新功能 | `feat(attendance): 新增 GPS 打卡的位置校验功能` |
-| fix | 修复bug | `fix(user): 修复并发登录时 Token 覆盖导致的会话丢失` |
-| docs | 文档更新 | `docs(api): 补充考勤接口的请求参数和错误码说明` |
-| refactor | 重构 | `refactor(auth): 将同步认证重构为异步模式` |
-| test | 测试 | `test(attendance): 添加边界条件的单元测试覆盖` |
-| chore | 杂项 | `chore(deps): 升级依赖至最新稳定版` |
-| perf | 性能优化 | `perf(query): 优化批量查询性能，处理时间从 5s 降至 0.8s` |
-
-### 完整提交格式
-
-```
-<type>(<scope>): <标题行 - 简述做了什么>
-
-<正文 - 详细描述>
-- 为什么要做这个变更（背景/动机）
-- 具体做了哪些修改（变更内容）
-- 这个变更会带来什么影响（影响范围）
-
-<可选: 关联信息>
-关联任务: #issue编号 或 任务名称
-破坏性变更: 如有，说明兼容性影响
-```
-
-### 提交示例
-
-#### 功能开发
-
-```
-feat(attendance): 新增 GPS 打卡的位置校验功能
-
-背景:
-- 用户需要在指定范围内才能打卡
-- 防止远程虚假打卡
-
-变更内容:
-- 新增 LocationValidator 类处理位置校验
-- 在 AttendanceService.checkIn 中集成校验逻辑
-- 添加位置校验的单元测试
-
-影响范围:
-- 打卡接口新增位置参数校验
-- 超出范围返回 ERR_ATTENDANCE_OUT_OF_RANGE
-
-关联任务: #45
-```
-
-#### Bug 修复
-
-```
-fix(auth): 修复并发登录时 Token 覆盖导致的会话丢失
-
-背景:
-- 用户反馈多设备登录时会被踢出
-- 问题出现在同时登录的竞态条件下
-
-变更内容:
-- 修复 TokenService.generate() 中的竞态条件
-- 添加设备标识区分不同登录会话
-- 补充并发登录的测试用例
-
-影响范围:
-- 修复影响所有多设备登录场景
-- 无破坏性变更
-```
+| feat | 新功能 | `feat(attendance): 添加打卡功能` |
+| fix | 修复bug | `fix(user): 修复登录验证问题` |
+| docs | 文档更新 | `docs(api): 更新API文档` |
+| refactor | 重构 | `refactor(auth): 重构认证逻辑` |
+| test | 测试 | `test(attendance): 添加打卡测试` |
+| chore | 杂项 | `chore(deps): 更新依赖` |
 
 ### 分支策略
 
 | 分支 | 用途 | 命名 |
 |------|------|------|
 | main | 稳定版本 | main |
-| feature/* | 功能开发 | feature/{功能简述} |
-| fix/* | 问题修复 | fix/{问题简述} |
-| refactor/* | 重构 | refactor/{重构简述} |
-| docs/* | 文档更新 | docs/{文档简述} |
-
-### 分支命名示例
-
-```
-feature/gps-checkin      # 新功能
-fix/concurrent-data-race # Bug 修复
-refactor/async-llm       # 重构
-docs/api-params          # 文档更新
-```
+| feature/* | 功能开发 | feature/{feature-name} |
+| fix/* | 问题修复 | fix/{issue-name} |
 
 ### 操作报告模板
 
@@ -602,59 +425,11 @@ commit
 
 | 异常场景 | 处理方式 |
 |----------|----------|
-| 冲突（简单） | AI 基于需求文档分析，自动合并，用户确认 |
-| 冲突（复杂） | AI 列出选项，用户选择 |
-| 冲突（无法判断） | 暂停，请求用户补充需求文档 |
+| 冲突 | 通知人处理，不自动解决 |
 | push失败 | 检查原因，重试或通知人 |
-| 编译失败 | 拒绝 push，提示先修复编译错误 |
 | 未通过验证 | 拒绝提交，提示先验证 |
 | 危险操作 | 拒绝执行，如force push |
 | 远程不存在 | 提示创建远程分支 |
-
-### 冲突处理示例
-
-**简单冲突（AI 可处理）**：
-
-```
-检测到冲突，AI 分析中...
-
-冲突文件: packages/server/src/modules/user/user.service.ts
-
-本地版本（你的改动）:
-+ 新增 getUserProfile 方法
-
-远程版本（对方的改动）:
-+ 新增 updateUserAvatar 方法
-
-依据: .trae/specs/user-management/requirements.md
-- Story 1 要求: 用户可查看个人资料 → getUserProfile ✓
-- Story 3 要求: 用户可修改头像 → updateUserAvatar ✓
-
-分析: 两个改动分别对应不同 Story，互不影响
-
-处理方案: 保留双方改动
-
-请确认是否允许 AI 执行合并？
-```
-
-**复杂冲突（需用户决策）**：
-
-```
-⚠️ 检测到复杂冲突，需要人工决策
-
-冲突位置: user.service.ts 第 45 行
-
-你的版本: return user.name
-对方版本: return user.displayName
-
-查阅 .trae/specs/user-management/requirements.md:
-- 未找到明确说明应使用 name 还是 displayName
-
-请选择：
-1. 用 user.name
-2. 用 user.displayName
-3. 补充需求文档后再处理
-```
 
 ### 危险操作清单
 
@@ -672,7 +447,6 @@ commit
 - `code-verification` 验证通过（A/B级）
 - Git仓库已初始化
 - 远程仓库已配置（如需push）
-- **Push 前编译必须通过**（`npm run build` 无错误）
 
 ---
 
