@@ -57,7 +57,7 @@
 | id | INT | 主键 |
 | name | VARCHAR(100) | 设备名称 |
 | sn | VARCHAR(100) | 设备序列号，唯一 |
-| type | ENUM | 设备类型 |
+| type | ENUM | face/fingerprint/card |
 | location | VARCHAR(200) | 安装位置 |
 | supports_temperature | BOOLEAN | 是否支持体温检测 |
 | supports_mask | BOOLEAN | 是否支持口罩检测 |
@@ -178,7 +178,7 @@
 |------|------|------|
 | id | INT | 主键 |
 | employee_id | INT | 人员ID |
-| type | ENUM | annual/sick/personal/business_trip/... |
+| type | ENUM | annual/sick/personal/business_trip/maternity/paternity/marriage/bereavement/other |
 | start_time | DATETIME | 开始时间 |
 | end_time | DATETIME | 结束时间 |
 | reason | VARCHAR(500) | 备注/原因 |
