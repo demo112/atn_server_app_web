@@ -1,10 +1,21 @@
 {
   "name": "@attendance/app",
-  "version": "1.0.0",
-  "dependencies": {
-    "@attendance/shared": "workspace:*"
-  },
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
   "scripts": {
-    "dev": "echo \"Starting app...\""
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "@attendance/shared": "workspace:*",
+    "expo": "~50.0.0",
+    "react": "18.2.0",
+    "react-native": "0.73.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0"
   }
 }

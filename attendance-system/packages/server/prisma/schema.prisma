@@ -1,0 +1,300 @@
+// Prisma Schema for Attendance System
+// 模块归属：用户/组织(人A) + 考勤(人B)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 用户/组织模块 (人A负责)
+// ============================================
+
+model User {
+  id           Int      @id @default(autoincrement())
+  employeeNo   String   @unique @map("employee_no") @db.VarChar(50)
+  name         String   @db.VarChar(100)
+  phone        String?  @db.VarChar(20)
+  email        String?  @db.VarChar(100)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  deptId       Int?     @map("dept_id")
+  status       UserStatus @default(active)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  department   Department? @relation(fields: [deptId], references: [id])
+  
+  // 考勤关联
+  clockRecords    AttClockRecord[]
+  dailyRecords    AttDailyRecord[]
+  schedules       AttSchedule[]
+  corrections     AttCorrection[]
+  leaves          AttLeave[]
+  operatedCorrections AttCorrection[] @relation("Operator")
+
+  @@index([deptId])
+  @@map("users")
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  parentId  Int?     @map("parent_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parent    Department?  @relation("DeptTree", fields: [parentId], references: [id])
+  children  Department[] @relation("DeptTree")
+  users     User[]
+
+  @@map("departments")
+}
+
+model Device {
+  id                  Int          @id @default(autoincrement())
+  name                String       @db.VarChar(100)
+  sn                  String       @unique @db.VarChar(100)
+  type                DeviceType   @default(face)
+  location            String?      @db.VarChar(200)
+  supportsTemperature Boolean      @default(false) @map("supports_temperature")
+  supportsMask        Boolean      @default(false) @map("supports_mask")
+  status              DeviceStatus @default(offline)
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  clockRecords AttClockRecord[]
+
+  @@map("devices")
+}
+
+enum DeviceType {
+  face
+  fingerprint
+  card
+}
+
+enum DeviceStatus {
+  online
+  offline
+  disabled
+}
+
+// ============================================
+// 考勤模块 (人B负责)
+// ============================================
+
+model AttTimePeriod {
+  id                 Int             @id @default(autoincrement())
+  name               String          @db.VarChar(100)
+  type               TimePeriodType  @default(normal)
+  workStart          DateTime?       @map("work_start") @db.Time()
+  workEnd            DateTime?       @map("work_end") @db.Time()
+  checkInStart       DateTime?       @map("check_in_start") @db.Time()
+  checkInEnd         DateTime?       @map("check_in_end") @db.Time()
+  checkOutStart      DateTime?       @map("check_out_start") @db.Time()
+  checkOutEnd        DateTime?       @map("check_out_end") @db.Time()
+  requireCheckIn     Boolean         @default(true) @map("require_check_in")
+  requireCheckOut    Boolean         @default(true) @map("require_check_out")
+  lateRule           Json?           @map("late_rule")
+  earlyLeaveRule     Json?           @map("early_leave_rule")
+  absentCheckInRule  Json?           @map("absent_check_in_rule")
+  absentCheckOutRule Json?           @map("absent_check_out_rule")
+  flexCalcMethod     FlexCalcMethod? @map("flex_calc_method")
+  flexMinInterval    Int?            @map("flex_min_interval")
+  flexDailyHours     Decimal?        @map("flex_daily_hours") @db.Decimal(4, 2)
+  flexDaySwitch      DateTime?       @map("flex_day_switch") @db.Time()
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  shiftPeriods AttShiftPeriod[]
+  dailyRecords AttDailyRecord[]
+
+  @@map("att_time_periods")
+}
+
+enum TimePeriodType {
+  normal
+  flexible
+}
+
+enum FlexCalcMethod {
+  first_last
+  pair
+}
+
+model AttShift {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(100)
+  cycleDays  Int      @default(7) @map("cycle_days")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  periods      AttShiftPeriod[]
+  schedules    AttSchedule[]
+  dailyRecords AttDailyRecord[]
+
+  @@map("att_shifts")
+}
+
+model AttShiftPeriod {
+  id         Int @id @default(autoincrement())
+  shiftId    Int @map("shift_id")
+  periodId   Int @map("period_id")
+  dayOfCycle Int @map("day_of_cycle")
+  sortOrder  Int @default(0) @map("sort_order")
+
+  shift  AttShift      @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  period AttTimePeriod @relation(fields: [periodId], references: [id])
+
+  @@map("att_shift_periods")
+}
+
+model AttSchedule {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  shiftId   Int      @map("shift_id")
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User     @relation(fields: [userId], references: [id])
+  shift AttShift @relation(fields: [shiftId], references: [id])
+
+  @@index([userId, startDate, endDate])
+  @@map("att_schedules")
+}
+
+model AttClockRecord {
+  id          BigInt     @id @default(autoincrement())
+  userId      Int        @map("user_id")
+  deviceId    Int?       @map("device_id")
+  clockTime   DateTime   @map("clock_time")
+  temperature Decimal?   @db.Decimal(3, 1)
+  maskStatus  MaskStatus? @map("mask_status")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  device Device? @relation(fields: [deviceId], references: [id])
+
+  @@index([userId, clockTime])
+  @@map("att_clock_records")
+}
+
+enum MaskStatus {
+  none
+  wearing
+  not_wearing
+}
+
+model AttDailyRecord {
+  id                BigInt            @id @default(autoincrement())
+  userId            Int               @map("user_id")
+  workDate          DateTime          @map("work_date") @db.Date
+  shiftId           Int?              @map("shift_id")
+  periodId          Int?              @map("period_id")
+  checkInTime       DateTime?         @map("check_in_time")
+  checkOutTime      DateTime?         @map("check_out_time")
+  status            AttendanceStatus  @default(normal)
+  actualHours       Decimal?          @map("actual_hours") @db.Decimal(5, 2)
+  effectiveHours    Decimal?          @map("effective_hours") @db.Decimal(5, 2)
+  lateMinutes       Int?              @map("late_minutes")
+  earlyLeaveMinutes Int?              @map("early_leave_minutes")
+  absentMinutes     Int?              @map("absent_minutes")
+  remark            String?           @db.VarChar(500)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  user        User           @relation(fields: [userId], references: [id])
+  shift       AttShift?      @relation(fields: [shiftId], references: [id])
+  period      AttTimePeriod? @relation(fields: [periodId], references: [id])
+  corrections AttCorrection[]
+
+  @@index([userId, workDate])
+  @@map("att_daily_records")
+}
+
+enum AttendanceStatus {
+  normal
+  late
+  early_leave
+  absent
+  leave
+  business_trip
+}
+
+model AttCorrection {
+  id             Int            @id @default(autoincrement())
+  userId         Int            @map("user_id")
+  dailyRecordId  BigInt         @map("daily_record_id")
+  type           CorrectionType
+  correctionTime DateTime       @map("correction_time")
+  operatorId     Int            @map("operator_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  user        User           @relation(fields: [userId], references: [id])
+  dailyRecord AttDailyRecord @relation(fields: [dailyRecordId], references: [id])
+  operator    User           @relation("Operator", fields: [operatorId], references: [id])
+
+  @@map("att_corrections")
+}
+
+enum CorrectionType {
+  check_in
+  check_out
+}
+
+model AttLeave {
+  id        Int         @id @default(autoincrement())
+  userId    Int         @map("user_id")
+  type      LeaveType
+  startTime DateTime    @map("start_time")
+  endTime   DateTime    @map("end_time")
+  reason    String?     @db.VarChar(500)
+  applyTime DateTime    @map("apply_time")
+  status    LeaveStatus @default(pending)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("att_leaves")
+}
+
+enum LeaveType {
+  annual
+  sick
+  personal
+  business_trip
+  maternity
+  paternity
+  marriage
+  bereavement
+  other
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+}
+
+model AttSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(50)
+  value       Json
+  description String?  @db.VarChar(200)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("att_settings")
+}

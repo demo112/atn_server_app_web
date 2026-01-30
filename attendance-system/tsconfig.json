@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@attendance/shared/*": ["packages/shared/src/*"],
-      "@attendance/server/*": ["packages/server/src/*"],
-      "@attendance/web/*": ["packages/web/src/*"],
-      "@attendance/app/*": ["packages/app/src/*"]
+      "@attendance/shared": ["packages/shared/src"],
+      "@attendance/shared/*": ["packages/shared/src/*"]
     }
   }
 }
