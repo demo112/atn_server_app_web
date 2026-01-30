@@ -255,6 +255,12 @@ Skill会检查并补充：
 - 外部服务调用 → INFO/ERROR
 - 用户关键操作 → INFO
 
+**WARN及以上级别要求**：
+- 必须携带完整调用堆栈（stack），逐级具体到代码行
+- 必须携带各层调用的真实参数（args）
+- 接口场景还需携带 request、response
+- 参考 project_rules.md 日志规范
+
 **禁止记录**：密码、Token、敏感信息
 
 ### Step 3: 四维验证
@@ -285,10 +291,18 @@ Skill会执行四维验证：
 > 说"提交代码"或"git commit"激活Skill
 
 Skill会：
-```bash
-git add .
-git commit -m "{type}({scope}): {description}"
-```
+1. 执行提交前自检（语言、内容、格式）
+2. 生成符合规范的中文 commit message
+3. 执行 `git add` + `git commit`
+4. 检查远程状态，建议 rebase 后 push
+
+**强制规则**：
+- 全中文描述，禁止英文动词
+- 标题必须具体：做了什么 + 为什么
+- 禁止 merge commit，使用 rebase
+- 非交互式执行：使用 `--no-pager`
+
+详细规范参考 project_rules.md Git规范章节
 
 ### Step 5: 修复（验证失败时）
 
