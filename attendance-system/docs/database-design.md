@@ -13,7 +13,7 @@
 
 ### 用户/组织模块（人A）
 
-#### users - 用户表
+#### employees - 人员表（核心考勤主体）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -22,9 +22,20 @@
 | name | VARCHAR(100) | 姓名 |
 | phone | VARCHAR(20) | 手机号 |
 | email | VARCHAR(100) | 邮箱 |
-| password_hash | VARCHAR(255) | 密码哈希 |
 | dept_id | INT | 部门ID，外键 |
-| status | ENUM | active/inactive |
+| status | ENUM | active/inactive/resigned |
+| created_at | DATETIME | 创建时间 |
+| updated_at | DATETIME | 更新时间 |
+
+#### users - 用户表（系统登录账号）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INT | 主键 |
+| username | VARCHAR(50) | 用户名，唯一 |
+| password_hash | VARCHAR(255) | 密码哈希 |
+| employee_id | INT | 关联人员ID，外键，唯一（一个用户对应一个人员） |
+| status | ENUM | active/disabled |
 | created_at | DATETIME | 创建时间 |
 | updated_at | DATETIME | 更新时间 |
 
@@ -109,7 +120,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | INT | 主键 |
-| user_id | INT | 用户ID |
+| employee_id | INT | 人员ID |
 | shift_id | INT | 班次ID |
 | start_date | DATE | 生效开始日期 |
 | end_date | DATE | 生效结束日期 |
@@ -121,7 +132,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BIGINT | 主键 |
-| user_id | INT | 用户ID |
+| employee_id | INT | 人员ID |
 | device_id | INT | 设备ID |
 | clock_time | DATETIME | 打卡时间 |
 | temperature | DECIMAL(3,1) | 体温 |
@@ -133,7 +144,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BIGINT | 主键 |
-| user_id | INT | 用户ID |
+| employee_id | INT | 人员ID |
 | work_date | DATE | 工作日 |
 | shift_id | INT | 班次ID |
 | period_id | INT | 时间段ID |
@@ -154,11 +165,11 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | INT | 主键 |
-| user_id | INT | 用户ID |
+| employee_id | INT | 人员ID（被补签人） |
 | daily_record_id | BIGINT | 关联的每日记录ID |
 | type | ENUM | check_in/check_out（补签到/补签退） |
 | correction_time | DATETIME | 补签时间 |
-| operator_id | INT | 操作人ID |
+| operator_id | INT | 操作人用户ID（users.id） |
 | created_at | DATETIME | 操作时间 |
 
 #### att_leaves - 请假/出差记录表
@@ -166,7 +177,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | INT | 主键 |
-| user_id | INT | 用户ID |
+| employee_id | INT | 人员ID |
 | type | ENUM | annual/sick/personal/business_trip/... |
 | start_time | DATETIME | 开始时间 |
 | end_time | DATETIME | 结束时间 |
@@ -197,17 +208,20 @@
 ### 高频查询索引
 
 ```sql
--- 打卡记录按用户+时间查询
-CREATE INDEX idx_clock_user_time ON att_clock_records(user_id, clock_time);
+-- 打卡记录按人员+时间查询
+CREATE INDEX idx_clock_emp_time ON att_clock_records(employee_id, clock_time);
 
--- 每日记录按用户+日期查询
-CREATE INDEX idx_daily_user_date ON att_daily_records(user_id, work_date);
+-- 每日记录按人员+日期查询
+CREATE INDEX idx_daily_emp_date ON att_daily_records(employee_id, work_date);
 
--- 排班按用户+日期范围查询
-CREATE INDEX idx_schedule_user_date ON att_schedules(user_id, start_date, end_date);
+-- 排班按人员+日期范围查询
+CREATE INDEX idx_schedule_emp_date ON att_schedules(employee_id, start_date, end_date);
 
--- 用户按部门查询
-CREATE INDEX idx_user_dept ON users(dept_id);
+-- 人员按部门查询
+CREATE INDEX idx_employee_dept ON employees(dept_id);
+
+-- 用户按人员查询
+CREATE INDEX idx_user_employee ON users(employee_id);
 ```
 
 ---

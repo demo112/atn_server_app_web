@@ -14,19 +14,19 @@ datasource db {
 // 用户/组织模块 (人A负责)
 // ============================================
 
-model User {
+model Employee {
   id           Int      @id @default(autoincrement())
   employeeNo   String   @unique @map("employee_no") @db.VarChar(50)
   name         String   @db.VarChar(100)
   phone        String?  @db.VarChar(20)
   email        String?  @db.VarChar(100)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
   deptId       Int?     @map("dept_id")
-  status       UserStatus @default(active)
+  status       EmployeeStatus @default(active)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   department   Department? @relation(fields: [deptId], references: [id])
+  user         User?
   
   // 考勤关联
   clockRecords    AttClockRecord[]
@@ -34,15 +34,35 @@ model User {
   schedules       AttSchedule[]
   corrections     AttCorrection[]
   leaves          AttLeave[]
-  operatedCorrections AttCorrection[] @relation("Operator")
 
   @@index([deptId])
+  @@map("employees")
+}
+
+enum EmployeeStatus {
+  active
+  inactive
+  resigned
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique @db.VarChar(50)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  employeeId   Int      @unique @map("employee_id")
+  status       UserStatus @default(active)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  operatedCorrections AttCorrection[] @relation("Operator")
+
   @@map("users")
 }
 
 enum UserStatus {
   active
-  inactive
+  disabled
 }
 
 model Department {
@@ -55,7 +75,7 @@ model Department {
 
   parent    Department?  @relation("DeptTree", fields: [parentId], references: [id])
   children  Department[] @relation("DeptTree")
-  users     User[]
+  employees Employee[]
 
   @@map("departments")
 }
@@ -161,33 +181,33 @@ model AttShiftPeriod {
 
 model AttSchedule {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  employeeId Int     @map("employee_id")
   shiftId   Int      @map("shift_id")
   startDate DateTime @map("start_date") @db.Date
   endDate   DateTime @map("end_date") @db.Date
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user  User     @relation(fields: [userId], references: [id])
-  shift AttShift @relation(fields: [shiftId], references: [id])
+  employee  Employee @relation(fields: [employeeId], references: [id])
+  shift     AttShift @relation(fields: [shiftId], references: [id])
 
-  @@index([userId, startDate, endDate])
+  @@index([employeeId, startDate, endDate])
   @@map("att_schedules")
 }
 
 model AttClockRecord {
   id          BigInt     @id @default(autoincrement())
-  userId      Int        @map("user_id")
+  employeeId  Int        @map("employee_id")
   deviceId    Int?       @map("device_id")
   clockTime   DateTime   @map("clock_time")
   temperature Decimal?   @db.Decimal(3, 1)
   maskStatus  MaskStatus? @map("mask_status")
   createdAt   DateTime   @default(now()) @map("created_at")
 
-  user   User    @relation(fields: [userId], references: [id])
-  device Device? @relation(fields: [deviceId], references: [id])
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  device      Device?  @relation(fields: [deviceId], references: [id])
 
-  @@index([userId, clockTime])
+  @@index([employeeId, clockTime])
   @@map("att_clock_records")
 }
 
@@ -199,7 +219,7 @@ enum MaskStatus {
 
 model AttDailyRecord {
   id                BigInt            @id @default(autoincrement())
-  userId            Int               @map("user_id")
+  employeeId        Int               @map("employee_id")
   workDate          DateTime          @map("work_date") @db.Date
   shiftId           Int?              @map("shift_id")
   periodId          Int?              @map("period_id")
@@ -215,12 +235,12 @@ model AttDailyRecord {
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
 
-  user        User           @relation(fields: [userId], references: [id])
+  employee    Employee       @relation(fields: [employeeId], references: [id])
   shift       AttShift?      @relation(fields: [shiftId], references: [id])
   period      AttTimePeriod? @relation(fields: [periodId], references: [id])
   corrections AttCorrection[]
 
-  @@index([userId, workDate])
+  @@index([employeeId, workDate])
   @@map("att_daily_records")
 }
 
@@ -235,14 +255,14 @@ enum AttendanceStatus {
 
 model AttCorrection {
   id             Int            @id @default(autoincrement())
-  userId         Int            @map("user_id")
+  employeeId     Int            @map("employee_id")
   dailyRecordId  BigInt         @map("daily_record_id")
   type           CorrectionType
   correctionTime DateTime       @map("correction_time")
   operatorId     Int            @map("operator_id")
   createdAt      DateTime       @default(now()) @map("created_at")
 
-  user        User           @relation(fields: [userId], references: [id])
+  employee    Employee       @relation(fields: [employeeId], references: [id])
   dailyRecord AttDailyRecord @relation(fields: [dailyRecordId], references: [id])
   operator    User           @relation("Operator", fields: [operatorId], references: [id])
 
@@ -256,7 +276,7 @@ enum CorrectionType {
 
 model AttLeave {
   id        Int         @id @default(autoincrement())
-  userId    Int         @map("user_id")
+  employeeId Int        @map("employee_id")
   type      LeaveType
   startTime DateTime    @map("start_time")
   endTime   DateTime    @map("end_time")
@@ -266,7 +286,7 @@ model AttLeave {
   createdAt DateTime    @default(now()) @map("created_at")
   updatedAt DateTime    @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
 
   @@map("att_leaves")
 }

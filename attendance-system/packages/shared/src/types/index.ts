@@ -34,18 +34,30 @@ export interface QueryParams {
 // 用户/组织模块类型 (人A负责)
 // ============================================
 
-export type UserStatus = 'active' | 'inactive';
+export type EmployeeStatus = 'active' | 'inactive' | 'resigned';
 
-export interface User {
+export interface Employee {
   id: number;
   employeeNo: string;
   name: string;
   phone?: string;
   email?: string;
   deptId?: number;
+  status: EmployeeStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type UserStatus = 'active' | 'disabled';
+
+export interface User {
+  id: number;
+  username: string;
+  employeeId: number;
   status: UserStatus;
   createdAt: string;
   updatedAt: string;
+  employee?: Employee;
 }
 
 export interface Department {
