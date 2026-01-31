@@ -68,20 +68,6 @@ export interface Department {
   children?: Department[];
 }
 
-export type DeviceType = 'face' | 'fingerprint' | 'card';
-export type DeviceStatus = 'online' | 'offline' | 'disabled';
-
-export interface Device {
-  id: number;
-  name: string;
-  sn: string;
-  type: DeviceType;
-  location?: string;
-  supportsTemperature: boolean;
-  supportsMask: boolean;
-  status: DeviceStatus;
-}
-
 // ============================================
 // 考勤模块类型 (人B负责)
 // ============================================
@@ -137,17 +123,14 @@ export interface Schedule {
   shift?: Shift;
 }
 
-export type MaskStatus = 'none' | 'wearing' | 'not_wearing';
+export type ClockType = 'app' | 'web';
 
 export interface ClockRecord {
   id: number;
-  userId: number;
-  deviceId?: number;
+  employeeId: number;
+  clockType: ClockType;
   clockTime: string;
-  temperature?: number;
-  maskStatus?: MaskStatus;
-  user?: User;
-  device?: Device;
+  employee?: Employee;
 }
 
 export type AttendanceStatus = 
@@ -235,10 +218,8 @@ export interface ClockRecordQuery extends QueryParams {
   startTime?: string;
   endTime?: string;
   deptId?: number;
-  userId?: number;
-  temperatureMin?: number;
-  temperatureMax?: number;
-  maskStatus?: MaskStatus;
+  employeeId?: number;
+  clockType?: ClockType;
 }
 
 export interface DailyRecordQuery extends QueryParams {

@@ -114,49 +114,6 @@ model Department {
   @@map("departments")
 }
 
-/// 设备表
-model Device {
-  /// 主键
-  id                  Int          @id @default(autoincrement())
-  /// 设备名称
-  name                String       @db.VarChar(100)
-  /// 设备序列号，唯一
-  sn                  String       @unique @db.VarChar(100)
-  /// 设备类型
-  type                DeviceType   @default(face)
-  /// 安装位置
-  location            String?      @db.VarChar(200)
-  /// 是否支持体温检测
-  supportsTemperature Boolean      @default(false) @map("supports_temperature")
-  /// 是否支持口罩检测
-  supportsMask        Boolean      @default(false) @map("supports_mask")
-  /// 设备状态
-  status              DeviceStatus @default(offline)
-  /// 创建时间
-  createdAt           DateTime     @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt           DateTime     @updatedAt @map("updated_at")
-
-  /// 打卡记录
-  clockRecords AttClockRecord[]
-
-  @@map("devices")
-}
-
-/// 设备类型枚举
-enum DeviceType {
-  face        // 人脸
-  fingerprint // 指纹
-  card        // 刷卡
-}
-
-/// 设备状态枚举
-enum DeviceStatus {
-  online   // 在线
-  offline  // 离线
-  disabled // 停用
-}
-
 // ============================================
 // 考勤模块 (人B负责)
 // ============================================
@@ -293,29 +250,23 @@ model AttClockRecord {
   id          BigInt     @id @default(autoincrement())
   /// 人员ID
   employeeId  Int        @map("employee_id")
-  /// 设备ID
-  deviceId    Int?       @map("device_id")
+  /// 打卡方式：app/web
+  clockType   ClockType  @default(app) @map("clock_type")
   /// 打卡时间
   clockTime   DateTime   @map("clock_time")
-  /// 体温
-  temperature Decimal?   @db.Decimal(3, 1)
-  /// 口罩状态
-  maskStatus  MaskStatus? @map("mask_status")
   /// 创建时间
   createdAt   DateTime   @default(now()) @map("created_at")
 
   employee    Employee @relation(fields: [employeeId], references: [id])
-  device      Device?  @relation(fields: [deviceId], references: [id])
 
   @@index([employeeId, clockTime])
   @@map("att_clock_records")
 }
 
-/// 口罩状态枚举
-enum MaskStatus {
-  none        // 无数据
-  wearing     // 已佩戴
-  not_wearing // 未佩戴
+/// 打卡方式枚举
+enum ClockType {
+  app // APP打卡
+  web // Web手动打卡
 }
 
 /// 每日考勤记录表
