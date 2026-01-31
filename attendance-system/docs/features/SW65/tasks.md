@@ -83,6 +83,74 @@
 | 预计 | 5 分钟 |
 | 依赖 | Task 5 |
 
+### 阶段4：Web端实现
+
+#### Task 7: 初始化 Web 基础架构 (已完成)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/web/package.json`<br>`packages/web/src/App.tsx`<br>`packages/web/src/main.tsx` |
+| 操作 | 新增/修改 |
+| 内容 | 安装 react-router-dom, axios; 搭建基础路由结构 |
+| 验证 | 页面可访问 |
+| 预计 | 10 分钟 |
+| 依赖 | 无 |
+
+#### Task 8: 实现排班主页面 (SW65-05) (已完成)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/web/src/pages/attendance/schedule/SchedulePage.tsx` |
+| 操作 | 新增 |
+| 内容 | 左右布局：左侧部门树(Mock)，右侧排班日历占位 |
+| 验证 | 页面显示正常 |
+| 预计 | 15 分钟 |
+| 依赖 | Task 7 |
+
+#### Task 9: 实现排班日历视图 (SW65-06) (已完成)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/web/src/pages/attendance/schedule/components/ScheduleCalendar.tsx` |
+| 操作 | 新增 |
+| 内容 | 月视图日历，显示每日班次 |
+| 验证 | 显示班次数据 |
+| 预计 | 20 分钟 |
+| 依赖 | Task 8 |
+
+#### Task 10: 集成排班 API (已完成)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/web/src/services/attendance.ts` |
+| 操作 | 新增 |
+| 内容 | 调用 /api/v1/attendance/schedules 相关接口 |
+| 验证 | 真实数据交互 |
+| 预计 | 10 分钟 |
+| 依赖 | Task 9 |
+
+#### Task 11: 实现新建/编辑排班弹窗 (SW65-07)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/web/src/pages/attendance/schedule/components/ScheduleDialog.tsx` |
+| 操作 | 新增 |
+| 内容 | 表单：选人、选班次、选日期、Force选项 |
+| 验证 | 提交成功 |
+| 预计 | 20 分钟 |
+| 依赖 | Task 10 |
+
+#### Task 12: 实现批量排班功能 (SW65-08)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/web/src/pages/attendance/schedule/components/BatchScheduleDialog.tsx` |
+| 操作 | 新增 |
+| 内容 | 表单：选部门、选班次、日期范围、冲突处理策略 |
+| 验证 | 批量提交成功 |
+| 预计 | 20 分钟 |
+| 依赖 | Task 11 |
+
 ## 检查点策略
 
 | 时机 | 操作 |
