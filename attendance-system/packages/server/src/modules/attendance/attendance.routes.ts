@@ -4,11 +4,13 @@ import { attendanceSettingsController } from './attendance-settings.controller';
 import { TimePeriodController } from './time-period/time-period.controller';
 import { AttendanceShiftController } from './attendance-shift.controller';
 import { AttendanceClockController } from './attendance-clock.controller';
+import { ScheduleController } from './schedule/schedule.controller';
 
 const router = Router();
 const periodController = new TimePeriodController();
 const shiftController = new AttendanceShiftController();
 const clockController = new AttendanceClockController();
+const scheduleController = new ScheduleController();
 
 // 考勤设置路由
 router.get('/settings', attendanceSettingsController.getSettings);
@@ -31,5 +33,11 @@ router.get('/shifts/:id', shiftController.getById.bind(shiftController));
 router.post('/shifts', shiftController.create.bind(shiftController));
 router.put('/shifts/:id', shiftController.update.bind(shiftController));
 router.delete('/shifts/:id', shiftController.delete.bind(shiftController));
+
+// 排班管理路由
+router.post('/schedules', scheduleController.create.bind(scheduleController));
+router.post('/schedules/batch', scheduleController.batchCreate.bind(scheduleController));
+router.get('/schedules', scheduleController.getOverview.bind(scheduleController));
+router.delete('/schedules/:id', scheduleController.delete.bind(scheduleController));
 
 export const attendanceRouter = router;

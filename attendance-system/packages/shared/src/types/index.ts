@@ -197,6 +197,28 @@ export type AttendanceStatus =
   | 'leave'
   | 'business_trip';
 
+export interface CreateScheduleDto {
+  employeeId: number;
+  shiftId: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  force?: boolean;
+}
+
+export interface BatchCreateScheduleDto {
+  departmentIds: number[];
+  shiftId: number;
+  startDate: string;
+  endDate: string;
+  force?: boolean;
+  includeSubDepartments?: boolean;
+}
+
+export interface ScheduleVo extends Schedule {
+  shiftName?: string;
+  employeeName?: string;
+}
+
 export interface DailyRecord {
   id: number;
   employeeId: number;
