@@ -1,6 +1,8 @@
 ---
 name: test-driven-development
-description: 测试驱动开发方法论，先写测试再写代码。来源：obra/superpowers
+description: "[方法论层] 测试驱动开发方法论，可在 code-implementation 中选用 TDD 模式。来源：obra/superpowers"
+type: methodology
+optional_for: code-implementation
 ---
 
 # 测试驱动开发 (TDD)

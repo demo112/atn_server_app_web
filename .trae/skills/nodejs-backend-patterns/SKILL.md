@@ -1,6 +1,8 @@
 ---
 name: nodejs-backend-patterns
-description: Node.js后端开发模式，包含Express、分层架构、中间件、错误处理等最佳实践。来源：wshobson/agents
+description: "[参考层] Node.js后端开发模式，供 code-implementation 编写 Server 代码时参考。来源：wshobson/agents"
+type: reference
+applies_to: server
 ---
 
 # Node.js 后端模式

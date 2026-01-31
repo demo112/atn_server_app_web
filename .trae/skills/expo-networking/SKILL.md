@@ -1,6 +1,8 @@
 ---
 name: expo-networking
-description: Expo网络请求指南，包含fetch、React Query、认证、离线支持等。来源：expo/skills
+description: "[参考层] Expo网络请求指南，供 code-implementation 编写 App 代码时参考。来源：expo/skills"
+type: reference
+applies_to: app
 ---
 
 # Expo 网络请求

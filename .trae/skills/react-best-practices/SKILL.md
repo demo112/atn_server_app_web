@@ -1,6 +1,8 @@
 ---
 name: react-best-practices
-description: React和Next.js性能优化指南，包含57条规则，按影响优先级排序。来源：vercel-labs/agent-skills
+description: "[参考层] React性能优化指南，供 code-implementation 编写 Web 代码时参考。来源：vercel-labs/agent-skills"
+type: reference
+applies_to: web
 ---
 
 # React 最佳实践

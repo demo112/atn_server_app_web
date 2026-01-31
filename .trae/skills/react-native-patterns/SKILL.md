@@ -1,6 +1,8 @@
 ---
 name: react-native-patterns
-description: React Native性能优化指南，涵盖JS/React、原生和打包优化。来源：callstackincubator/agent-skills
+description: "[参考层] React Native性能优化指南，供 code-implementation 编写 App 代码时参考。来源：callstackincubator/agent-skills"
+type: reference
+applies_to: app
 ---
 
 # React Native 模式

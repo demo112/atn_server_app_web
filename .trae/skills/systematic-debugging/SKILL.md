@@ -1,6 +1,8 @@
 ---
 name: systematic-debugging
-description: 系统化调试方法论，在修复任何Bug前必须先找到根因。来源：obra/superpowers
+description: "[方法论层] 系统化调试方法论，已融入 problem-fixing 流程。来源：obra/superpowers"
+type: methodology
+merged_into: problem-fixing
 ---
 
 # 系统化调试

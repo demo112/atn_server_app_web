@@ -245,12 +245,30 @@ description: 根据任务描述实现代码，遵循设计文档和项目规范�
 | Task详情 | 阶段一输出 | 结构化数据 | 必须 |
 | 上下文摘要 | 阶段二输出 | 文本 | 必须 |
 
+#### 开发模式选择
+
+| 模式 | 适用场景 | 说明 |
+|------|----------|------|
+| **标准模式** | 大多数Task | 直接编写代码 |
+| **TDD模式** | 复杂逻辑、边界多 | 先写测试再写实现（参考 `test-driven-development`） |
+
+#### 技术参考（按模块）
+
+编写代码时参考对应技术栈的 patterns skill：
+
+| 模块 | 参考 Skill |
+|------|-----------|
+| Server (Express/Prisma) | `nodejs-backend-patterns` |
+| Web (React/Vite) | `react-best-practices` + `vite-patterns` |
+| App (React Native/Expo) | `react-native-patterns` + `expo-native-ui` + `expo-networking` |
+
 #### 执行步骤
 
 1. **确定文件结构**：确定要创建/修改的文件
-2. **编写代码**：按照设计和规范编写
-3. **添加注释**：必要的注释说明
-4. **处理导入**：正确处理import语句
+2. **参考技术模式**：查阅对应模块的 patterns skill
+3. **编写代码**：按照设计、规范和最佳实践编写
+4. **添加注释**：必要的注释说明
+5. **处理导入**：正确处理import语句
 
 #### 输出
 

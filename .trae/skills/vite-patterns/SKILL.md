@@ -1,6 +1,8 @@
 ---
 name: vite-patterns
-description: Vite构建工具使用指南，包含配置、环境变量、插件开发等。来源：antfu/skills
+description: "[参考层] Vite构建工具指南，供 code-implementation 编写 Web 代码时参考。来源：antfu/skills"
+type: reference
+applies_to: web
 ---
 
 # Vite 模式

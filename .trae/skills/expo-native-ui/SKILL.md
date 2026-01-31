@@ -1,6 +1,8 @@
 ---
 name: expo-native-ui
-description: Expo原生UI构建指南，包含路由、导航、样式等最佳实践。来源：expo/skills
+description: "[参考层] Expo原生UI构建指南，供 code-implementation 编写 App 代码时参考。来源：expo/skills"
+type: reference
+applies_to: app
 ---
 
 # Expo 原生 UI
