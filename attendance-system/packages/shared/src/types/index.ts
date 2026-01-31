@@ -31,10 +31,24 @@ export interface QueryParams {
 }
 
 // ============================================
-// 用户/组织模块类型 (人A负责)
+// 用户/组织模块类型 (sasuke 负责)
 // ============================================
 
-export type EmployeeStatus = 'active' | 'inactive' | 'resigned';
+export type UserRole = 'admin' | 'user';
+export type UserStatus = 'active' | 'inactive';
+
+export interface User {
+  id: number;
+  username: string;
+  employeeId?: number;
+  role: UserRole;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
+  employee?: Employee;
+}
+
+export type EmployeeStatus = 'active' | 'inactive';
 
 export interface Employee {
   id: number;
@@ -43,21 +57,12 @@ export interface Employee {
   phone?: string;
   email?: string;
   deptId?: number;
+  deptName?: string; // 冗余字段，方便显示
   status: EmployeeStatus;
+  hireDate?: string;
+  leaveDate?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export type UserStatus = 'active' | 'disabled';
-
-export interface User {
-  id: number;
-  username: string;
-  employeeId: number;
-  status: UserStatus;
-  createdAt: string;
-  updatedAt: string;
-  employee?: Employee;
 }
 
 export interface Department {
@@ -66,10 +71,11 @@ export interface Department {
   parentId?: number;
   sortOrder: number;
   children?: Department[];
+  employeeCount?: number; // 部门人数（含子部门）
 }
 
 // ============================================
-// 考勤模块类型 (人B负责)
+// 考勤配置模块类型 (naruto 负责)
 // ============================================
 
 export type TimePeriodType = 'normal' | 'flexible';
@@ -79,22 +85,38 @@ export interface TimePeriod {
   id: number;
   name: string;
   type: TimePeriodType;
-  workStart?: string;
-  workEnd?: string;
+  workStart?: string;  // HH:mm
+  workEnd?: string;    // HH:mm
   checkInStart?: string;
   checkInEnd?: string;
   checkOutStart?: string;
   checkOutEnd?: string;
   requireCheckIn: boolean;
   requireCheckOut: boolean;
-  lateRule?: Record<string, unknown>;
-  earlyLeaveRule?: Record<string, unknown>;
-  absentCheckInRule?: Record<string, unknown>;
-  absentCheckOutRule?: Record<string, unknown>;
+  lateRule?: LateRule;
+  earlyLeaveRule?: EarlyLeaveRule;
+  absentCheckInRule?: AbsentRule;
+  absentCheckOutRule?: AbsentRule;
   flexCalcMethod?: FlexCalcMethod;
-  flexMinInterval?: number;
-  flexDailyHours?: number;
-  flexDaySwitch?: string;
+  flexMinInterval?: number;  // 分钟
+  flexDailyHours?: number;   // 小时
+  flexDaySwitch?: string;    // HH:mm
+}
+
+// 异常规则类型
+export interface LateRule {
+  graceMinutes?: number;     // 宽限分钟数
+  deductMinutes?: number;    // 每迟到N分钟扣除
+}
+
+export interface EarlyLeaveRule {
+  graceMinutes?: number;
+  deductMinutes?: number;
+}
+
+export interface AbsentRule {
+  markAsAbsent?: boolean;    // 是否标记为缺勤
+  absentMinutes?: number;    // 缺勤分钟数
 }
 
 export interface Shift {
@@ -108,111 +130,150 @@ export interface ShiftPeriod {
   id: number;
   shiftId: number;
   periodId: number;
-  dayOfCycle: number;
+  dayOfCycle: number;  // 1-7
   sortOrder: number;
   period?: TimePeriod;
 }
 
 export interface Schedule {
   id: number;
-  userId: number;
+  employeeId: number;
   shiftId: number;
-  startDate: string;
-  endDate: string;
-  user?: User;
+  startDate: string;  // YYYY-MM-DD
+  endDate: string;    // YYYY-MM-DD
+  employee?: Employee;
   shift?: Shift;
 }
+
+// ============================================
+// 考勤数据模块类型 (naruto 负责)
+// ============================================
 
 export type ClockType = 'app' | 'web';
 
 export interface ClockRecord {
   id: number;
   employeeId: number;
+  clockTime: string;  // ISO datetime
   clockType: ClockType;
-  clockTime: string;
-  employee?: Employee;
+  operatorId?: number;
+  remark?: string;
+  createdAt: string;
+  // 冗余字段
+  employeeNo?: string;
+  employeeName?: string;
+  deptName?: string;
 }
 
-export type AttendanceStatus = 
-  | 'normal' 
-  | 'late' 
-  | 'early_leave' 
-  | 'absent' 
-  | 'leave' 
+export type AttendanceStatus =
+  | 'normal'
+  | 'late'
+  | 'early_leave'
+  | 'absent'
+  | 'leave'
   | 'business_trip';
 
 export interface DailyRecord {
   id: number;
-  userId: number;
-  workDate: string;
+  employeeId: number;
+  workDate: string;  // YYYY-MM-DD
   shiftId?: number;
   periodId?: number;
   checkInTime?: string;
   checkOutTime?: string;
   status: AttendanceStatus;
-  actualHours?: number;
-  effectiveHours?: number;
+  actualMinutes?: number;
+  effectiveMinutes?: number;
   lateMinutes?: number;
   earlyLeaveMinutes?: number;
   absentMinutes?: number;
   remark?: string;
-  user?: User;
-  shift?: Shift;
-  period?: TimePeriod;
+  // 冗余字段
+  employeeNo?: string;
+  employeeName?: string;
+  deptId?: number;
+  deptName?: string;
+  shiftName?: string;
+  periodName?: string;
 }
 
 export type CorrectionType = 'check_in' | 'check_out';
 
 export interface Correction {
   id: number;
-  userId: number;
+  employeeId: number;
   dailyRecordId: number;
   type: CorrectionType;
   correctionTime: string;
   operatorId: number;
+  remark?: string;
   createdAt: string;
+  // 冗余字段
+  employeeNo?: string;
+  employeeName?: string;
+  deptName?: string;
+  operatorName?: string;
 }
 
-export type LeaveType = 
-  | 'annual' 
-  | 'sick' 
-  | 'personal' 
-  | 'business_trip' 
-  | 'maternity' 
-  | 'paternity' 
-  | 'marriage' 
-  | 'bereavement' 
+export type LeaveType =
+  | 'annual'
+  | 'sick'
+  | 'personal'
+  | 'business_trip'
+  | 'maternity'
+  | 'paternity'
+  | 'marriage'
+  | 'bereavement'
   | 'other';
 
-export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
 export interface Leave {
   id: number;
-  userId: number;
+  employeeId: number;
   type: LeaveType;
   startTime: string;
   endTime: string;
   reason?: string;
-  applyTime: string;
   status: LeaveStatus;
+  approverId?: number;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  // 冗余字段
+  employeeNo?: string;
+  employeeName?: string;
+  deptName?: string;
+  approverName?: string;
 }
 
 // ============================================
-// 统计报表类型
+// 统计报表类型 (sasuke 负责)
 // ============================================
 
 export interface AttendanceSummary {
-  userId: number;
+  employeeId: number;
   employeeNo: string;
-  name: string;
+  employeeName: string;
+  deptId: number;
   deptName: string;
-  lateMinutes: number;
-  earlyLeaveMinutes: number;
-  actualHours: number;
-  effectiveHours: number;
-  absentMinutes: number;
-  leaveHours: number;
+  totalDays: number;         // 应出勤天数
+  actualDays: number;        // 实际出勤天数
+  lateCount: number;         // 迟到次数
+  lateMinutes: number;       // 迟到总分钟
+  earlyLeaveCount: number;   // 早退次数
+  earlyLeaveMinutes: number; // 早退总分钟
+  absentCount: number;       // 缺勤次数
+  absentMinutes: number;     // 缺勤总分钟
+  leaveCount: number;        // 请假次数
+  leaveMinutes: number;      // 请假总分钟
+  actualMinutes: number;     // 实际出勤总分钟
+  effectiveMinutes: number;  // 有效出勤总分钟
 }
+
+// ============================================
+// 查询参数类型
+// ============================================
 
 export interface ClockRecordQuery extends QueryParams {
   startTime?: string;
@@ -226,6 +287,22 @@ export interface DailyRecordQuery extends QueryParams {
   startDate?: string;
   endDate?: string;
   deptId?: number;
-  userId?: number;
+  employeeId?: number;
   status?: AttendanceStatus;
+}
+
+export interface LeaveQuery extends QueryParams {
+  startTime?: string;
+  endTime?: string;
+  deptId?: number;
+  employeeId?: number;
+  type?: LeaveType;
+  status?: LeaveStatus;
+}
+
+export interface SummaryQuery {
+  startDate: string;
+  endDate: string;
+  deptId?: number;
+  employeeId?: number;
 }

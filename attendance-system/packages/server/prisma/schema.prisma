@@ -1,5 +1,5 @@
 // Prisma Schema for Attendance System
-// 模块归属：用户/组织(人A) + 考勤(人B)
+// 模块归属：用户/组织(sasuke) + 考勤(naruto)
 
 generator client {
   provider = "prisma-client-js"
@@ -11,156 +11,111 @@ datasource db {
 }
 
 // ============================================
-// 用户/组织模块 (人A负责)
+// 用户/组织模块 (sasuke 负责)
 // ============================================
 
-/// 人员表（核心考勤主体）
-model Employee {
-  /// 主键
-  id           Int      @id @default(autoincrement())
-  /// 人员编号，唯一
-  employeeNo   String   @unique @map("employee_no") @db.VarChar(50)
-  /// 姓名
-  name         String   @db.VarChar(100)
-  /// 手机号
-  phone        String?  @db.VarChar(20)
-  /// 邮箱
-  email        String?  @db.VarChar(100)
-  /// 部门ID，外键
-  deptId       Int?     @map("dept_id")
-  /// 状态：active/inactive/resigned
-  status       EmployeeStatus @default(active)
-  /// 创建时间
-  createdAt    DateTime @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt    DateTime @updatedAt @map("updated_at")
+/// 用户账号表 - 用于登录认证
+model User {
+  id           Int        @id @default(autoincrement())
+  username     String     @unique @db.VarChar(50)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  employeeId   Int?       @unique @map("employee_id")
+  role         UserRole   @default(user)
+  status       UserStatus @default(active)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  /// 关联部门
-  department   Department? @relation(fields: [deptId], references: [id])
-  /// 关联用户账号
+  employee            Employee?       @relation(fields: [employeeId], references: [id])
+  operatedClockRecords AttClockRecord[] @relation("ClockOperator")
+  operatedCorrections AttCorrection[]  @relation("CorrectionOperator")
+  approvedLeaves      AttLeave[]       @relation("LeaveApprover")
+
+  @@map("users")
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+/// 人员档案表 - 考勤主体
+model Employee {
+  id         Int            @id @default(autoincrement())
+  employeeNo String         @unique @map("employee_no") @db.VarChar(50)
+  name       String         @db.VarChar(100)
+  phone      String?        @db.VarChar(20)
+  email      String?        @db.VarChar(100)
+  deptId     Int?           @map("dept_id")
+  status     EmployeeStatus @default(active)
+  hireDate   DateTime?      @map("hire_date") @db.Date
+  leaveDate  DateTime?      @map("leave_date") @db.Date
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
   user         User?
-  
-  // 考勤关联
-  clockRecords    AttClockRecord[]
-  dailyRecords    AttDailyRecord[]
-  schedules       AttSchedule[]
-  corrections     AttCorrection[]
-  leaves          AttLeave[]
+  department   Department?      @relation(fields: [deptId], references: [id])
+  schedules    AttSchedule[]
+  clockRecords AttClockRecord[]
+  dailyRecords AttDailyRecord[]
+  corrections  AttCorrection[]
+  leaves       AttLeave[]
 
   @@index([deptId])
   @@map("employees")
 }
 
-/// 人员状态枚举
 enum EmployeeStatus {
   active   // 在职
-  inactive // 停用
-  resigned // 离职
+  inactive // 离职
 }
 
-/// 用户表（系统登录账号）
-model User {
-  /// 主键
-  id           Int      @id @default(autoincrement())
-  /// 用户名，唯一
-  username     String   @unique @db.VarChar(50)
-  /// 密码哈希
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  /// 关联人员ID，外键，唯一（一个用户对应一个人员）
-  employeeId   Int      @unique @map("employee_id")
-  /// 状态：active/disabled
-  status       UserStatus @default(active)
-  /// 创建时间
-  createdAt    DateTime @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  /// 关联人员
-  employee     Employee @relation(fields: [employeeId], references: [id])
-  /// 操作的补签记录
-  operatedCorrections AttCorrection[] @relation("Operator")
-
-  @@map("users")
-}
-
-/// 用户状态枚举
-enum UserStatus {
-  active   // 启用
-  disabled // 禁用
-}
-
-/// 部门表
+/// 部门表 - 树形结构
 model Department {
-  /// 主键
   id        Int      @id @default(autoincrement())
-  /// 部门名称
   name      String   @db.VarChar(100)
-  /// 父部门ID，自引用
   parentId  Int?     @map("parent_id")
-  /// 排序
   sortOrder Int      @default(0) @map("sort_order")
-  /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
-  /// 更新时间
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  /// 父部门
   parent    Department?  @relation("DeptTree", fields: [parentId], references: [id])
-  /// 子部门
   children  Department[] @relation("DeptTree")
-  /// 部门下人员
   employees Employee[]
 
   @@map("departments")
 }
 
 // ============================================
-// 考勤模块 (人B负责)
+// 考勤配置模块 (naruto 负责)
 // ============================================
 
-/// 时间段表
+/// 时间段表 - 定义上下班时间
 model AttTimePeriod {
-  /// 主键
   id                 Int             @id @default(autoincrement())
-  /// 时间段名称
   name               String          @db.VarChar(100)
-  /// 类型：normal/flexible（普通/弹性）
   type               TimePeriodType  @default(normal)
-  /// 上班时间
   workStart          DateTime?       @map("work_start") @db.Time()
-  /// 下班时间
   workEnd            DateTime?       @map("work_end") @db.Time()
-  /// 签到开始时间
   checkInStart       DateTime?       @map("check_in_start") @db.Time()
-  /// 签到结束时间
   checkInEnd         DateTime?       @map("check_in_end") @db.Time()
-  /// 签退开始时间
   checkOutStart      DateTime?       @map("check_out_start") @db.Time()
-  /// 签退结束时间
   checkOutEnd        DateTime?       @map("check_out_end") @db.Time()
-  /// 是否必须签到
   requireCheckIn     Boolean         @default(true) @map("require_check_in")
-  /// 是否必须签退
   requireCheckOut    Boolean         @default(true) @map("require_check_out")
-  /// 迟到规则
   lateRule           Json?           @map("late_rule")
-  /// 早退规则
   earlyLeaveRule     Json?           @map("early_leave_rule")
-  /// 未签到规则
   absentCheckInRule  Json?           @map("absent_check_in_rule")
-  /// 未签退规则
   absentCheckOutRule Json?           @map("absent_check_out_rule")
-  /// 弹性计算方式：first_last/pair（首尾/两两）
   flexCalcMethod     FlexCalcMethod? @map("flex_calc_method")
-  /// 有效打卡间隔（分钟）
   flexMinInterval    Int?            @map("flex_min_interval")
-  /// 每日工作时长
   flexDailyHours     Decimal?        @map("flex_daily_hours") @db.Decimal(4, 2)
-  /// 跨天切换点
   flexDaySwitch      DateTime?       @map("flex_day_switch") @db.Time()
-  /// 创建时间
   createdAt          DateTime        @default(now()) @map("created_at")
-  /// 更新时间
   updatedAt          DateTime        @updatedAt @map("updated_at")
 
   shiftPeriods AttShiftPeriod[]
@@ -169,30 +124,23 @@ model AttTimePeriod {
   @@map("att_time_periods")
 }
 
-/// 时间段类型枚举
 enum TimePeriodType {
-  normal   // 普通
-  flexible // 弹性
+  normal   // 普通时间段
+  flexible // 弹性时间段
 }
 
-/// 弹性计算方式枚举
 enum FlexCalcMethod {
-  first_last // 首尾
-  pair       // 两两
+  first_last // 首尾打卡计算
+  pair       // 两两打卡累积
 }
 
 /// 班次表
 model AttShift {
-  /// 主键
-  id         Int      @id @default(autoincrement())
-  /// 班次名称
-  name       String   @db.VarChar(100)
-  /// 周期天数（默认7）
-  cycleDays  Int      @default(7) @map("cycle_days")
-  /// 创建时间
-  createdAt  DateTime @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  cycleDays Int      @default(7) @map("cycle_days")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   periods      AttShiftPeriod[]
   schedules    AttSchedule[]
@@ -203,15 +151,10 @@ model AttShift {
 
 /// 班次时间段关联表
 model AttShiftPeriod {
-  /// 主键
   id         Int @id @default(autoincrement())
-  /// 班次ID
   shiftId    Int @map("shift_id")
-  /// 时间段ID
   periodId   Int @map("period_id")
-  /// 周期内第几天（1-7）
-  dayOfCycle Int @map("day_of_cycle")
-  /// 排序
+  dayOfCycle Int @map("day_of_cycle") // 1-7 表示周一到周日
   sortOrder  Int @default(0) @map("sort_order")
 
   shift  AttShift      @relation(fields: [shiftId], references: [id], onDelete: Cascade)
@@ -222,48 +165,53 @@ model AttShiftPeriod {
 
 /// 排班表
 model AttSchedule {
-  /// 主键
-  id        Int      @id @default(autoincrement())
-  /// 人员ID
-  employeeId Int     @map("employee_id")
-  /// 班次ID
-  shiftId   Int      @map("shift_id")
-  /// 生效开始日期
-  startDate DateTime @map("start_date") @db.Date
-  /// 生效结束日期
-  endDate   DateTime @map("end_date") @db.Date
-  /// 创建时间
-  createdAt DateTime @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  employeeId Int      @map("employee_id")
+  shiftId    Int      @map("shift_id")
+  startDate  DateTime @map("start_date") @db.Date
+  endDate    DateTime @map("end_date") @db.Date
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  employee  Employee @relation(fields: [employeeId], references: [id])
-  shift     AttShift @relation(fields: [shiftId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+  shift    AttShift @relation(fields: [shiftId], references: [id])
 
   @@index([employeeId, startDate, endDate])
   @@map("att_schedules")
 }
 
+/// 考勤设置表
+model AttSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(50)
+  value       Json
+  description String?  @db.VarChar(200)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("att_settings")
+}
+
+// ============================================
+// 考勤数据模块 (naruto 负责)
+// ============================================
+
 /// 原始打卡记录表
 model AttClockRecord {
-  /// 主键
-  id          BigInt     @id @default(autoincrement())
-  /// 人员ID
-  employeeId  Int        @map("employee_id")
-  /// 打卡方式：app/web
-  clockType   ClockType  @default(app) @map("clock_type")
-  /// 打卡时间
-  clockTime   DateTime   @map("clock_time")
-  /// 创建时间
-  createdAt   DateTime   @default(now()) @map("created_at")
+  id         BigInt    @id @default(autoincrement())
+  employeeId Int       @map("employee_id")
+  clockTime  DateTime  @map("clock_time")
+  clockType  ClockType @map("clock_type")
+  operatorId Int?      @map("operator_id") // Web打卡时记录操作人
+  remark     String?   @db.VarChar(200)
+  createdAt  DateTime  @default(now()) @map("created_at")
 
-  employee    Employee @relation(fields: [employeeId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+  operator User?    @relation("ClockOperator", fields: [operatorId], references: [id])
 
   @@index([employeeId, clockTime])
   @@map("att_clock_records")
 }
 
-/// 打卡方式枚举
 enum ClockType {
   app // APP打卡
   web // Web手动打卡
@@ -271,49 +219,32 @@ enum ClockType {
 
 /// 每日考勤记录表
 model AttDailyRecord {
-  /// 主键
-  id                BigInt            @id @default(autoincrement())
-  /// 人员ID
-  employeeId        Int               @map("employee_id")
-  /// 工作日
-  workDate          DateTime          @map("work_date") @db.Date
-  /// 班次ID
-  shiftId           Int?              @map("shift_id")
-  /// 时间段ID
-  periodId          Int?              @map("period_id")
-  /// 签到时间
-  checkInTime       DateTime?         @map("check_in_time")
-  /// 签退时间
-  checkOutTime      DateTime?         @map("check_out_time")
-  /// 状态：normal/late/early_leave/absent/leave...
-  status            AttendanceStatus  @default(normal)
-  /// 实际出勤时长
-  actualHours       Decimal?          @map("actual_hours") @db.Decimal(5, 2)
-  /// 有效出勤时长
-  effectiveHours    Decimal?          @map("effective_hours") @db.Decimal(5, 2)
-  /// 迟到分钟数
-  lateMinutes       Int?              @map("late_minutes")
-  /// 早退分钟数
-  earlyLeaveMinutes Int?              @map("early_leave_minutes")
-  /// 缺勤分钟数
-  absentMinutes     Int?              @map("absent_minutes")
-  /// 备注
-  remark            String?           @db.VarChar(500)
-  /// 创建时间
-  createdAt         DateTime          @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt         DateTime          @updatedAt @map("updated_at")
+  id                BigInt           @id @default(autoincrement())
+  employeeId        Int              @map("employee_id")
+  workDate          DateTime         @map("work_date") @db.Date
+  shiftId           Int?             @map("shift_id")
+  periodId          Int?             @map("period_id")
+  checkInTime       DateTime?        @map("check_in_time")
+  checkOutTime      DateTime?        @map("check_out_time")
+  status            AttendanceStatus @default(normal)
+  actualMinutes     Int?             @map("actual_minutes")
+  effectiveMinutes  Int?             @map("effective_minutes")
+  lateMinutes       Int?             @map("late_minutes")
+  earlyLeaveMinutes Int?             @map("early_leave_minutes")
+  absentMinutes     Int?             @map("absent_minutes")
+  remark            String?          @db.VarChar(500)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
 
-  employee    Employee       @relation(fields: [employeeId], references: [id])
-  shift       AttShift?      @relation(fields: [shiftId], references: [id])
-  period      AttTimePeriod? @relation(fields: [periodId], references: [id])
+  employee    Employee        @relation(fields: [employeeId], references: [id])
+  shift       AttShift?       @relation(fields: [shiftId], references: [id])
+  period      AttTimePeriod?  @relation(fields: [periodId], references: [id])
   corrections AttCorrection[]
 
   @@index([employeeId, workDate])
   @@map("att_daily_records")
 }
 
-/// 考勤状态枚举
 enum AttendanceStatus {
   normal        // 正常
   late          // 迟到
@@ -325,29 +256,22 @@ enum AttendanceStatus {
 
 /// 补签记录表
 model AttCorrection {
-  /// 主键
   id             Int            @id @default(autoincrement())
-  /// 人员ID（被补签人）
   employeeId     Int            @map("employee_id")
-  /// 关联的每日记录ID
   dailyRecordId  BigInt         @map("daily_record_id")
-  /// 类型：check_in/check_out（补签到/补签退）
   type           CorrectionType
-  /// 补签时间
   correctionTime DateTime       @map("correction_time")
-  /// 操作人用户ID
   operatorId     Int            @map("operator_id")
-  /// 创建时间
+  remark         String?        @db.VarChar(200)
   createdAt      DateTime       @default(now()) @map("created_at")
 
   employee    Employee       @relation(fields: [employeeId], references: [id])
   dailyRecord AttDailyRecord @relation(fields: [dailyRecordId], references: [id])
-  operator    User           @relation("Operator", fields: [operatorId], references: [id])
+  operator    User           @relation("CorrectionOperator", fields: [operatorId], references: [id])
 
   @@map("att_corrections")
 }
 
-/// 补签类型枚举
 enum CorrectionType {
   check_in  // 补签到
   check_out // 补签退
@@ -355,33 +279,25 @@ enum CorrectionType {
 
 /// 请假/出差记录表
 model AttLeave {
-  /// 主键
-  id        Int         @id @default(autoincrement())
-  /// 人员ID
-  employeeId Int        @map("employee_id")
-  /// 类型：annual/sick/personal/business_trip...
-  type      LeaveType
-  /// 开始时间
-  startTime DateTime    @map("start_time")
-  /// 结束时间
-  endTime   DateTime    @map("end_time")
-  /// 备注/原因
-  reason    String?     @db.VarChar(500)
-  /// 申请时间
-  applyTime DateTime    @map("apply_time")
-  /// 状态：pending/approved/rejected
-  status    LeaveStatus @default(pending)
-  /// 创建时间
-  createdAt DateTime    @default(now()) @map("created_at")
-  /// 更新时间
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id         Int         @id @default(autoincrement())
+  employeeId Int         @map("employee_id")
+  type       LeaveType
+  startTime  DateTime    @map("start_time")
+  endTime    DateTime    @map("end_time")
+  reason     String?     @db.VarChar(500)
+  status     LeaveStatus @default(pending)
+  approverId Int?        @map("approver_id")
+  approvedAt DateTime?   @map("approved_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
 
   employee Employee @relation(fields: [employeeId], references: [id])
+  approver User?    @relation("LeaveApprover", fields: [approverId], references: [id])
 
+  @@index([employeeId, startTime, endTime])
   @@map("att_leaves")
 }
 
-/// 请假类型枚举
 enum LeaveType {
   annual        // 年假
   sick          // 病假
@@ -394,25 +310,9 @@ enum LeaveType {
   other         // 其他
 }
 
-/// 请假状态枚举
 enum LeaveStatus {
-  pending  // 待审批
-  approved // 已通过
-  rejected // 已拒绝
-}
-
-/// 考勤设置表
-model AttSetting {
-  /// 主键
-  id          Int      @id @default(autoincrement())
-  /// 设置键
-  key         String   @unique @db.VarChar(50)
-  /// 设置值
-  value       Json
-  /// 说明
-  description String?  @db.VarChar(200)
-  /// 更新时间
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("att_settings")
+  pending   // 待审批
+  approved  // 已通过
+  rejected  // 已拒绝
+  cancelled // 已撤销
 }
