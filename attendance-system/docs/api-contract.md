@@ -104,6 +104,62 @@ Authorization: Bearer <token>
 }
 ```
 
+---
+
+## 三、考勤核心模块（naruto）
+
+### GET /attendance/settings
+
+获取考勤全局配置
+
+**认证**: 需要
+
+**响应:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "key": "day_switch_time",
+      "value": "05:00",
+      "description": "考勤日切换时间"
+    }
+  ]
+}
+```
+
+### PUT /attendance/settings
+
+更新考勤全局配置
+
+**认证**: 需要
+
+**Request:**
+```json
+{
+  "items": [
+    {
+      "key": "day_switch_time",
+      "value": "04:00"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "key": "day_switch_time",
+      "value": "04:00",
+      "description": "考勤日切换时间"
+    }
+  ]
+}
+```
+
 ### GET /auth/me
 
 获取当前用户信息
@@ -451,33 +507,33 @@ Authorization: Bearer <token>
 
 创建时间段
 
-**请求体（普通时间段）：**
+**请求体（固定班制）：**
 ```json
 {
   "name": "标准工作时间",
-  "type": "normal",
-  "workStart": "09:00",
-  "workEnd": "18:00",
-  "checkInStart": "08:00",
-  "checkInEnd": "10:00",
-  "checkOutStart": "17:00",
-  "checkOutEnd": "20:00",
-  "requireCheckIn": true,
-  "requireCheckOut": true,
-  "lateRule": { "graceMinutes": 10 },
-  "earlyLeaveRule": { "graceMinutes": 10 }
+  "type": 0,
+  "startTime": "09:00",
+  "endTime": "18:00",
+  "restStartTime": "12:00",
+  "restEndTime": "13:00",
+  "rules": {
+    "lateGraceMinutes": 10,
+    "earlyLeaveGraceMinutes": 10
+  }
 }
 ```
 
-**请求体（弹性时间段）：**
+**请求体（弹性班制）：**
 ```json
 {
   "name": "弹性工作制",
-  "type": "flexible",
-  "flexCalcMethod": "first_last",
-  "flexMinInterval": 30,
-  "flexDailyHours": 8,
-  "flexDaySwitch": "05:00"
+  "type": 1,
+  "startTime": "09:00",
+  "endTime": "18:00",
+  "rules": {
+    "minWorkHours": 8,
+    "flexRangeMinutes": 60
+  }
 }
 ```
 

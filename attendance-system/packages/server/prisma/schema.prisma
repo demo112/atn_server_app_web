@@ -96,42 +96,29 @@ model Department {
 
 /// 时间段表 - 定义上下班时间
 model AttTimePeriod {
-  id                 Int             @id @default(autoincrement())
-  name               String          @db.VarChar(100)
-  type               TimePeriodType  @default(normal)
-  workStart          DateTime?       @map("work_start") @db.Time()
-  workEnd            DateTime?       @map("work_end") @db.Time()
-  checkInStart       DateTime?       @map("check_in_start") @db.Time()
-  checkInEnd         DateTime?       @map("check_in_end") @db.Time()
-  checkOutStart      DateTime?       @map("check_out_start") @db.Time()
-  checkOutEnd        DateTime?       @map("check_out_end") @db.Time()
-  requireCheckIn     Boolean         @default(true) @map("require_check_in")
-  requireCheckOut    Boolean         @default(true) @map("require_check_out")
-  lateRule           Json?           @map("late_rule")
-  earlyLeaveRule     Json?           @map("early_leave_rule")
-  absentCheckInRule  Json?           @map("absent_check_in_rule")
-  absentCheckOutRule Json?           @map("absent_check_out_rule")
-  flexCalcMethod     FlexCalcMethod? @map("flex_calc_method")
-  flexMinInterval    Int?            @map("flex_min_interval")
-  flexDailyHours     Decimal?        @map("flex_daily_hours") @db.Decimal(4, 2)
-  flexDaySwitch      DateTime?       @map("flex_day_switch") @db.Time()
-  createdAt          DateTime        @default(now()) @map("created_at")
-  updatedAt          DateTime        @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  type        Int      @default(0) @db.TinyInt // 0:固定班制, 1:弹性班制
+  
+  // 工作时间
+  startTime   String   @map("start_time") @db.Char(5) // HH:mm
+  endTime     String   @map("end_time") @db.Char(5)   // HH:mm
+  
+  // 休息时间
+  restStartTime String? @map("rest_start_time") @db.Char(5)
+  restEndTime   String? @map("rest_end_time") @db.Char(5)
+  
+  // 规则配置
+  rules       Json?
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  shiftPeriods AttShiftPeriod[]
+  // 关联
+  shifts       AttShiftPeriod[]
   dailyRecords AttDailyRecord[]
 
   @@map("att_time_periods")
-}
-
-enum TimePeriodType {
-  normal   // 普通时间段
-  flexible // 弹性时间段
-}
-
-enum FlexCalcMethod {
-  first_last // 首尾打卡计算
-  pair       // 两两打卡累积
 }
 
 /// 班次表
