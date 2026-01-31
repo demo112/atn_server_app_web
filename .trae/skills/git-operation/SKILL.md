@@ -13,6 +13,43 @@ description: 执行Git操作（提交、分支等），遵循提交规范，每�
 
 ---
 
+## ⚠️ 强制规则（必须遵守）
+
+### 规则 1: 全中文描述
+
+**所有 commit message 必须使用中文**，禁止出现英文动词。
+
+### 规则 2: 禁止模糊描述
+
+禁止使用 "修复 bug", "更新文档" 等模糊描述，必须说明具体做了什么。
+
+### 规则 3: 标题必须具体
+
+标题行必须回答：**做了什么 + 为什么/解决什么问题**。
+
+### 规则 4: 冲突处理策略
+
+**AI 判断必须完全基于 `.trae/specs/{feature}/requirements.md` 文档**。禁止无依据猜测。
+
+### 规则 5: 非交互式执行
+
+在自动化执行 Git 命令时，**必须**使用 `--no-pager` 参数，防止命令挂起：
+
+```bash
+git --no-pager status
+git --no-pager diff
+git --no-pager log
+git --no-pager show
+git --no-pager branch
+git --no-pager tag
+```
+
+### 规则 6: Push 前必须编译通过
+
+**禁止推送编译失败的代码**。Push 前必须执行 `npm run build`。
+
+---
+
 ## 激活方式
 
 ### 触发场景

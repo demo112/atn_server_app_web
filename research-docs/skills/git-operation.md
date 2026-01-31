@@ -83,6 +83,9 @@ description: 执行Git操作（提交、分支等），遵循提交规范，每�
 git --no-pager status
 git --no-pager diff
 git --no-pager log
+git --no-pager show
+git --no-pager branch
+git --no-pager tag
 ```
 
 ### 规则 6: Push 前必须编译通过
