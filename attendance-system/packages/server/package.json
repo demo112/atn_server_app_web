@@ -5,7 +5,8 @@
   "main": "dist/server/src/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "vitest",
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "dev": "ts-node-dev --respawn src/index.ts",
     "start": "node dist/server/src/index.js",
     "db:generate": "prisma generate",

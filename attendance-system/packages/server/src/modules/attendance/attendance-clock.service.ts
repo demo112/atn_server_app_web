@@ -1,6 +1,7 @@
 import { prisma } from '../../common/db/prisma';
 import { CreateClockDto, ClockQueryDto, AttClockRecordVo } from './attendance-clock.dto';
 import { Prisma } from '@prisma/client';
+import invariant from 'tiny-invariant';
 
 export class AttendanceClockService {
   
@@ -31,6 +32,37 @@ export class AttendanceClockService {
    * 创建打卡记录
    */
   async create(data: CreateClockDto) {
+    // 维度2: Consistency - 前置条件断言
+    if (data.employeeId <= 0) {
+      throw new Error('ERR_EMPLOYEE_NOT_FOUND');
+    }
+    invariant(data.type, 'Clock type is required');
+    invariant(data.source, 'Clock source is required');
+
+    const clockTime = data.clockTime ? new Date(data.clockTime) : new Date();
+    const now = new Date();
+
+    // 1. 禁止未来时间打卡 (允许 1 分钟容错)
+    if (clockTime.getTime() > now.getTime() + 60 * 1000) {
+      throw new Error('ERR_CLOCK_FUTURE_TIME_NOT_ALLOWED');
+    }
+
+    // 2. 处理重复打卡 (1 分钟内禁止重复)
+    const lastClock = await prisma.attClockRecord.findFirst({
+      where: {
+        employeeId: data.employeeId,
+        clockTime: {
+          gte: new Date(clockTime.getTime() - 60 * 1000),
+          lte: clockTime
+        }
+      },
+      orderBy: { clockTime: 'desc' }
+    });
+
+    if (lastClock) {
+      throw new Error('ERR_CLOCK_TOO_FREQUENT');
+    }
+
     // 检查员工是否存在
     const employee = await prisma.employee.findUnique({
       where: { id: data.employeeId }
@@ -43,7 +75,7 @@ export class AttendanceClockService {
     const record = await prisma.attClockRecord.create({
       data: {
         employeeId: data.employeeId,
-        clockTime: data.clockTime ? new Date(data.clockTime) : new Date(),
+        clockTime: clockTime,
         type: data.type,
         source: data.source,
         deviceInfo: data.deviceInfo ?? Prisma.JsonNull,
