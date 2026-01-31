@@ -174,13 +174,12 @@ description: 保持文档与代码同步，每个Task完成后自动更新相关
 
 | 触发事件 | 更新文档 |
 |---------|---------|
-| 需求分析完成 | requirements/*.md |
-| 设计完成 | design/*.md |
-| API变更 | api/*.md |
-| 数据库变更 | database/*.md |
-| 任务状态变化 | progress/*.md |
-| 做出决策 | decisions/*.md |
-| 遇到/解决问题 | issues/*.md |
+| 需求分析完成 | features/{SPEC_ID}/requirements.md |
+| 设计完成 | features/{SPEC_ID}/design.md |
+| 任务拆分完成 | features/{SPEC_ID}/tasks.md |
+| API变更 | api-contract.md |
+| 数据库变更 | database-design.md |
+| 任务状态变化 | progress/YYYY-MM-DD.md |
 | 代码提交 | changelog.md |
 
 ### 阶段一：识别变更
@@ -346,15 +345,27 @@ description: 保持文档与代码同步，每个Task完成后自动更新相关
 
 ```
 attendance-system/docs/
-├── requirements/    # 需求文档
-├── design/          # 设计文档
-├── api/             # API文档
-├── database/        # 数据库文档
-├── progress/        # 进度文档
-├── decisions/       # 决策记录
-├── issues/          # 问题记录
-└── changelog.md     # 变更日志
+├── api-contract.md          # API 契约（全局）
+├── database-design.md       # 数据库设计（全局）
+├── requirements.md          # 需求规格（全局）
+├── requirement-analysis.md  # 需求分析（全局）
+├── project-roadmap.md       # 项目路线图
+├── task-backlog.md          # 任务清单
+├── changelog.md             # 变更日志
+├── deployment.md            # 部署文档
+├── progress/                # 进展日志（按日期 YYYY-MM-DD.md）
+└── features/                # 功能文档（按规格编号）
+    └── {SPEC_ID}/
+        ├── requirements.md  # 需求文档
+        ├── design.md        # 设计文档
+        └── tasks.md         # 任务拆分
 ```
+
+### 文档命名规范
+
+- 功能目录：使用规格编号，全大写（如 `SW62/`、`UA1/`）
+- 文档文件：统一英文 kebab-case（如 `design.md`，禁止 `设计文档.md`）
+- 进展日志：日期格式 `YYYY-MM-DD.md`
 
 ### API文档模板
 

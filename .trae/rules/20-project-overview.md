@@ -81,5 +81,6 @@
 | 项目路线图 | attendance-system/docs/project-roadmap.md |
 | 任务清单 | attendance-system/docs/task-backlog.md |
 | API 契约 | attendance-system/docs/api-contract.md |
+| 功能文档 | attendance-system/docs/features/{SPEC_ID}/ |
 | 共享类型 | attendance-system/packages/shared/src/types/index.ts |
 | Prisma Schema | attendance-system/packages/server/prisma/schema.prisma |

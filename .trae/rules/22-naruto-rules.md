@@ -117,4 +117,6 @@
 
 当前 Sprint 任务请参考：attendance-system/docs/task-backlog.md
 
+功能文档位置：attendance-system/docs/features/{SPEC_ID}/（如 SW62、SW63、SW64 等）
+
 筛选条件：负责人 = naruto

@@ -70,5 +70,6 @@ packages/server/src/
 - 项目路线图：#[[file:docs/project-roadmap.md]]
 - 任务清单：#[[file:docs/task-backlog.md]]
 - API 契约：#[[file:docs/api-contract.md]]
+- 功能文档：docs/features/{SPEC_ID}/（requirements.md、design.md、tasks.md）
 - 共享类型：#[[file:packages/shared/src/types/index.ts]]
 - Prisma Schema：#[[file:packages/server/prisma/schema.prisma]]
