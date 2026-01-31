@@ -101,8 +101,8 @@ model AttTimePeriod {
   type Int    @default(0) @db.TinyInt // 0:固定班制, 1:弹性班制
 
   // 工作时间
-  startTime String @map("start_time") @db.Char(5) // HH:mm
-  endTime   String @map("end_time") @db.Char(5) // HH:mm
+  startTime String? @map("start_time") @db.Char(5) // HH:mm
+  endTime   String? @map("end_time") @db.Char(5) // HH:mm
 
   // 休息时间
   restStartTime String? @map("rest_start_time") @db.Char(5)

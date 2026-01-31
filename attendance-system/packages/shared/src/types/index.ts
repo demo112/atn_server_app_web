@@ -78,30 +78,49 @@ export interface Department {
 // 考勤配置模块类型 (naruto 负责)
 // ============================================
 
-export type TimePeriodType = 'normal' | 'flexible';
-export type FlexCalcMethod = 'first_last' | 'pair';
-
 export interface TimePeriod {
   id: number;
   name: string;
-  type: TimePeriodType;
-  workStart?: string;  // HH:mm
-  workEnd?: string;    // HH:mm
-  checkInStart?: string;
-  checkInEnd?: string;
-  checkOutStart?: string;
-  checkOutEnd?: string;
-  requireCheckIn: boolean;
-  requireCheckOut: boolean;
-  lateRule?: LateRule;
-  earlyLeaveRule?: EarlyLeaveRule;
-  absentCheckInRule?: AbsentRule;
-  absentCheckOutRule?: AbsentRule;
-  flexCalcMethod?: FlexCalcMethod;
-  flexMinInterval?: number;  // 分钟
-  flexDailyHours?: number;   // 小时
-  flexDaySwitch?: string;    // HH:mm
+  type: number; // 0:固定, 1:弹性
+  startTime?: string;
+  endTime?: string;
+  restStartTime?: string;
+  restEndTime?: string;
+  rules?: TimePeriodRules;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export interface TimePeriodRules {
+  // 弹性规则
+  minWorkHours?: number; // 最小工时（分钟）
+  maxWorkHours?: number;
+  
+  // 宽限规则
+  lateGraceMinutes?: number; // 迟到宽限
+  earlyLeaveGraceMinutes?: number; // 早退宽限
+  
+  // 打卡窗口
+  checkInStartOffset?: number; // 上班前多久可打卡
+  checkInEndOffset?: number; // 上班后多久可打卡
+  checkOutStartOffset?: number;
+  checkOutEndOffset?: number;
+  
+  // 旷工规则
+  absentTime?: number; // 迟到超过多少分钟算旷工
+}
+
+export interface CreateTimePeriodDto {
+  name: string;
+  type: number;
+  startTime?: string;
+  endTime?: string;
+  restStartTime?: string;
+  restEndTime?: string;
+  rules?: TimePeriodRules;
+}
+
+export interface UpdateTimePeriodDto extends Partial<CreateTimePeriodDto> {}
 
 // 异常规则类型
 export interface LateRule {
