@@ -4,7 +4,7 @@
 
 | 模块 | 负责人 | 表前缀 |
 |------|--------|--------|
-| 用户/组织 | 人A | `user_`, `dept_`, `device_` |
+| 用户/组织 | 人A | `user_`, `dept_` |
 | 考勤 | 人B | `att_` |
 
 ---
@@ -47,21 +47,6 @@
 | name | VARCHAR(100) | 部门名称 |
 | parent_id | INT | 父部门ID，自引用 |
 | sort_order | INT | 排序 |
-| created_at | DATETIME | 创建时间 |
-| updated_at | DATETIME | 更新时间 |
-
-#### devices - 设备表
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | INT | 主键 |
-| name | VARCHAR(100) | 设备名称 |
-| sn | VARCHAR(100) | 设备序列号，唯一 |
-| type | ENUM | face/fingerprint/card |
-| location | VARCHAR(200) | 安装位置 |
-| supports_temperature | BOOLEAN | 是否支持体温检测 |
-| supports_mask | BOOLEAN | 是否支持口罩检测 |
-| status | ENUM | online/offline/disabled |
 | created_at | DATETIME | 创建时间 |
 | updated_at | DATETIME | 更新时间 |
 
@@ -133,10 +118,8 @@
 |------|------|------|
 | id | BIGINT | 主键 |
 | employee_id | INT | 人员ID |
-| device_id | INT | 设备ID |
+| clock_type | ENUM | app/web（APP打卡/Web手动打卡） |
 | clock_time | DATETIME | 打卡时间 |
-| temperature | DECIMAL(3,1) | 体温 |
-| mask_status | ENUM | none/wearing/not_wearing |
 | created_at | DATETIME | 创建时间 |
 
 #### att_daily_records - 每日考勤记录表
