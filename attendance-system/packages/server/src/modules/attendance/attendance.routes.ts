@@ -2,14 +2,20 @@ import { Router } from 'express';
 import { attendanceSettingsController } from './attendance-settings.controller';
 import { AttendancePeriodController } from './attendance-period.controller';
 import { AttendanceShiftController } from './attendance-shift.controller';
+import { AttendanceClockController } from './attendance-clock.controller';
 
 const router = Router();
 const periodController = new AttendancePeriodController();
 const shiftController = new AttendanceShiftController();
+const clockController = new AttendanceClockController();
 
 // 考勤设置路由
 router.get('/settings', attendanceSettingsController.getSettings);
 router.put('/settings', attendanceSettingsController.updateSettings);
+
+// 打卡记录路由
+router.post('/clock', clockController.create.bind(clockController));
+router.get('/clock', clockController.getList.bind(clockController));
 
 // 时间段管理路由
 router.get('/time-periods', periodController.getList.bind(periodController));

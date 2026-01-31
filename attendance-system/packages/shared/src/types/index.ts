@@ -149,13 +149,17 @@ export interface Schedule {
 // 考勤数据模块类型 (naruto 负责)
 // ============================================
 
-export type ClockType = 'app' | 'web';
+export type ClockType = 'sign_in' | 'sign_out';
+export type ClockSource = 'app' | 'web' | 'device';
 
 export interface ClockRecord {
-  id: number;
+  id: string;
   employeeId: number;
   clockTime: string;  // ISO datetime
-  clockType: ClockType;
+  type: ClockType;
+  source: ClockSource;
+  deviceInfo?: any;
+  location?: any;
   operatorId?: number;
   remark?: string;
   createdAt: string;
@@ -163,6 +167,7 @@ export interface ClockRecord {
   employeeNo?: string;
   employeeName?: string;
   deptName?: string;
+  operatorName?: string;
 }
 
 export type AttendanceStatus =
@@ -280,7 +285,8 @@ export interface ClockRecordQuery extends QueryParams {
   endTime?: string;
   deptId?: number;
   employeeId?: number;
-  clockType?: ClockType;
+  type?: ClockType;
+  source?: ClockSource;
 }
 
 export interface DailyRecordQuery extends QueryParams {

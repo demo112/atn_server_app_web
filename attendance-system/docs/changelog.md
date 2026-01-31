@@ -1,17 +1,15 @@
-# 变更日志
+# Changelog
 
-## [2026-01-31]
+All notable changes to this project will be documented in this file.
 
-### 新增
-- feat(attendance): 新增班次管理功能 (SW64)
-  - 新增 AttendanceShiftService 实现班次 CRUD
-  - 新增 RESTful 接口 /api/v1/attendance/shifts
-  - 实现班次与时间段的按天聚合配置
-- feat(attendance): 新增时间段配置功能 (SW63)
-  - 新增 AttendancePeriodService 实现时间段 CRUD
-  - 新增 RESTful 接口 /api/v1/attendance/time-periods
-  - 更新 AttTimePeriod 数据模型支持固定/弹性班制
-- feat(attendance): 新增考勤系统基础设置功能 (SW62)
-  - 新增 AttendanceSettingsService 实现默认配置初始化
-  - 新增 RESTful 接口 GET/PUT /api/v1/attendance/settings
-  - 集成 Prisma AttSetting 模型
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- **[SW69] 原始考勤/打卡功能**
+  - 数据层: 更新 `AttClockRecord` 模型，支持 `ClockType` (签到/签退) 和 `ClockSource` (App/Web/Device)
+  - 服务层: 实现打卡记录的创建与查询逻辑，支持关联信息 (员工/部门/操作人) 返回
+  - 接口层: 新增 `POST /api/v1/attendance/clock` (打卡) 和 `GET /api/v1/attendance/clock` (查询) 接口
+  - 规范: 完善 API 契约文档，定义打卡相关接口规范
