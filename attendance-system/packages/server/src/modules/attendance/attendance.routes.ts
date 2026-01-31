@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { attendanceSettingsController } from './attendance-settings.controller';
 import { AttendancePeriodController } from './attendance-period.controller';
+import { AttendanceShiftController } from './attendance-shift.controller';
 
 const router = Router();
 const periodController = new AttendancePeriodController();
+const shiftController = new AttendanceShiftController();
 
 // 考勤设置路由
 router.get('/settings', attendanceSettingsController.getSettings);
@@ -15,5 +17,12 @@ router.get('/time-periods/:id', periodController.getById.bind(periodController))
 router.post('/time-periods', periodController.create.bind(periodController));
 router.put('/time-periods/:id', periodController.update.bind(periodController));
 router.delete('/time-periods/:id', periodController.delete.bind(periodController));
+
+// 班次管理路由
+router.get('/shifts', shiftController.getList.bind(shiftController));
+router.get('/shifts/:id', shiftController.getById.bind(shiftController));
+router.post('/shifts', shiftController.create.bind(shiftController));
+router.put('/shifts/:id', shiftController.update.bind(shiftController));
+router.delete('/shifts/:id', shiftController.delete.bind(shiftController));
 
 export const attendanceRouter = router;

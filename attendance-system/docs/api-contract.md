@@ -562,19 +562,7 @@ Authorization: Bearer <token>
       "id": 1,
       "name": "标准班",
       "cycleDays": 7,
-      "periods": [
-        {
-          "id": 1,
-          "dayOfCycle": 1,
-          "sortOrder": 0,
-          "period": {
-            "id": 1,
-            "name": "标准工作时间",
-            "workStart": "09:00",
-            "workEnd": "18:00"
-          }
-        }
-      ]
+      "createdAt": "2026-02-01T00:00:00Z"
     }
   ]
 }
@@ -582,7 +570,32 @@ Authorization: Bearer <token>
 
 ### GET /attendance/shifts/:id
 
-获取单个班次
+获取单个班次详情
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "标准班",
+    "cycleDays": 7,
+    "days": [
+      {
+        "dayOfCycle": 1,
+        "periods": [
+          {
+            "id": 1,
+            "name": "标准工作时间",
+            "startTime": "09:00",
+            "endTime": "18:00"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 ### POST /attendance/shifts
 
@@ -593,12 +606,15 @@ Authorization: Bearer <token>
 {
   "name": "标准班",
   "cycleDays": 7,
-  "periods": [
-    { "periodId": 1, "dayOfCycle": 1, "sortOrder": 0 },
-    { "periodId": 1, "dayOfCycle": 2, "sortOrder": 0 },
-    { "periodId": 1, "dayOfCycle": 3, "sortOrder": 0 },
-    { "periodId": 1, "dayOfCycle": 4, "sortOrder": 0 },
-    { "periodId": 1, "dayOfCycle": 5, "sortOrder": 0 }
+  "days": [
+    {
+      "dayOfCycle": 1,
+      "periodIds": [1]
+    },
+    {
+      "dayOfCycle": 2,
+      "periodIds": [1]
+    }
   ]
 }
 ```
@@ -606,6 +622,19 @@ Authorization: Bearer <token>
 ### PUT /attendance/shifts/:id
 
 更新班次
+
+**请求体：**
+```json
+{
+  "name": "新标准班",
+  "days": [
+    {
+      "dayOfCycle": 1,
+      "periodIds": [2]
+    }
+  ]
+}
+```
 
 ### DELETE /attendance/shifts/:id
 
