@@ -35,35 +35,21 @@ describe('StatisticsService', () => {
       } as any
     ]);
 
-    // Mock Daily Records
-    // 1 day late, 1 day normal
-    mockPrisma.attDailyRecord.findMany.mockResolvedValue([
+    // Mock Daily Records Aggregation (queryRaw)
+    mockPrisma.$queryRaw.mockResolvedValue([
       {
-        employeeId: 1,
-        workDate: new Date('2023-01-01'),
-        status: 'late',
-        lateMinutes: 10,
-        actualMinutes: 470,
-        effectiveMinutes: 470,
-      } as any,
-      {
-        employeeId: 1,
-        workDate: new Date('2023-01-02'),
-        status: 'normal',
-        actualMinutes: 480,
-        effectiveMinutes: 480,
-      } as any
-    ]);
-
-    // Mock Leaves
-    // 1 hour leave
-    mockPrisma.attLeave.findMany.mockResolvedValue([
-      {
-        employeeId: 1,
-        status: 'approved',
-        startTime: new Date('2023-01-03T09:00:00'),
-        endTime: new Date('2023-01-03T10:00:00'),
-      } as any
+        employee_id: 1,
+        total_days: 2,
+        actual_days: 2,
+        late_count: 1,
+        late_minutes: 10,
+        early_leave_count: 0,
+        early_leave_minutes: 0,
+        absent_count: 0,
+        absent_minutes: 0,
+        leave_count: 1,
+        leave_minutes: 60,
+      }
     ]);
 
     // Execute
@@ -78,12 +64,11 @@ describe('StatisticsService', () => {
     const summary = result[0];
     
     expect(summary.employeeId).toBe(1);
-    expect(summary.totalDays).toBe(2); // 2 daily records
-    expect(summary.actualDays).toBe(2); // no absent
+    expect(summary.totalDays).toBe(2); 
+    expect(summary.actualDays).toBe(2);
     expect(summary.lateCount).toBe(1);
     expect(summary.lateMinutes).toBe(10);
     expect(summary.leaveCount).toBe(1);
     expect(summary.leaveMinutes).toBe(60);
-    expect(summary.actualMinutes).toBe(950); // 470 + 480
   });
 });

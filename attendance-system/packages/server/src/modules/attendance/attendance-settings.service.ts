@@ -45,6 +45,9 @@ export class AttendanceSettingsService {
     if (!result.day_switch_time) {
       result.day_switch_time = '05:00';
     }
+    if (!result.auto_calc_time) {
+      result.auto_calc_time = '05:00';
+    }
 
     return result as AttendanceSettings;
   }
@@ -54,12 +57,13 @@ export class AttendanceSettingsService {
    */
   async updateSettings(dto: UpdateSettingsDto): Promise<AttendanceSettings> {
     this.logger.info({ dto }, 'System - Updating settings');
-    // 目前只支持更新 day_switch_time，后续可扩展
+    
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
+    // 更新 day_switch_time
     if (dto.day_switch_time) {
-      // 简单的格式校验
-      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
       if (!timeRegex.test(dto.day_switch_time)) {
-        throw AppError.badRequest('Invalid time format', 'ERR_INVALID_TIME_FORMAT');
+        throw AppError.badRequest('Invalid time format for day_switch_time', 'ERR_INVALID_TIME_FORMAT');
       }
 
       await prisma.attSetting.upsert({
@@ -69,6 +73,23 @@ export class AttendanceSettingsService {
           key: 'day_switch_time',
           value: dto.day_switch_time,
           description: '考勤日切换时间',
+        },
+      });
+    }
+
+    // 更新 auto_calc_time
+    if (dto.auto_calc_time) {
+      if (!timeRegex.test(dto.auto_calc_time)) {
+        throw AppError.badRequest('Invalid time format for auto_calc_time', 'ERR_INVALID_TIME_FORMAT');
+      }
+
+      await prisma.attSetting.upsert({
+        where: { key: 'auto_calc_time' },
+        update: { value: dto.auto_calc_time },
+        create: {
+          key: 'auto_calc_time',
+          value: dto.auto_calc_time,
+          description: '自动计算时间',
         },
       });
     }

@@ -91,6 +91,18 @@
 | 预计 | 10 分钟 |
 | 依赖 | Task 2 |
 
+#### Task 7: App 端用户管理
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/services/user.ts`<br>`packages/app/src/screens/organization/user/UserListScreen.tsx`<br>`packages/app/src/screens/organization/user/UserEditScreen.tsx` |
+| 操作 | 新增 |
+| 内容 | 1. 封装 User API (CRUD)<br>2. 用户列表与搜索<br>3. 用户编辑与角色分配 |
+| 验证 | Admin 登录后可管理用户 |
+| 预计 | 30 分钟 |
+| 状态 | ✅ 已完成 |
+| 依赖 | UA3-Task9 (入口) |
+
 ## 检查点策略
 
 | 时机 | 操作 |

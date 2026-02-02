@@ -82,6 +82,32 @@
 | 验证 | 业务流程通畅，无报错 |
 | 状态 | ✅ 已完成 |
 
+### 阶段5：App端实现 (App)
+
+#### Task 8: App端员工Service与列表
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/services/employee.ts`<br>`packages/app/src/screens/organization/employee/EmployeeListScreen.tsx` |
+| 操作 | 新增 |
+| 内容 | 1. 封装 Employee API<br>2. 员工列表展示 (含搜索) |
+| 验证 | 模拟器查看列表，搜索功能正常 |
+| 预计 | 20 分钟 |
+| 状态 | ✅ 已完成 |
+| 依赖 | UA3-Task9 (入口) |
+
+#### Task 9: App端员工详情与编辑
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/screens/organization/employee/EmployeeDetailScreen.tsx`<br>`packages/app/src/screens/organization/employee/EmployeeEditScreen.tsx` |
+| 操作 | 新增 |
+| 内容 | 1. 员工详情展示<br>2. 新增/编辑表单 (含部门选择) |
+| 验证 | 增删改流程测试通过 |
+| 预计 | 30 分钟 |
+| 状态 | ✅ 已完成 |
+| 依赖 | Task 8, UA3-Task7 (部门选择器) |
+
 ## 检查点策略
 
 | 时机 | 操作 |

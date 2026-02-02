@@ -1,12 +1,12 @@
 
 import { prisma } from '../../common/db/prisma';
 import { GetSummaryDto, AttendanceSummaryVo } from '@attendance/shared';
+import { Prisma } from '@prisma/client';
 
 export class StatisticsService {
   async getDepartmentSummary(dto: GetSummaryDto): Promise<AttendanceSummaryVo[]> {
     const { startDate, endDate, deptId, employeeId } = dto;
     
-    // 简单处理日期范围
     const queryStart = new Date(startDate + 'T00:00:00');
     const queryEnd = new Date(endDate + 'T23:59:59.999');
 
@@ -28,102 +28,58 @@ export class StatisticsService {
 
     const employeeIds = employees.map(e => e.id);
 
-    // 2. 获取每日考勤记录
-    const dailyRecords = await prisma.attDailyRecord.findMany({
-      where: {
-        employeeId: { in: employeeIds },
-        workDate: {
-          gte: queryStart,
-          lte: queryEnd,
-        },
-      },
-    });
+    // 2. 使用聚合查询获取统计数据
+    // 注意: Prisma queryRaw 返回的大数类型 (BigInt) 需要转换，但在聚合函数结果中通常是 number 或 string
+    const aggregations = await prisma.$queryRaw<any[]>`
+      SELECT 
+        employee_id,
+        COUNT(*) as total_days,
+        SUM(CASE WHEN status IN ('normal', 'late', 'early_leave') THEN 1 ELSE 0 END) as actual_days,
+        SUM(CASE WHEN late_minutes > 0 THEN 1 ELSE 0 END) as late_count,
+        SUM(COALESCE(late_minutes, 0)) as late_minutes,
+        SUM(CASE WHEN early_leave_minutes > 0 THEN 1 ELSE 0 END) as early_leave_count,
+        SUM(COALESCE(early_leave_minutes, 0)) as early_leave_minutes,
+        SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent_count,
+        SUM(COALESCE(absent_minutes, 0)) as absent_minutes,
+        SUM(CASE WHEN leave_minutes > 0 THEN 1 ELSE 0 END) as leave_count,
+        SUM(COALESCE(leave_minutes, 0)) as leave_minutes
+      FROM att_daily_records
+      WHERE employee_id IN (${Prisma.join(employeeIds)})
+        AND work_date >= ${queryStart}
+        AND work_date <= ${queryEnd}
+      GROUP BY employee_id
+    `;
 
-    // 3. 获取请假记录
-    const leaves = await prisma.attLeave.findMany({
-      where: {
-        employeeId: { in: employeeIds },
-        status: 'approved',
-        OR: [
-          { startTime: { lte: queryEnd }, endTime: { gte: queryStart } }
-        ]
-      },
-    });
+    // 3. 组装结果
+    const summaryMap = new Map<number, any>();
+    for (const agg of aggregations) {
+      summaryMap.set(Number(agg.employee_id), agg);
+    }
 
-    // 4. 聚合数据
-    const summaryMap = new Map<number, AttendanceSummaryVo>();
-
-    // 初始化 VO
-    for (const emp of employees) {
-      summaryMap.set(emp.id, {
+    const result: AttendanceSummaryVo[] = employees.map(emp => {
+      const agg = summaryMap.get(emp.id) || {};
+      
+      return {
         employeeId: emp.id,
         employeeNo: emp.employeeNo,
         employeeName: emp.name,
         deptId: emp.deptId || 0,
         deptName: emp.department?.name || '未分配',
-        totalDays: 0,
-        actualDays: 0,
-        lateCount: 0,
-        lateMinutes: 0,
-        earlyLeaveCount: 0,
-        earlyLeaveMinutes: 0,
-        absentCount: 0,
-        absentMinutes: 0,
-        leaveCount: 0,
-        leaveMinutes: 0,
-        actualMinutes: 0,
-        effectiveMinutes: 0,
-      });
-    }
+        totalDays: Number(agg.total_days || 0),
+        actualDays: Number(agg.actual_days || 0),
+        lateCount: Number(agg.late_count || 0),
+        lateMinutes: Number(agg.late_minutes || 0),
+        earlyLeaveCount: Number(agg.early_leave_count || 0),
+        earlyLeaveMinutes: Number(agg.early_leave_minutes || 0),
+        absentCount: Number(agg.absent_count || 0),
+        absentMinutes: Number(agg.absent_minutes || 0),
+        leaveCount: Number(agg.leave_count || 0),
+        leaveMinutes: Number(agg.leave_minutes || 0),
+        actualMinutes: 0, // 暂不统计
+        effectiveMinutes: 0, // 暂不统计
+      };
+    });
 
-    // 聚合 DailyRecords
-    for (const record of dailyRecords) {
-      const vo = summaryMap.get(record.employeeId);
-      if (!vo) continue;
-
-      vo.totalDays++;
-      
-      if (record.status !== 'absent') {
-          vo.actualDays++;
-      }
-
-      if ((record.lateMinutes || 0) > 0) {
-        vo.lateMinutes += record.lateMinutes || 0;
-        vo.lateCount++;
-      }
-
-      if ((record.earlyLeaveMinutes || 0) > 0) {
-        vo.earlyLeaveMinutes += record.earlyLeaveMinutes || 0;
-        vo.earlyLeaveCount++;
-      }
-
-      if (record.status === 'absent') {
-        vo.absentMinutes += record.absentMinutes || 0;
-        vo.absentCount++;
-      }
-
-      vo.actualMinutes += record.actualMinutes || 0;
-      vo.effectiveMinutes += record.effectiveMinutes || 0;
-    }
-
-    // 聚合 Leaves
-    for (const leave of leaves) {
-      const vo = summaryMap.get(leave.employeeId);
-      if (!vo) continue;
-
-      vo.leaveCount++;
-      
-      // 计算交集时长
-      const leaveStart = leave.startTime < queryStart ? queryStart : leave.startTime;
-      const leaveEnd = leave.endTime > queryEnd ? queryEnd : leave.endTime;
-      const durationMs = leaveEnd.getTime() - leaveStart.getTime();
-      
-      if (durationMs > 0) {
-         const minutes = Math.floor(durationMs / 1000 / 60);
-         vo.leaveMinutes += minutes;
-      }
-    }
-
-    return Array.from(summaryMap.values());
+    return result;
   }
 }

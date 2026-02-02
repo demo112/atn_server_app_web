@@ -1,10 +1,24 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { clearAuth } from '../utils/auth';
+import { clearAuth, getUser } from '../utils/auth';
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const loadUser = async () => {
+    try {
+      const userData = await getUser();
+      setUser(userData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleLogout = async () => {
     await clearAuth();
@@ -14,15 +28,21 @@ const HomeScreen = () => {
     });
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>考勤助手</Text>
+        <View>
+          <Text style={styles.title}>考勤助手</Text>
+          {user && <Text style={styles.subtitle}>你好, {user.name}</Text>}
+        </View>
         <TouchableOpacity onPress={handleLogout}>
           <Text style={styles.logoutText}>退出</Text>
         </TouchableOpacity>
       </View>
 
+      <Text style={styles.sectionTitle}>常用功能</Text>
       <View style={styles.grid}>
         <TouchableOpacity 
           style={styles.card} 
@@ -64,7 +84,38 @@ const HomeScreen = () => {
           <Text style={styles.cardTitle}>我的排班</Text>
         </TouchableOpacity>
       </View>
-    </View>
+
+      {isAdmin && (
+        <>
+          <Text style={styles.sectionTitle}>管理中心</Text>
+          <View style={styles.grid}>
+            <TouchableOpacity 
+              style={styles.card} 
+              onPress={() => navigation.navigate('DepartmentList')}
+            >
+              <Text style={styles.cardIcon}>🏢</Text>
+              <Text style={styles.cardTitle}>部门管理</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.card} 
+              onPress={() => navigation.navigate('EmployeeList')}
+            >
+              <Text style={styles.cardIcon}>👥</Text>
+              <Text style={styles.cardTitle}>人员管理</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.card} 
+              onPress={() => navigation.navigate('UserList')}
+            >
+              <Text style={styles.cardIcon}>👤</Text>
+              <Text style={styles.cardTitle}>用户管理</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </ScrollView>
   );
 };
 
@@ -86,9 +137,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
   logoutText: {
     color: '#ff4d4f',
     fontSize: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+    marginTop: 10,
   },
   grid: {
     flexDirection: 'row',

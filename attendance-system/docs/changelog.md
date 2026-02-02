@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **[SW70] 考勤汇总与定时计算**
+  - 架构: 采用每日定时预计算 (BullMQ) + 实时SQL聚合的混合模式
+  - Server: 实现 `AttendanceScheduler` 定时任务，优化 `StatisticsService` 聚合查询
+  - Web: 新增考勤汇总页面 (支持导出Excel)，考勤配置增加 `auto_calc_time` 选项
+  - API: 新增 `POST /statistics/calculate` 手动触发接口
+
 - **[UA1] 用户管理与认证**
   - 服务层: 实现 Auth 模块 (登录/JWT) 和 User 模块 (CRUD)
   - Web端: 实现登录页面和用户管理页面

@@ -9,6 +9,12 @@ import LeaveScreen from './screens/attendance/LeaveScreen';
 import CorrectionScreen from './screens/attendance/CorrectionScreen';
 import HistoryScreen from './screens/attendance/HistoryScreen';
 import ScheduleScreen from './screens/attendance/ScheduleScreen';
+import { DepartmentListScreen } from './screens/organization/department/DepartmentListScreen';
+import { DepartmentEditScreen } from './screens/organization/department/DepartmentEditScreen';
+import { EmployeeListScreen } from './screens/organization/employee/EmployeeListScreen';
+import { EmployeeEditScreen } from './screens/organization/employee/EmployeeEditScreen';
+import { UserListScreen } from './screens/organization/user/UserListScreen';
+import { UserEditScreen } from './screens/organization/user/UserEditScreen';
 import { getToken } from './utils/auth';
 
 const Stack = createStackNavigator();
@@ -77,6 +83,36 @@ export default function App() {
           name="Schedule" 
           component={ScheduleScreen} 
           options={{ title: '我的排班' }}
+        />
+        <Stack.Screen 
+          name="DepartmentList" 
+          component={DepartmentListScreen} 
+          options={{ title: '部门管理' }}
+        />
+        <Stack.Screen 
+          name="DepartmentEdit" 
+          component={DepartmentEditScreen} 
+          options={{ title: '编辑部门' }}
+        />
+        <Stack.Screen 
+          name="EmployeeList" 
+          component={EmployeeListScreen} 
+          options={{ title: '人员管理' }}
+        />
+        <Stack.Screen 
+          name="EmployeeEdit" 
+          component={EmployeeEditScreen} 
+          options={{ title: '编辑员工' }}
+        />
+        <Stack.Screen 
+          name="UserList" 
+          component={UserListScreen} 
+          options={{ title: '用户管理' }}
+        />
+        <Stack.Screen 
+          name="UserEdit" 
+          component={UserEditScreen} 
+          options={{ title: '编辑用户' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
