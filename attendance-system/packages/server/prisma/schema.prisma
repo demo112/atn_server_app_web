@@ -260,6 +260,7 @@ model AttCorrection {
   operatorId     Int            @map("operator_id")
   remark         String?        @db.VarChar(200)
   createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at")
 
   employee    Employee       @relation(fields: [employeeId], references: [id])
   dailyRecord AttDailyRecord @relation(fields: [dailyRecordId], references: [id])

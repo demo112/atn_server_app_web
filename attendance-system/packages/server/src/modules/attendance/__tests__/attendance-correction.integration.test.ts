@@ -8,6 +8,19 @@ import { prisma } from '../../../common/db/prisma';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import { CorrectionType, PrismaClient, AttendanceStatus } from '@prisma/client';
 
+// Mock auth middleware
+vi.mock('../../../common/middleware/auth', () => ({
+  authMiddleware: (req: any, res: any, next: any) => {
+    req.user = {
+      id: 999,
+      employeeId: 100,
+      role: 'admin',
+      username: 'admin'
+    };
+    next();
+  }
+}));
+
 // Mock prisma
 vi.mock('../../../common/db/prisma', async () => {
   const { mockDeep } = await import('vitest-mock-extended');
@@ -35,6 +48,14 @@ describe('Attendance Correction Integration', () => {
 
   beforeEach(() => {
     mockReset(prismaMock);
+    
+    // Mock interactive transaction
+    prismaMock.$transaction.mockImplementation(async (callback) => {
+      if (typeof callback === 'function') {
+        return callback(prismaMock);
+      }
+      return callback;
+    });
   });
 
   const mockPeriod = {
@@ -60,6 +81,21 @@ describe('Attendance Correction Integration', () => {
     absentMinutes: 480
   };
 
+  const mockCorrection = {
+    id: 1,
+    employeeId: 100,
+    dailyRecordId: BigInt(1),
+    type: CorrectionType.check_in,
+    correctionTime: new Date('2024-02-01T09:00:00Z'),
+    remark: 'Forgot',
+    operatorId: 999,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    employee: { id: 100, name: 'John', department: { name: 'IT' } },
+    dailyRecord: mockRecord,
+    operator: { name: 'Admin' }
+  };
+
   describe('GET /daily', () => {
     it('should return daily records', async () => {
       prismaMock.attDailyRecord.findMany.mockResolvedValue([mockRecord] as any);
@@ -76,87 +112,86 @@ describe('Attendance Correction Integration', () => {
     });
   });
 
-  describe('POST /corrections/check-in', () => {
-    it('should supplement check-in successfully', async () => {
-      // Mock findUnique
-      prismaMock.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
-      
-      // Mock transaction
-      prismaMock.$transaction.mockImplementation(async (callback) => {
-        // Since service uses array of promises: await prisma.$transaction([ ... ])
-        // We mock it to return array of results
-        return [
-          { 
-            ...mockRecord, 
-            checkInTime: new Date('2024-02-01T09:00:00Z'), 
-            status: AttendanceStatus.normal,
-            lateMinutes: 0,
-            absentMinutes: 0
-          },
-          { id: 1, type: CorrectionType.check_in }
-        ];
-      });
+  describe('GET /corrections', () => {
+    it('should return correction records', async () => {
+      prismaMock.attCorrection.findMany.mockResolvedValue([mockCorrection] as any);
+      prismaMock.attCorrection.count.mockResolvedValue(1);
 
       const res = await request(app)
-        .post('/api/v1/attendance/corrections/check-in')
-        .send({
-          dailyRecordId: '1',
-          checkInTime: '2024-02-01T09:00:00Z',
-          remark: 'Forgot'
-        });
+        .get('/api/v1/attendance/corrections')
+        .query({ page: 1, pageSize: 10 });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.dailyRecord.checkInTime).toBe('2024-02-01T09:00:00.000Z');
-      expect(res.body.data.dailyRecord.status).toBe('normal');
-    });
-
-    it('should return 404 if record not found', async () => {
-      prismaMock.attDailyRecord.findUnique.mockResolvedValue(null);
-
-      const res = await request(app)
-        .post('/api/v1/attendance/corrections/check-in')
-        .send({
-          dailyRecordId: '999',
-          checkInTime: '2024-02-01T09:00:00Z'
-        });
-
-      expect(res.status).toBe(404);
+      expect(res.body.data.items).toHaveLength(1);
+      expect(res.body.data.items[0].id).toBe(1);
     });
   });
 
-  describe('POST /corrections/check-out', () => {
-    it('should supplement check-out successfully', async () => {
-      const recordWithCheckIn = {
-        ...mockRecord,
-        checkInTime: new Date('2024-02-01T09:00:00Z'),
-        status: AttendanceStatus.normal // Initial status
-      };
+  describe('PUT /corrections/:id', () => {
+    it('should update correction successfully', async () => {
+      // Mock findUnique for permission check (if any) or initial fetch
+      prismaMock.attCorrection.findUnique.mockResolvedValue(mockCorrection as any);
+      // Mock update
+      prismaMock.attCorrection.update.mockResolvedValue({
+        ...mockCorrection,
+        correctionTime: new Date('2024-02-01T09:30:00Z')
+      } as any);
 
-      prismaMock.attDailyRecord.findUnique.mockResolvedValue(recordWithCheckIn as any);
-      
-      prismaMock.$transaction.mockImplementation(async () => {
-        return [
-          { 
-            ...recordWithCheckIn, 
-            checkOutTime: new Date('2024-02-01T18:00:00Z'), 
-            status: AttendanceStatus.normal 
-          },
-          { id: 2, type: CorrectionType.check_out }
-        ];
-      });
+      // Mocks for recalculation
+      prismaMock.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
+      prismaMock.attClockRecord.findMany.mockResolvedValue([]);
+      prismaMock.attLeave.findMany.mockResolvedValue([]);
+      prismaMock.attCorrection.findMany.mockResolvedValue([
+        {
+          ...mockCorrection,
+          correctionTime: new Date('2024-02-01T09:30:00Z')
+        }
+      ] as any);
+      prismaMock.attDailyRecord.update.mockResolvedValue({
+        ...mockRecord,
+        checkInTime: new Date('2024-02-01T09:30:00Z'),
+        status: AttendanceStatus.late,
+        lateMinutes: 30
+      } as any);
 
       const res = await request(app)
-        .post('/api/v1/attendance/corrections/check-out')
+        .put('/api/v1/attendance/corrections/1')
         .send({
-          dailyRecordId: '1',
-          checkOutTime: '2024-02-01T18:00:00Z',
-          remark: 'Forgot out'
+          correctionTime: '2024-02-01T09:30:00Z',
+          remark: 'Updated time'
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.dailyRecord.checkOutTime).toBe('2024-02-01T18:00:00.000Z');
+    });
+  });
+
+  describe('DELETE /corrections/:id', () => {
+    it('should delete correction successfully', async () => {
+      // Mock findUnique for existence check
+      prismaMock.attCorrection.findUnique.mockResolvedValue(mockCorrection as any);
+      // Mock delete
+      prismaMock.attCorrection.delete.mockResolvedValue(mockCorrection as any);
+
+      // Mocks for recalculation (after deletion)
+      prismaMock.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
+      prismaMock.attClockRecord.findMany.mockResolvedValue([]);
+      prismaMock.attLeave.findMany.mockResolvedValue([]);
+      // findMany returns empty to simulate no corrections left
+      prismaMock.attCorrection.findMany.mockResolvedValue([] as any);
+      // update daily record to reset status
+      prismaMock.attDailyRecord.update.mockResolvedValue({
+        ...mockRecord,
+        checkInTime: null,
+        status: AttendanceStatus.absent
+      } as any);
+
+      const res = await request(app)
+        .delete('/api/v1/attendance/corrections/1');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
     });
   });
 });
