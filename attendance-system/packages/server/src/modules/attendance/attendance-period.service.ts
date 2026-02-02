@@ -1,5 +1,6 @@
 import { prisma } from '../../common/db/prisma';
 import { createLogger } from '../../common/logger';
+import { AppError } from '../../common/errors';
 import { CreateTimePeriodDto, UpdateTimePeriodDto } from './attendance-period.dto';
 
 export class AttendancePeriodService {
@@ -15,7 +16,7 @@ export class AttendancePeriodService {
     });
 
     if (existing) {
-      throw new Error('ERR_ATT_PERIOD_NAME_EXISTS');
+      throw AppError.conflict('Time period name already exists', 'ERR_ATT_PERIOD_NAME_EXISTS');
     }
 
     // 2. 验证时间格式 (简单的正则验证可以在 Controller 层做，这里做业务逻辑验证)
@@ -64,7 +65,7 @@ export class AttendancePeriodService {
     // 检查是否存在
     const existing = await this.findById(id);
     if (!existing) {
-      throw new Error('ERR_ATT_PERIOD_NOT_FOUND');
+      throw new AppError('ERR_ATT_PERIOD_NOT_FOUND', 'Time period not found', 404);
     }
 
     // 如果修改了名称，检查重复
@@ -73,7 +74,7 @@ export class AttendancePeriodService {
         where: { name: data.name },
       });
       if (nameExists) {
-        throw new Error('ERR_ATT_PERIOD_NAME_EXISTS');
+        throw AppError.conflict('Time period name already exists', 'ERR_ATT_PERIOD_NAME_EXISTS');
       }
     }
 
@@ -96,18 +97,18 @@ export class AttendancePeriodService {
     // 检查是否存在
     const existing = await this.findById(id);
     if (!existing) {
-      throw new Error('ERR_ATT_PERIOD_NOT_FOUND');
+      throw new AppError('ERR_ATT_PERIOD_NOT_FOUND', 'Time period not found', 404);
     }
 
     // TODO: 检查是否被班次引用 (AttShiftPeriod)
     // const usageCount = await prisma.attShiftPeriod.count({ where: { timePeriodId: id } });
-    // if (usageCount > 0) throw new Error('ERR_ATT_PERIOD_IN_USE');
+    // if (usageCount > 0) throw AppError.conflict('Time period in use', 'ERR_ATT_PERIOD_IN_USE');
 
     await prisma.attTimePeriod.delete({
       where: { id },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendancePeriod] Deleted time period: ${existing.name} (ID: ${existing.id})`);
+    this.logger.info(`Deleted time period: ${existing.name} (ID: ${existing.id})`);
     return true;
   }
 }

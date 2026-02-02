@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Link } from 'react-router-dom';
 
 // 临时占位组件，后续会移动到 components/layouts
 const MainLayout = () => (
@@ -7,8 +7,10 @@ const MainLayout = () => (
       <h3>Sidebar</h3>
       <nav>
         <ul>
-          <li><a href="/attendance/schedule">排班管理</a></li>
-          <li><a href="/attendance/correction">异常考勤处理</a></li>
+          <li><Link to="/attendance/time-periods">时间段设置</Link></li>
+          <li><Link to="/attendance/schedule">排班管理</Link></li>
+          <li><Link to="/attendance/correction">异常考勤处理</Link></li>
+          <li><Link to="/attendance/settings">考勤制度设置</Link></li>
         </ul>
       </nav>
     </div>
@@ -21,6 +23,7 @@ const MainLayout = () => (
 const Home = () => <div><h2>Welcome to Attendance System</h2></div>;
 
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
+import TimePeriodPage from '@/pages/attendance/time-period/TimePeriodPage';
 
 export default function App() {
   return (
@@ -29,6 +32,7 @@ export default function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
           <Route path="attendance">
+             <Route path="time-periods" element={<TimePeriodPage />} />
              <Route path="schedule" element={<SchedulePage />} />
           </Route>
         </Route>

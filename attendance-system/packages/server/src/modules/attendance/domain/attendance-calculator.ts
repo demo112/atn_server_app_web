@@ -30,7 +30,7 @@ export class AttendanceCalculator {
     const startTimeStr = period.startTime || '09:00';
     const endTimeStr = period.endTime || '18:00';
     
-    let shiftStart = this.combineDateAndTime(workDate, startTimeStr);
+    const shiftStart = this.combineDateAndTime(workDate, startTimeStr);
     let shiftEnd = this.combineDateAndTime(workDate, endTimeStr);
     
     // 处理跨天 (如果结束时间小于开始时间，说明跨天)

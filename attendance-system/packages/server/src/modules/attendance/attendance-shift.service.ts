@@ -1,5 +1,6 @@
 import { prisma } from '../../common/db/prisma';
 import { createLogger } from '../../common/logger';
+import { AppError } from '../../common/errors';
 import { CreateShiftDto, UpdateShiftDto, AttShiftVo } from './attendance-shift.dto';
 
 export class AttendanceShiftService {
@@ -15,7 +16,7 @@ export class AttendanceShiftService {
     });
 
     if (existing) {
-      throw new Error('ERR_ATT_SHIFT_NAME_EXISTS');
+      throw AppError.conflict('Shift name already exists', 'ERR_ATT_SHIFT_NAME_EXISTS');
     }
 
     // 2. 准备关联数据
@@ -88,7 +89,7 @@ export class AttendanceShiftService {
     // 检查是否存在
     const existing = await this.findById(id);
     if (!existing) {
-      throw new Error('ERR_ATT_SHIFT_NOT_FOUND');
+      throw new AppError('ERR_ATT_SHIFT_NOT_FOUND', 'Shift not found', 404);
     }
 
     // 如果修改了名称，检查重复
@@ -97,7 +98,7 @@ export class AttendanceShiftService {
         where: { name: data.name },
       });
       if (nameExists) {
-        throw new Error('ERR_ATT_SHIFT_NAME_EXISTS');
+        throw AppError.conflict('Shift name already exists', 'ERR_ATT_SHIFT_NAME_EXISTS');
       }
     }
 
@@ -154,9 +155,9 @@ export class AttendanceShiftService {
       });
     });
 
-    if (!result) throw new Error('ERR_UPDATE_FAILED'); // Should not happen
+    if (!result) throw new AppError('ERR_UPDATE_FAILED', 'Update failed', 500); // Should not happen
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendanceShift] Updated shift: ${result.name} (ID: ${result.id})`);
+    this.logger.info(`Updated shift: ${result.name} (ID: ${result.id})`);
     return this.formatShift(result);
   }
 
@@ -167,20 +168,20 @@ export class AttendanceShiftService {
     // 检查是否存在
     const existing = await prisma.attShift.findUnique({ where: { id } });
     if (!existing) {
-      throw new Error('ERR_ATT_SHIFT_NOT_FOUND');
+      throw new AppError('ERR_ATT_SHIFT_NOT_FOUND', 'Shift not found', 404);
     }
 
     // 检查是否被排班引用
     const usageCount = await prisma.attSchedule.count({ where: { shiftId: id } });
     if (usageCount > 0) {
-      throw new Error('ERR_ATT_SHIFT_IN_USE');
+      throw AppError.conflict('Shift is in use', 'ERR_ATT_SHIFT_IN_USE');
     }
 
     await prisma.attShift.delete({
       where: { id },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendanceShift] Deleted shift: ${existing.name} (ID: ${existing.id})`);
+    this.logger.info(`Deleted shift: ${existing.name} (ID: ${existing.id})`);
     return true;
   }
 

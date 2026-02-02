@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { AttendanceShiftService } from './attendance-shift.service';
 import { CreateShiftDto, UpdateShiftDto } from './attendance-shift.dto';
+import { createLogger } from '../../common/logger';
 
 const service = new AttendanceShiftService();
+const logger = createLogger('AttendanceShiftController');
 
 export class AttendanceShiftController {
   /**
@@ -17,7 +19,7 @@ export class AttendanceShiftController {
         data: list,
       });
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceShift] Get list failed`, error);
+      logger.error({ err: error }, 'Get list failed');
       res.status(500).json({
         success: false,
         error: {
@@ -54,7 +56,7 @@ export class AttendanceShiftController {
         data: shift,
       });
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceShift] Get by ID failed`, error);
+      logger.error({ err: error }, 'Get by ID failed');
       res.status(500).json({
         success: false,
         error: {
@@ -106,9 +108,9 @@ export class AttendanceShiftController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceShift] Create failed`, error);
+      logger.error({ err: error }, 'Create failed');
 
-      if (error.message === 'ERR_ATT_SHIFT_NAME_EXISTS') {
+      if (error.message === 'ERR_ATT_SHIFT_NAME_EXISTS' || error.code === 'ERR_ATT_SHIFT_NAME_EXISTS') {
         return res.status(409).json({
           success: false,
           error: { code: 'ERR_ATT_SHIFT_NAME_EXISTS', message: 'Shift name already exists' },
@@ -159,15 +161,15 @@ export class AttendanceShiftController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceShift] Update failed`, error);
+      logger.error({ err: error }, 'Update failed');
 
-      if (error.message === 'ERR_ATT_SHIFT_NOT_FOUND') {
+      if (error.message === 'ERR_ATT_SHIFT_NOT_FOUND' || error.code === 'ERR_ATT_SHIFT_NOT_FOUND') {
         return res.status(404).json({
           success: false,
           error: { code: 'ERR_ATT_SHIFT_NOT_FOUND', message: 'Shift not found' },
         });
       }
-      if (error.message === 'ERR_ATT_SHIFT_NAME_EXISTS') {
+      if (error.message === 'ERR_ATT_SHIFT_NAME_EXISTS' || error.code === 'ERR_ATT_SHIFT_NAME_EXISTS') {
         return res.status(409).json({
           success: false,
           error: { code: 'ERR_ATT_SHIFT_NAME_EXISTS', message: 'Shift name already exists' },
@@ -203,15 +205,15 @@ export class AttendanceShiftController {
         data: { message: 'Shift deleted successfully' },
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceShift] Delete failed`, error);
+      logger.error({ err: error }, 'Delete failed');
 
-      if (error.message === 'ERR_ATT_SHIFT_NOT_FOUND') {
+      if (error.message === 'ERR_ATT_SHIFT_NOT_FOUND' || error.code === 'ERR_ATT_SHIFT_NOT_FOUND') {
         return res.status(404).json({
           success: false,
           error: { code: 'ERR_ATT_SHIFT_NOT_FOUND', message: 'Shift not found' },
         });
       }
-      if (error.message === 'ERR_ATT_SHIFT_IN_USE') {
+      if (error.message === 'ERR_ATT_SHIFT_IN_USE' || error.code === 'ERR_ATT_SHIFT_IN_USE') {
         return res.status(409).json({
           success: false,
           error: { code: 'ERR_ATT_SHIFT_IN_USE', message: 'Shift is in use by schedules' },

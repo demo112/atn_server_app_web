@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { AttendancePeriodService } from './attendance-period.service';
 import { CreateTimePeriodDto, UpdateTimePeriodDto } from './attendance-period.dto';
+import { createLogger } from '../../common/logger';
 
 const service = new AttendancePeriodService();
+const logger = createLogger('AttendancePeriodController');
 
 export class AttendancePeriodController {
   /**
@@ -16,7 +18,7 @@ export class AttendancePeriodController {
         data: list,
       });
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendancePeriod] Get list failed`, error);
+      logger.error({ err: error }, 'Get list failed');
       res.status(500).json({
         success: false,
         error: {
@@ -53,7 +55,7 @@ export class AttendancePeriodController {
         data: period,
       });
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendancePeriod] Get by ID failed`, error);
+      logger.error({ err: error }, 'Get by ID failed');
       res.status(500).json({
         success: false,
         error: {
@@ -94,9 +96,9 @@ export class AttendancePeriodController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendancePeriod] Create failed`, error);
+      logger.error({ err: error }, 'Create failed');
       
-      if (error.message === 'ERR_ATT_PERIOD_NAME_EXISTS') {
+      if (error.message === 'ERR_ATT_PERIOD_NAME_EXISTS' || error.code === 'ERR_ATT_PERIOD_NAME_EXISTS') {
         return res.status(409).json({
           success: false,
           error: { code: 'ERR_ATT_PERIOD_NAME_EXISTS', message: 'Time period name already exists' },
@@ -144,15 +146,15 @@ export class AttendancePeriodController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendancePeriod] Update failed`, error);
+      logger.error({ err: error }, 'Update failed');
       
-      if (error.message === 'ERR_ATT_PERIOD_NOT_FOUND') {
+      if (error.message === 'ERR_ATT_PERIOD_NOT_FOUND' || error.code === 'ERR_ATT_PERIOD_NOT_FOUND') {
         return res.status(404).json({
           success: false,
           error: { code: 'ERR_ATT_PERIOD_NOT_FOUND', message: 'Time period not found' },
         });
       }
-      if (error.message === 'ERR_ATT_PERIOD_NAME_EXISTS') {
+      if (error.message === 'ERR_ATT_PERIOD_NAME_EXISTS' || error.code === 'ERR_ATT_PERIOD_NAME_EXISTS') {
         return res.status(409).json({
           success: false,
           error: { code: 'ERR_ATT_PERIOD_NAME_EXISTS', message: 'Time period name already exists' },
@@ -188,9 +190,9 @@ export class AttendancePeriodController {
         data: null,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendancePeriod] Delete failed`, error);
+      logger.error({ err: error }, 'Delete failed');
       
-      if (error.message === 'ERR_ATT_PERIOD_NOT_FOUND') {
+      if (error.message === 'ERR_ATT_PERIOD_NOT_FOUND' || error.code === 'ERR_ATT_PERIOD_NOT_FOUND') {
         return res.status(404).json({
           success: false,
           error: { code: 'ERR_ATT_PERIOD_NOT_FOUND', message: 'Time period not found' },
