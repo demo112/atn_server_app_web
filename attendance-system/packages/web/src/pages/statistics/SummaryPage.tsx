@@ -4,7 +4,7 @@ import { Table, Card, Form, DatePicker, Button, Select, message, Space } from 'a
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-// import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import request from '../../utils/request';
 import { AttendanceSummaryVo, GetSummaryDto } from '@attendance/shared';
 
@@ -92,23 +92,23 @@ const SummaryPage: React.FC = () => {
       return;
     }
 
-    // const exportData = data.map(item => ({
-    //   '工号': item.employeeNo,
-    //   '姓名': item.employeeName,
-    //   '部门': item.deptName,
-    //   '应出勤天数': item.totalDays,
-    //   '实际出勤天数': item.actualDays,
-    //   '迟到次数': item.lateCount,
-    //   '迟到时长(分)': item.lateMinutes,
-    //   '早退次数': item.earlyLeaveCount,
-    //   '早退时长(分)': item.earlyLeaveMinutes,
-    //   '缺勤次数': item.absentCount,
-    //   '缺勤时长(分)': item.absentMinutes,
-    //   '请假次数': item.leaveCount,
-    //   '请假时长(分)': item.leaveMinutes,
-    //   '实际出勤时长': item.actualMinutes,
-    //   '有效出勤时长': item.effectiveMinutes,
-    // }));
+    const exportData = data.map(item => ({
+      '工号': item.employeeNo,
+      '姓名': item.employeeName,
+      '部门': item.deptName,
+      '应出勤天数': item.totalDays,
+      '实际出勤天数': item.actualDays,
+      '迟到次数': item.lateCount,
+      '迟到时长(分)': item.lateMinutes,
+      '早退次数': item.earlyLeaveCount,
+      '早退时长(分)': item.earlyLeaveMinutes,
+      '缺勤次数': item.absentCount,
+      '缺勤时长(分)': item.absentMinutes,
+      '请假次数': item.leaveCount,
+      '请假时长(分)': item.leaveMinutes,
+      '实际出勤时长': item.actualMinutes,
+      '有效出勤时长': item.effectiveMinutes,
+    }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
