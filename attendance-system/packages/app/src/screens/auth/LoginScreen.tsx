@@ -25,8 +25,8 @@ const LoginScreen = ({ navigation }: any) => {
       await setToken(res.token);
       await setUser(res.user);
       
-      // Navigate to Main/Home
-      navigation.replace('Main');
+      // Navigate to Home
+      navigation.replace('Home');
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.error?.message || '登录失败，请检查用户名密码';

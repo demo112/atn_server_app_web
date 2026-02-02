@@ -45,7 +45,7 @@ export const createLeave = (data: CreateLeaveDto) => {
  * 撤销请假
  */
 export const cancelLeave = (id: number) => {
-  return request.post<any, ApiResponse<void>>(`/attendance/leaves/${id}/cancel`);
+  return request.delete<any, ApiResponse<void>>(`/attendance/leaves/${id}`);
 };
 
 /**
@@ -56,15 +56,29 @@ export const getCorrections = (params: any) => {
 };
 
 /**
- * 申请补卡
+ * 申请补卡 (签到)
  */
-export const createCorrection = (data: { dailyRecordId: number; type: CorrectionType; clockTime: string; remark: string }) => {
-  return request.post<any, ApiResponse<Correction>>('/attendance/corrections', data);
+export const supplementCheckIn = (data: { dailyRecordId: number; checkInTime: string; remark: string }) => {
+  return request.post<any, ApiResponse<any>>('/attendance/corrections/check-in', data);
+};
+
+/**
+ * 申请补卡 (签退)
+ */
+export const supplementCheckOut = (data: { dailyRecordId: number; checkOutTime: string; remark: string }) => {
+  return request.post<any, ApiResponse<any>>('/attendance/corrections/check-out', data);
 };
 
 /**
  * 获取每日考勤记录 (用于补卡选择)
  */
 export const getDailyRecords = (params: { startDate: string; endDate: string }) => {
-  return request.get<any, ApiResponse<DailyRecord[]>>('/attendance/daily-records', { params });
+  return request.get<any, ApiResponse<DailyRecord[]>>('/attendance/daily', { params });
+};
+
+/**
+ * 获取排班记录
+ */
+export const getSchedules = (params: { employeeId?: number; deptId?: number; startDate: string; endDate: string }) => {
+  return request.get<any, ApiResponse<any[]>>('/attendance/schedules', { params });
 };

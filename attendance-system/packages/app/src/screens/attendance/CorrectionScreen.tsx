@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
   Modal, TextInput, Alert, ActivityIndicator 
 } from 'react-native';
-import { getCorrections, createCorrection, Correction, CorrectionType } from '../../services/attendance';
+import { getCorrections, supplementCheckIn, supplementCheckOut, Correction, CorrectionType } from '../../services/attendance';
 
 const CorrectionScreen = () => {
   const [corrections, setCorrections] = useState<Correction[]>([]);
@@ -41,12 +41,17 @@ const CorrectionScreen = () => {
     }
 
     try {
-      await createCorrection({
+      const data = {
         dailyRecordId: parseInt(formData.dailyRecordId),
-        type: formData.type,
-        clockTime: new Date(formData.clockTime).toISOString(),
         remark: formData.remark,
-      });
+      };
+
+      if (formData.type === 'check_in') {
+        await supplementCheckIn({ ...data, checkInTime: new Date(formData.clockTime).toISOString() });
+      } else {
+        await supplementCheckOut({ ...data, checkOutTime: new Date(formData.clockTime).toISOString() });
+      }
+
       Alert.alert('成功', '补卡申请提交成功');
       setModalVisible(false);
       fetchCorrections();

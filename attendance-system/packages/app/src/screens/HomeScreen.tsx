@@ -47,6 +47,22 @@ const HomeScreen = () => {
           <Text style={styles.cardIcon}>📝</Text>
           <Text style={styles.cardTitle}>补卡申请</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.card} 
+          onPress={() => navigation.navigate('History')}
+        >
+          <Text style={styles.cardIcon}>📊</Text>
+          <Text style={styles.cardTitle}>考勤记录</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.card} 
+          onPress={() => navigation.navigate('Schedule')}
+        >
+          <Text style={styles.cardIcon}>📅</Text>
+          <Text style={styles.cardTitle}>我的排班</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

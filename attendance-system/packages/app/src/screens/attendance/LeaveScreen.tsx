@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
   Modal, TextInput, ScrollView, Alert, ActivityIndicator 
 } from 'react-native';
-import { getLeaves, createLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
+import { getLeaves, createLeave, cancelLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
 import { LeaveType } from '@attendance/shared';
 
 const LeaveScreen = () => {
@@ -17,19 +17,7 @@ const LeaveScreen = () => {
     startTime: '',
     endTime: '',
     reason: ''
-    cancelButton: {
-    marginTop: 8,
-    alignSelf: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#ff4d4f',
-    borderRadius: 4,
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-});
+  });
 
   useEffect(() => {
     fetchLeaves();
@@ -48,7 +36,7 @@ const LeaveScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.startTime || !formData.endTime || !formData.reason) {
+    if (!formData.type || !formData.startTime || !formData.endTime || !formData.reason) {
       Alert.alert('提示', '请填写完整信息');
       return;
     }
@@ -56,9 +44,9 @@ const LeaveScreen = () => {
     try {
       await createLeave({
         employeeId: 0, // Server will override
-        type: formData.type as LeaveType,
-        startTime: new Date(formData.startTime!).toISOString(),
-        endTime: new Date(formData.endTime!).toISOString(),
+        type: formData.type,
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString(),
         reason: formData.reason!,
       });
       Alert.alert('成功', '申请提交成功');
@@ -67,6 +55,29 @@ const LeaveScreen = () => {
     } catch (error: any) {
       Alert.alert('失败', error.response?.data?.error?.message || '提交失败');
     }
+  };
+
+  const handleCancel = async (id: number) => {
+    Alert.alert(
+      '确认撤销',
+      '确定要撤销这条请假申请吗？',
+      [
+        { text: '取消', style: 'cancel' },
+        { 
+          text: '确定', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await cancelLeave(id);
+              Alert.alert('成功', '撤销成功');
+              fetchLeaves();
+            } catch (error: any) {
+              Alert.alert('失败', error.response?.data?.error?.message || '撤销失败');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderItem = ({ item }: { item: LeaveVo }) => (
@@ -84,6 +95,14 @@ const LeaveScreen = () => {
         {new Date(item.startTime).toLocaleDateString()} - {new Date(item.endTime).toLocaleDateString()}
       </Text>
       <Text style={styles.itemReason}>{item.reason}</Text>
+      {item.status === 'pending' && (
+        <TouchableOpacity 
+          style={styles.revokeButton}
+          onPress={() => handleCancel(item.id)}
+        >
+          <Text style={styles.revokeButtonText}>撤销</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -266,6 +285,18 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#1890ff',
+  },
+  revokeButton: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#ff4d4f',
+    borderRadius: 4,
+  },
+  revokeButtonText: {
+    color: '#fff',
+    fontSize: 12,
   },
   cancelButtonText: {
     color: '#666',

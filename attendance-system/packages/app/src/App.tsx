@@ -7,6 +7,7 @@ import HomeScreen from './screens/HomeScreen';
 import ClockInScreen from './screens/attendance/ClockInScreen';
 import LeaveScreen from './screens/attendance/LeaveScreen';
 import CorrectionScreen from './screens/attendance/CorrectionScreen';
+import ScheduleScreen from './screens/attendance/ScheduleScreen';
 import { getToken } from './utils/auth';
 
 const Stack = createStackNavigator();
@@ -65,6 +66,16 @@ export default function App() {
           name="Correction" 
           component={CorrectionScreen} 
           options={{ title: '补卡申请' }}
+        />
+        <Stack.Screen 
+          name="History" 
+          component={HistoryScreen} 
+          options={{ title: '考勤记录' }}
+        />
+        <Stack.Screen 
+          name="Schedule" 
+          component={ScheduleScreen} 
+          options={{ title: '我的排班' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
