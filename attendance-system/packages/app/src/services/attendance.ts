@@ -42,6 +42,13 @@ export const createLeave = (data: CreateLeaveDto) => {
 };
 
 /**
+ * 撤销请假
+ */
+export const cancelLeave = (id: number) => {
+  return request.post<any, ApiResponse<void>>(`/attendance/leaves/${id}/cancel`);
+};
+
+/**
  * 获取补卡记录
  */
 export const getCorrections = (params: any) => {

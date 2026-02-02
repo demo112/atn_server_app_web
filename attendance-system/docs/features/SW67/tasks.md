@@ -59,6 +59,19 @@
   - 根据请假类型和时间调整 `AttendanceStatus` 和各项时长统计。
 - **验证**: 编写集成测试，模拟请假场景下的考勤计算结果。
 
+### SW67-06: App 端请假申请页面
+- **文件**: `packages/app/src/screens/attendance/LeaveScreen.tsx`
+- **内容**: 
+  - 请假申请表单（类型、时间、原因）
+  - 历史记录列表展示
+- **验证**: App端能正常提交申请并刷新列表
+- **状态**: ✅ 已完成
+
+### SW67-07: Web/App 端请假撤销功能
+- **文件**: `packages/web/src/pages/attendance/leave/LeavePage.tsx`, `packages/app/src/screens/attendance/LeaveScreen.tsx`
+- **内容**: 实现撤销接口调用
+- **状态**: ✅ 已完成
+
 ## 完成标准 (DoD)
 
 每个任务完成前必须确认：

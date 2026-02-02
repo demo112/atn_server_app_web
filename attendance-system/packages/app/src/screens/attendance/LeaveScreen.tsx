@@ -17,7 +17,19 @@ const LeaveScreen = () => {
     startTime: '',
     endTime: '',
     reason: ''
-  });
+    cancelButton: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#ff4d4f',
+    borderRadius: 4,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+});
 
   useEffect(() => {
     fetchLeaves();

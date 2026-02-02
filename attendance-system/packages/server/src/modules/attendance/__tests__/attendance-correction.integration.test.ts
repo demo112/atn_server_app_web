@@ -8,14 +8,15 @@ import { prisma } from '../../../common/db/prisma';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import { CorrectionType, PrismaClient, AttendanceStatus } from '@prisma/client';
 
-// Mock auth middleware
+// Mock auth middleware - MUST be before imports that use it if not hoisted (Vitest hoists, but safe to be explicit)
 vi.mock('../../../common/middleware/auth', () => ({
   authMiddleware: (req: any, res: any, next: any) => {
-    req.user = {
-      id: 999,
-      employeeId: 100,
-      role: 'admin',
-      username: 'admin'
+    // Set default user
+    req.user = { 
+      id: 1, 
+      username: 'admin', 
+      role: 'admin', 
+      employeeId: 1 
     };
     next();
   }

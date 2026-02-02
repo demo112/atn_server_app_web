@@ -18,4 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 数据层: 更新 `AttClockRecord` 模型，支持 `ClockType` (签到/签退) 和 `ClockSource` (App/Web/Device)
   - 服务层: 实现打卡记录的创建与查询逻辑，支持关联信息 (员工/部门/操作人) 返回
   - 接口层: 新增 `POST /api/v1/attendance/clock` (打卡) 和 `GET /api/v1/attendance/clock` (查询) 接口
+  - Web端: 实现考勤记录查询与管理员补录功能
+  - App端: 实现打卡界面，支持定位与设备信息获取
   - 规范: 完善 API 契约文档，定义打卡相关接口规范
+
+- **[SW64] 班次管理**
+  - Web端: 实现班次列表管理、创建/编辑班次（支持复杂周期与时间段配置）
+
+- **[SW67] 请假/出差管理**
+  - Web端: 实现请假申请列表与管理页面，支持撤销功能
+  - App端: 实现请假申请提交与历史记录查询
+
+- **[SW68] 补签记录管理**
+  - Web端: 实现补签申请列表与管理页面
+  - App端: 实现补签申请提交与历史记录查询
+  - Shared: 补充 `CreateShiftDto`, `CorrectionType` 等类型定义
