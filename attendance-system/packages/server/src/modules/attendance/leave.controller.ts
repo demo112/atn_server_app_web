@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { LeaveService } from './leave.service';
 import { CreateLeaveDto, UpdateLeaveDto, LeaveQueryDto } from './leave.dto';
+import { LeaveStatus } from '@prisma/client';
 import { createLogger } from '../../common/logger';
 import { AppError } from '../../common/errors';
 
@@ -11,21 +12,47 @@ export class LeaveController {
 
   /**
    * 创建请假记录
-   * 仅限管理员
+   * 管理员: 直接通过
+   * 员工: 提交申请 (pending)
    */
   async create(req: Request, res: Response) {
     try {
       const user = (req as any).user;
       
-      // 1. 权限检查: 仅管理员
-      if (user.role !== 'admin') {
-        throw new AppError('ERR_FORBIDDEN', 'Only admin can create leave records', 403);
-      }
+      let targetEmployeeId = req.body.employeeId;
+      let status: LeaveStatus = LeaveStatus.pending;
+      let approverId = undefined;
+      let approvedAt = undefined;
 
-      const dto: CreateLeaveDto = {
-        ...req.body,
-        operatorId: user.id
-      };
+      // 1. 权限与状态判定
+      if (user.role === 'admin') {
+        // 管理员创建: 默认为 Approved
+        status = LeaveStatus.approved;
+        approverId = user.id;
+        approvedAt = new Date();
+        
+        // 如果未指定 employeeId，报错 (管理员必须指定给谁请假)
+        if (!targetEmployeeId) {
+             throw new AppError('ERR_INVALID_PARAMS', 'employeeId is required for admin', 400);
+        }
+      } else {
+        // 普通员工: 只能给自己申请
+        if (!user.employeeId) {
+          throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked to current user', 403);
+        }
+        // 强制覆盖为自己的 ID
+      targetEmployeeId = user.employeeId;
+      status = LeaveStatus.pending;
+    }
+
+    const dto: CreateLeaveDto & { status?: LeaveStatus, approverId?: number, approvedAt?: Date } = {
+      ...req.body,
+      employeeId: targetEmployeeId,
+      operatorId: user.id,
+      status,
+      approverId,
+      approvedAt
+    };
 
       const result = await service.create(dto);
       

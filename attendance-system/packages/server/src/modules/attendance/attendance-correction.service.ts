@@ -98,6 +98,10 @@ export class AttendanceCorrectionService {
       where.employee = { deptId: Number(deptId) };
     }
 
+    if (dto.employeeId) {
+      where.employeeId = Number(dto.employeeId);
+    }
+
     if (startDate && endDate) {
       where.correctionTime = {
         gte: dayjs(startDate).startOf('day').toDate(),
@@ -154,10 +158,11 @@ export class AttendanceCorrectionService {
 
     const where: Prisma.AttDailyRecordWhereInput = {};
 
-    if (deptId || employeeName) {
+    if (deptId || employeeName || dto.employeeId) {
       const employeeWhere: Prisma.EmployeeWhereInput = {};
       if (deptId) employeeWhere.deptId = Number(deptId);
       if (employeeName) employeeWhere.name = { contains: employeeName };
+      if (dto.employeeId) employeeWhere.id = Number(dto.employeeId);
       where.employee = employeeWhere;
     }
 

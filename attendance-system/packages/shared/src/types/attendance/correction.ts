@@ -4,6 +4,7 @@ import type { AttendanceStatus, CorrectionType } from './record';
 // 查询每日考勤记录参数
 export interface QueryDailyRecordsDto extends QueryParams {
   deptId?: number;
+  employeeId?: number; // 筛选特定员工
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
   status?: AttendanceStatus; // 筛选特定状态
@@ -55,6 +56,7 @@ export interface SupplementResultVo {
 // 查询补签记录参数
 export interface QueryCorrectionsDto extends QueryParams {
   deptId?: number;
+  employeeId?: number; // 筛选特定员工
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
 }

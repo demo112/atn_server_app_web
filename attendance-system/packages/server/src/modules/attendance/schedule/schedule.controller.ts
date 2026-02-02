@@ -99,12 +99,22 @@ export class ScheduleController {
    */
   async getOverview(req: Request, res: Response) {
     try {
+      const user = (req as any).user;
       const query = {
         employeeId: req.query.employeeId ? Number(req.query.employeeId) : undefined,
         deptId: req.query.deptId ? Number(req.query.deptId) : undefined,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
       };
+
+      // 权限控制
+      if (user.role !== 'admin') {
+        if (!user.employeeId) {
+          throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked', 403);
+        }
+        query.deptId = undefined;
+        query.employeeId = user.employeeId;
+      }
 
       const result = await service.getOverview(query);
       

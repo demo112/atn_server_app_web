@@ -1,8 +1,11 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-// import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { app } from '../../app';
 import { prisma } from '../../common/db/prisma';
+
+process.env.JWT_SECRET = 'secret';
+
 
 // Mock logger
 vi.mock('../../common/logger', () => {

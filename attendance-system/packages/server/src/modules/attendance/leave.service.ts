@@ -35,7 +35,7 @@ export class LeaveService {
   /**
    * 创建请假记录
    */
-  async create(data: CreateLeaveDto) {
+  async create(data: CreateLeaveDto & { status?: LeaveStatus, approverId?: number, approvedAt?: Date }) {
     // 1. 验证参数
     const startTime = new Date(data.startTime);
     const endTime = new Date(data.endTime);
@@ -67,7 +67,12 @@ export class LeaveService {
       throw new AppError('ERR_LEAVE_TIME_OVERLAP', 'Leave time overlaps with existing record', 400);
     }
 
-    // 4. 创建记录 (默认通过)
+    // 4. 创建记录
+    // 默认为 Approved (保留兼容性)，但通常由 Controller 传入 status
+    const status = data.status || LeaveStatus.approved;
+    const approverId = status === LeaveStatus.pending ? null : (data.approverId || data.operatorId);
+    const approvedAt = status === LeaveStatus.pending ? null : (data.approvedAt || new Date());
+
     const record = await prisma.attLeave.create({
       data: {
         employeeId: data.employeeId,
@@ -75,9 +80,9 @@ export class LeaveService {
         startTime,
         endTime,
         reason: data.reason,
-        status: LeaveStatus.approved, // 管理员录入即生效
-        approverId: data.operatorId,  // 操作人即审批人
-        approvedAt: new Date(),
+        status,
+        approverId,
+        approvedAt,
       },
       include: {
         employee: {

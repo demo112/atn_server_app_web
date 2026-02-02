@@ -16,6 +16,11 @@ vi.mock('../../../common/db/prisma', async () => {
   };
 });
 
+// Mock auth middleware to skip token check and use mocked req.user
+vi.mock('../../../common/middleware/auth', () => ({
+  authMiddleware: (req: any, res: any, next: any) => next(),
+}));
+
 const app = express();
 app.use(express.json());
 // Mock user middleware for authentication

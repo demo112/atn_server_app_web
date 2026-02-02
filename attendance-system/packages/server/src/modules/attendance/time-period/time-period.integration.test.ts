@@ -17,6 +17,11 @@ vi.mock('../../../common/db/prisma', async () => {
 
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 
+// Mock auth middleware to skip token check
+vi.mock('../../../common/middleware/auth', () => ({
+  authMiddleware: (req: any, res: any, next: any) => next(),
+}));
+
 const app = express();
 app.use(express.json());
 // Mock auth middleware if needed, but TimePeriodController currently doesn't check user context explicitly

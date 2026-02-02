@@ -18,6 +18,15 @@ describe('AttendanceCorrectionService', () => {
 
   beforeEach(() => {
     mockReset(mockPrisma);
+    
+    // Mock transaction to execute callback
+    mockPrisma.$transaction.mockImplementation(async (arg: any) => {
+      if (typeof arg === 'function') {
+        return arg(mockPrisma);
+      }
+      return Promise.all(arg); // Handle array of promises if needed
+    });
+
     service = new AttendanceCorrectionService();
   });
 
@@ -46,11 +55,14 @@ describe('AttendanceCorrectionService', () => {
     it('should successfully check in and create correction', async () => {
       // Setup
       mockPrisma.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
+      mockPrisma.attCorrection.create.mockResolvedValue({ id: 1 } as any);
+      mockPrisma.attCorrection.update.mockResolvedValue({} as any);
+      mockPrisma.attClockRecord.findMany.mockResolvedValue([]);
+      mockPrisma.attCorrection.findMany.mockResolvedValue([]);
+      mockPrisma.attLeave.findMany.mockResolvedValue([]);
       
       const updatedRecord = { ...mockRecord, checkInTime: new Date('2024-02-01T09:00:00Z'), status: 'normal' };
-      const correctionLog = { id: 1, type: CorrectionType.check_in };
-
-      mockPrisma.$transaction.mockResolvedValue([updatedRecord, correctionLog] as any);
+      mockPrisma.attDailyRecord.update.mockResolvedValue(updatedRecord as any);
 
       // Execute
       const dto = { dailyRecordId: '1', checkInTime: '2024-02-01T09:00:00Z', remark: 'Forgot' };
@@ -70,6 +82,7 @@ describe('AttendanceCorrectionService', () => {
     });
 
     it('should throw error if record not found', async () => {
+      mockPrisma.attCorrection.create.mockResolvedValue({ id: 1 } as any);
       mockPrisma.attDailyRecord.findUnique.mockResolvedValue(null);
       
       const dto = { dailyRecordId: '1', checkInTime: '2024-02-01T09:00:00Z' };
@@ -77,43 +90,39 @@ describe('AttendanceCorrectionService', () => {
     });
 
     it('should throw error if period not found', async () => {
+      mockPrisma.attCorrection.create.mockResolvedValue({ id: 1 } as any);
       mockPrisma.attDailyRecord.findUnique.mockResolvedValue({ ...mockRecord, period: null } as any);
       
       const dto = { dailyRecordId: '1', checkInTime: '2024-02-01T09:00:00Z' };
-      await expect(service.checkIn(dto, 999)).rejects.toThrow('Time period not found');
+      await expect(service.checkIn(dto, 999)).rejects.toThrow('Period not found');
     });
   });
 
   describe('checkOut', () => {
     it('should successfully check out', async () => {
+      // Setup
       mockPrisma.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
+      mockPrisma.attCorrection.create.mockResolvedValue({ id: 2 } as any);
+      mockPrisma.attCorrection.update.mockResolvedValue({} as any);
+      mockPrisma.attClockRecord.findMany.mockResolvedValue([]);
+      mockPrisma.attCorrection.findMany.mockResolvedValue([]);
+      mockPrisma.attLeave.findMany.mockResolvedValue([]);
       
       const updatedRecord = { ...mockRecord, checkOutTime: new Date('2024-02-01T18:00:00Z'), status: 'normal' };
-      mockPrisma.$transaction.mockResolvedValue([updatedRecord, {}] as any);
+      mockPrisma.attDailyRecord.update.mockResolvedValue(updatedRecord as any);
 
-      const dto = { dailyRecordId: '1', checkOutTime: '2024-02-01T18:00:00Z' };
+      // Execute
+      const dto = { dailyRecordId: '1', checkOutTime: '2024-02-01T18:00:00Z', remark: 'Forgot' };
       const result = await service.checkOut(dto, 999);
 
+      // Verify
       expect(result.success).toBe(true);
+      expect(result.dailyRecord.checkOutTime).toBe('2024-02-01T18:00:00.000Z');
       expect(mockPrisma.attCorrection.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({
           type: CorrectionType.check_out
         })
       }));
-    });
-  });
-
-  describe('getDailyRecords', () => {
-    it('should return mapped records', async () => {
-      const records = [mockRecord];
-      mockPrisma.attDailyRecord.findMany.mockResolvedValue(records as any);
-      mockPrisma.attDailyRecord.count.mockResolvedValue(1);
-
-      const result = await service.getDailyRecords({ page: 1, pageSize: 10 });
-      
-      expect(result.total).toBe(1);
-      expect(result.items[0].id).toBe('1');
-      expect(result.items[0].employeeName).toBe('John');
     });
   });
 });

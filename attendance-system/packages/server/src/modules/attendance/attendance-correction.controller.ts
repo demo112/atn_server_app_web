@@ -97,7 +97,18 @@ export class AttendanceCorrectionController {
    */
   async getCorrections(req: Request, res: Response) {
     try {
+      const user = (req as any).user;
       const query: QueryCorrectionsDto = req.query as any;
+
+      // 权限控制
+      if (user.role !== 'admin') {
+        if (!user.employeeId) {
+          throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked', 403);
+        }
+        query.deptId = undefined; 
+        query.employeeId = user.employeeId;
+      }
+
       const result = await service.getCorrections(query);
       
       res.json({
@@ -218,8 +229,18 @@ export class AttendanceCorrectionController {
    */
   async getDailyRecords(req: Request, res: Response) {
     try {
+      const user = (req as any).user;
       const query: QueryDailyRecordsDto = req.query as any;
       // 注意: query params 都是 string，需要转换 (Service层处理了大部分，但 status 可能需要注意)
+
+      // 权限控制
+      if (user.role !== 'admin') {
+        if (!user.employeeId) {
+          throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked', 403);
+        }
+        query.deptId = undefined;
+        query.employeeId = user.employeeId;
+      }
       
       const result = await service.getDailyRecords(query);
       
