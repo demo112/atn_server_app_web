@@ -4,12 +4,14 @@
   "description": "Attendance System Monorepo",
   "scripts": {
     "dev": "pnpm -r dev",
+    "dev:trae": "npx --yes concurrently -k -n \"SERVER,WEB,APP\" -c \"blue,green,magenta\" \"pnpm --filter @attendance/server dev\" \"pnpm --filter @attendance/web dev\" \"pnpm --filter @attendance/app start\"",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "lint:docs": "node scripts/docs-lint.js"
   },
   "workspaces": [
+    "apps/*",
     "packages/*"
   ],
   "devDependencies": {
@@ -19,11 +21,6 @@
     "vitest-mock-extended": "^3.1.0"
   },
   "pnpm": {
-    "overrides": {
-      "react": "18.3.1",
-      "react-dom": "18.3.1",
-      "@types/react": "18.3.1",
-      "@types/react-dom": "18.3.1"
-    }
+    "overrides": {}
   }
 }
