@@ -1,9 +1,11 @@
 import { prisma } from '../../common/db/prisma';
+import { createLogger } from '../../common/logger';
 import { CreateClockDto, ClockQueryDto, AttClockRecordVo } from './attendance-clock.dto';
 import { Prisma } from '@prisma/client';
 import invariant from 'tiny-invariant';
 
 export class AttendanceClockService {
+  private logger = createLogger('AttendanceClock');
   
   /**
    * 将 Prisma 原始记录转换为 VO (处理 BigInt)
@@ -91,7 +93,7 @@ export class AttendanceClockService {
       }
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendanceClock] Created clock record: Emp ${record.employeeId} Type ${record.type} (ID: ${record.id})`);
+    this.logger.info(`Created clock record: Emp ${record.employeeId} Type ${record.type} (ID: ${record.id})`);
     return this.mapToVo(record);
   }
 

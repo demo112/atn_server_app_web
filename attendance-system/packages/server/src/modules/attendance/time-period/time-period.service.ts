@@ -1,9 +1,12 @@
 
 import { prisma } from '../../../common/db/prisma';
+import { createLogger } from '../../../common/logger';
 import { CreateTimePeriodReqDto, UpdateTimePeriodReqDto } from './time-period.dto';
 import { TimePeriod } from '@attendance/shared';
 
 export class TimePeriodService {
+  private logger = createLogger('TimePeriod');
+
   /**
    * 创建时间段
    */
@@ -20,7 +23,7 @@ export class TimePeriodService {
     // 2. 验证规则 (业务逻辑验证)
     if (data.type === 1 && !data.rules) {
       // 弹性班制建议有规则，但不强制
-      console.warn(`[WARN] Creating flexible time period ${data.name} without rules`);
+      this.logger.warn(`Creating flexible time period ${data.name} without rules`);
     }
 
     // 3. 创建
@@ -36,7 +39,7 @@ export class TimePeriodService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [TimePeriod] Created: ${period.name} (ID: ${period.id})`);
+    this.logger.info(`Created: ${period.name} (ID: ${period.id})`);
     
     return this.mapToVo(period);
   }
@@ -89,7 +92,7 @@ export class TimePeriodService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [TimePeriod] Updated: ${updated.name} (ID: ${updated.id})`);
+    this.logger.info(`Updated: ${updated.name} (ID: ${updated.id})`);
     return this.mapToVo(updated);
   }
 

@@ -1,220 +1,121 @@
 
 import { Request, Response } from 'express';
 import { TimePeriodService } from './time-period.service';
-import { CreateTimePeriodReqDto, UpdateTimePeriodReqDto } from './time-period.dto';
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-
-const service = new TimePeriodService();
+import { CreateTimePeriodDto, UpdateTimePeriodDto } from './time-period.dto';
+import { logger } from '../../../../common/logger';
 
 export class TimePeriodController {
-  
-  /**
-   * 创建时间段
-   */
+  private timePeriodService: TimePeriodService;
+
+  constructor() {
+    this.timePeriodService = new TimePeriodService();
+  }
+
   async create(req: Request, res: Response) {
     try {
-      // DTO 转换与验证
-      const dto = plainToInstance(CreateTimePeriodReqDto, req.body);
-      const errors = await validate(dto);
-      
-      if (errors.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'ERR_VALIDATION_FAILED',
-            message: 'Validation failed',
-            details: errors.map(e => Object.values(e.constraints || {})).flat(),
-          }
-        });
-      }
-
-      const result = await service.create(dto);
-      
+      const dto = req.body as CreateTimePeriodDto;
+      const result = await this.timePeriodService.create(dto);
       res.status(201).json({
         success: true,
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [TimePeriod] Create failed`, error);
-      
-      if (error.message === 'ERR_ATT_PERIOD_NAME_EXISTS') {
-        return res.status(409).json({
-          success: false,
-          error: { code: 'ERR_ATT_PERIOD_NAME_EXISTS', message: 'Time period name already exists' }
-        });
-      }
-
-      res.status(500).json({
+      logger.error('[TimePeriod] Create failed', { error, body: req.body });
+      res.status(400).json({
         success: false,
         error: {
-          code: 'ERR_INTERNAL_SERVER_ERROR',
-          message: 'Failed to create time period',
+          code: 'ERR_TIME_PERIOD_CREATE_FAILED',
+          message: error.message,
         },
       });
     }
   }
 
-  /**
-   * 获取列表
-   */
   async findAll(req: Request, res: Response) {
     try {
-      const result = await service.findAll();
-      res.json({
+      const result = await this.timePeriodService.findAll();
+      res.status(200).json({
         success: true,
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [TimePeriod] Find all failed`, error);
+      logger.error('[TimePeriod] Find all failed', { error });
       res.status(500).json({
         success: false,
         error: {
-          code: 'ERR_INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve time periods',
+          code: 'ERR_TIME_PERIOD_FIND_FAILED',
+          message: error.message,
         },
       });
     }
   }
 
-  /**
-   * 获取详情
-   */
   async findOne(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'ERR_INVALID_ID', message: 'Invalid ID' }
-        });
-      }
-
-      const result = await service.findById(id);
-      
+      const id = req.params.id;
+      const result = await this.timePeriodService.findOne(id);
       if (!result) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'ERR_ATT_PERIOD_NOT_FOUND', message: 'Time period not found' }
-        });
-      }
-
-      res.json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [TimePeriod] Find one failed`, error);
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'ERR_INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve time period',
-        },
-      });
-    }
-  }
-
-  /**
-   * 更新时间段
-   */
-  async update(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'ERR_INVALID_ID', message: 'Invalid ID' }
-        });
-      }
-
-      // DTO 转换与验证
-      const dto = plainToInstance(UpdateTimePeriodReqDto, req.body);
-      const errors = await validate(dto);
-      
-      if (errors.length > 0) {
-        return res.status(400).json({
+        res.status(404).json({
           success: false,
           error: {
-            code: 'ERR_VALIDATION_FAILED',
-            message: 'Validation failed',
-            details: errors.map(e => Object.values(e.constraints || {})).flat(),
-          }
+            code: 'ERR_TIME_PERIOD_NOT_FOUND',
+            message: 'Time period not found',
+          },
         });
+        return;
       }
-
-      const result = await service.update(id, dto);
-      
-      res.json({
+      res.status(200).json({
         success: true,
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [TimePeriod] Update failed`, error);
-      
-      if (error.message === 'ERR_ATT_PERIOD_NOT_FOUND') {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'ERR_ATT_PERIOD_NOT_FOUND', message: 'Time period not found' }
-        });
-      }
-      if (error.message === 'ERR_ATT_PERIOD_NAME_EXISTS') {
-        return res.status(409).json({
-          success: false,
-          error: { code: 'ERR_ATT_PERIOD_NAME_EXISTS', message: 'Time period name already exists' }
-        });
-      }
-
+      logger.error('[TimePeriod] Find one failed', { error, id: req.params.id });
       res.status(500).json({
         success: false,
         error: {
-          code: 'ERR_INTERNAL_SERVER_ERROR',
-          message: 'Failed to update time period',
+          code: 'ERR_TIME_PERIOD_FIND_FAILED',
+          message: error.message,
         },
       });
     }
   }
 
-  /**
-   * 删除时间段
-   */
+  async update(req: Request, res: Response) {
+    try {
+      const id = req.params.id;
+      const dto = req.body as UpdateTimePeriodDto;
+      const result = await this.timePeriodService.update(id, dto);
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error: any) {
+      logger.error('[TimePeriod] Update failed', { error, id: req.params.id, body: req.body });
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'ERR_TIME_PERIOD_UPDATE_FAILED',
+          message: error.message,
+        },
+      });
+    }
+  }
+
   async remove(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'ERR_INVALID_ID', message: 'Invalid ID' }
-        });
-      }
-
-      await service.remove(id);
-      
-      res.json({
+      const id = req.params.id;
+      await this.timePeriodService.remove(id);
+      res.status(200).json({
         success: true,
         data: null,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [TimePeriod] Remove failed`, error);
-      
-      if (error.message === 'ERR_ATT_PERIOD_NOT_FOUND') {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'ERR_ATT_PERIOD_NOT_FOUND', message: 'Time period not found' }
-        });
-      }
-      if (error.message === 'ERR_ATT_PERIOD_IN_USE') {
-        return res.status(409).json({
-          success: false,
-          error: { code: 'ERR_ATT_PERIOD_IN_USE', message: 'Time period is in use by shifts' }
-        });
-      }
-
-      res.status(500).json({
+      logger.error('[TimePeriod] Remove failed', { error, id: req.params.id });
+      res.status(400).json({
         success: false,
         error: {
-          code: 'ERR_INTERNAL_SERVER_ERROR',
-          message: 'Failed to delete time period',
+          code: 'ERR_TIME_PERIOD_DELETE_FAILED',
+          message: error.message,
         },
       });
     }

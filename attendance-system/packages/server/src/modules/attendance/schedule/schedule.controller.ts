@@ -3,6 +3,7 @@ import { ScheduleService } from './schedule.service';
 import { CreateScheduleReqDto, BatchCreateScheduleReqDto } from './schedule.dto';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { logger } from '../../../../common/logger';
 
 const service = new ScheduleService();
 
@@ -34,7 +35,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [Schedule] Create failed`, error);
+      logger.error('[Schedule] Create failed', { error, body: req.body });
       
       if (error.message.startsWith('ERR_SCHEDULE_CONFLICT')) {
         return res.status(409).json({
@@ -83,7 +84,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [Schedule] Batch create failed`, error);
+      logger.error('[Schedule] Batch create failed', { error, body: req.body });
       
       if (error.message.startsWith('ERR_SCHEDULE_CONFLICT')) {
         return res.status(409).json({
@@ -118,7 +119,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [Schedule] Get overview failed`, error);
+      logger.error('[Schedule] Get overview failed', { error, query: req.query });
       res.status(500).json({
         success: false,
         error: { code: 'ERR_INTERNAL_ERROR', message: error.message }
@@ -145,7 +146,7 @@ export class ScheduleController {
         success: true,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [Schedule] Delete failed`, error);
+      logger.error('[Schedule] Delete failed', { error, params: req.params });
       
       if (error.message === 'ERR_SCHEDULE_NOT_FOUND') {
         return res.status(404).json({

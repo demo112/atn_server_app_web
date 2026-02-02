@@ -1,7 +1,10 @@
 import { prisma } from '../../common/db/prisma';
+import { createLogger } from '../../common/logger';
 import { AttendanceSettings, UpdateSettingsDto } from './attendance-settings.dto';
 
 export class AttendanceSettingsService {
+  private logger = createLogger('AttendanceSettings');
+
   /**
    * 初始化默认配置
    */
@@ -49,7 +52,7 @@ export class AttendanceSettingsService {
    * 更新考勤设置
    */
   async updateSettings(dto: UpdateSettingsDto): Promise<AttendanceSettings> {
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendanceSettings] System - Updating settings`, JSON.stringify(dto));
+    this.logger.info({ dto }, 'System - Updating settings');
     // 目前只支持更新 day_switch_time，后续可扩展
     if (dto.day_switch_time) {
       // 简单的格式校验
