@@ -13,7 +13,7 @@ export class EmployeeController {
     try {
       const dto = createEmployeeSchema.parse(req.body);
       const employee = await employeeService.create(dto);
-      res.status(201).json(employee);
+      res.status(201).json({ success: true, data: employee });
     } catch (error) {
       // Zod error handling usually needs mapping, but assuming errorHandler handles it or AppError wraps it
       // If error is ZodError, errorHandler might need to handle it.
@@ -26,7 +26,7 @@ export class EmployeeController {
     try {
       const query = getEmployeesSchema.parse(req.query);
       const result = await employeeService.findAll(query);
-      res.json(result);
+      res.json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
@@ -37,7 +37,7 @@ export class EmployeeController {
       const id = parseInt(req.params.id);
       if (isNaN(id)) throw AppError.badRequest('Invalid ID');
       const employee = await employeeService.findOne(id);
-      res.json(employee);
+      res.json({ success: true, data: employee });
     } catch (error) {
       next(error);
     }
@@ -49,7 +49,7 @@ export class EmployeeController {
       if (isNaN(id)) throw AppError.badRequest('Invalid ID');
       const dto = updateEmployeeSchema.parse(req.body);
       const employee = await employeeService.update(id, dto);
-      res.json(employee);
+      res.json({ success: true, data: employee });
     } catch (error) {
       next(error);
     }
@@ -60,7 +60,7 @@ export class EmployeeController {
       const id = parseInt(req.params.id);
       if (isNaN(id)) throw AppError.badRequest('Invalid ID');
       await employeeService.delete(id);
-      res.json({ success: true });
+      res.json({ success: true, data: null });
     } catch (error) {
       next(error);
     }
@@ -72,7 +72,7 @@ export class EmployeeController {
       if (isNaN(id)) throw AppError.badRequest('Invalid ID');
       const dto = bindUserSchema.parse(req.body);
       await employeeService.bindUser(id, dto);
-      res.json({ success: true });
+      res.json({ success: true, data: null });
     } catch (error) {
       next(error);
     }

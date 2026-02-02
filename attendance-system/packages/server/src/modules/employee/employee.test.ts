@@ -4,6 +4,16 @@ import { prisma } from '../../common/db/prisma';
 import { AppError } from '../../common/errors';
 import { EmployeeStatus } from '@prisma/client';
 
+// Mock logger
+vi.mock('../../common/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 // Mock prisma
 vi.mock('../../common/db/prisma', () => ({
   prisma: {
@@ -56,9 +66,16 @@ describe('EmployeeService', () => {
 
   describe('delete', () => {
     it('should soft delete employee', async () => {
-      const employee = { id: 1, employeeNo: 'E001', status: 'active', userId: 100 };
+      const employee = { 
+        id: 1, 
+        employeeNo: 'E001', 
+        status: 'active', 
+        userId: 100,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       (prisma.employee.findUnique as any).mockResolvedValue(employee);
-      (prisma.employee.update as any).mockResolvedValue({});
+      (prisma.employee.update as any).mockResolvedValue({ ...employee, status: 'deleted', employeeNo: 'del_E001' });
       (prisma.user.update as any).mockResolvedValue({});
 
       await service.delete(1);
