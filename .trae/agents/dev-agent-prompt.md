@@ -23,6 +23,7 @@
 | "报错"、"有问题" | → 问题修复 Skill，分析并修复 |
 | "写代码"、"实现" | → 代码实现 + 验证 Skill |
 | "提交"、"上线" | → Git操作 Skill，规范提交 |
+| "冲突"、"merge失败"、"pull失败" | → Git冲突解决 Skill，分析并解决 |
 | "进度"、"做到哪了" | → 任务规划 Skill，查看状态 |
 | 意图不明确 | → 展示能力菜单，引导选择 |
 
@@ -90,6 +91,7 @@
 | code-verification | 阶段5：四维验证 |
 | problem-fixing | 阶段5：问题修复（含四阶段调查法）|
 | git-operation | 阶段5：Git提交 |
+| git-conflict-resolution | Git冲突检测、分析与解决 |
 | integration-test | 阶段6：集成测试 |
 | doc-sync | 文档同步 |
 
@@ -370,20 +372,28 @@ Skill会检查并补充：
 
 **禁止记录**：密码、Token、敏感信息
 
-### Step 3: 四维验证
+### Step 3: 四维验证 + DoD 检查
 
 **执行**：使用 `code-verification` Skill
 
 > 说"验证代码"或"四维验证"激活Skill
 
-Skill会执行四维验证：
+Skill会执行五维验证：
 
 | 维度 | 做什么 | 权重 |
 |------|--------|------|
-| 契约验证 | 检查前后置条件、不变量 | 30% |
-| 自洽性验证 | 类型检查、断言覆盖 | 20% |
-| 对抗性验证 | 边界测试、异常输入 | 30% |
-| 交叉验证 | 代码与设计一致性 | 20% |
+| 契约验证 | 检查前后置条件、不变量 | 25% |
+| 自洽性验证 | 类型检查、断言覆盖 | 15% |
+| 对抗性验证 | 边界测试、异常输入 | 25% |
+| 交叉验证 | 代码与设计一致性 | 15% |
+| DoD 检查 | 完成标准符合率 | 20% |
+
+**DoD 检查项**：
+- 无 `console.log`（使用 `logger`）
+- 无 `throw new Error()`（使用 `AppError`）
+- `npm run lint:docs` 通过
+- `npm run build` 通过
+- `npm run lint` 通过
 
 **评分标准**：
 - A (90-100): 高可信度 → Step 4
@@ -408,6 +418,8 @@ Skill会：
 - 标题必须具体：做了什么 + 为什么
 - 禁止 merge commit，使用 rebase
 - 非交互式执行：使用 `--no-pager`
+
+**冲突处理**：如果 pull/rebase/merge 产生冲突，自动切换到 `git-conflict-resolution` Skill
 
 详细规范参考 project_rules.md Git规范章节
 
@@ -495,6 +507,28 @@ docs/
 ---
 
 ## 重要规则
+
+### DoD (Definition of Done) 规则
+
+每个 Task 完成前，必须执行 DoD 检查：
+
+#### 1. 代码检查
+- `npm run build` 通过
+- `npm run lint` 通过
+- 无 `console.log`（使用 `logger`）
+- 无 `throw new Error()`（使用 `AppError`）
+
+#### 2. 文档检查
+- `npm run lint:docs` 通过
+- design.md 已同步
+- api-contract.md 已同步（如有 API 变更）
+
+#### 3. 验证检查
+- 四维验证 ≥ 80 分
+
+**DoD 未通过时**：禁止标记任务完成，必须先修复。
+
+详细标准参考 `.trae/rules/14-definition-of-done.md`
 
 ### 公共代码规则
 - `common.*` 文件禁止自行修改

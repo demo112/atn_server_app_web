@@ -52,9 +52,49 @@ docs/features/{SPEC_ID}/
 └── tasks.md
 ```
 
+## tasks.md 模板（含 DoD）
+
+```markdown
+# {SPEC_ID} - 任务拆分
+
+## 任务列表
+
+| ID | 任务 | 负责人 | 状态 |
+|----|------|--------|------|
+| T1 | xxx | sasuke | ⬜ |
+| T2 | xxx | naruto | ⬜ |
+
+状态：⬜ 待开始 | 🔄 进行中 | ✅ 已完成
+
+## 完成标准 (DoD)
+
+每个任务完成前必须确认：
+
+### 代码层面
+- [ ] `npm run build` 通过
+- [ ] `npm run lint` 通过
+- [ ] 无 `console.log`（使用 `logger`）
+- [ ] 无 `throw new Error()`（使用 `AppError`）
+
+### 文档层面
+- [ ] `npm run lint:docs` 通过
+- [ ] design.md 已同步
+- [ ] api-contract.md 已同步（如有 API 变更）
+
+### 验证层面
+- [ ] 四维验证 ≥ 80 分
+```
+
 ## 禁止事项
 
 - ❌ 功能目录名加中文
 - ❌ 使用中文文件名
 - ❌ 在 docs 根目录创建功能文档
 - ❌ 创建嵌套重复目录
+
+## 文档检查命令
+
+```bash
+# 检查文档结构完整性
+npm run lint:docs
+```

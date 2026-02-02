@@ -166,6 +166,58 @@ description: 主动检查和补充代码日志，确保关键场景有完整的�
 接收代码 → 扫描场景 → 检查日志 → 补充缺失 → 输出代码
 ```
 
+---
+
+## 强制规则
+
+### 禁止 console.log
+
+代码中**禁止**使用 `console.log`，必须使用项目统一的 Logger：
+
+```typescript
+// ❌ 禁止
+console.log('用户登录', userId);
+console.error('登录失败', error);
+
+// ✅ 正确
+import { createLogger } from '../common/logger';
+const logger = createLogger('user');
+
+logger.info({ userId }, '用户登录');
+logger.error({ err: error, userId }, '登录失败');
+```
+
+### 检查命令
+
+在日志检查阶段，必须执行：
+
+```bash
+# 检查是否有 console.log
+grep -r "console.log" packages/server/src --include="*.ts"
+
+# 如果有输出，必须替换为 logger
+```
+
+### Logger 使用规范
+
+```typescript
+import { createLogger } from '../common/logger';
+
+// 创建模块级 logger
+const logger = createLogger('attendance');
+
+// INFO 级别：关键业务操作
+logger.info({ userId, shiftId }, '创建班次');
+
+// ERROR 级别：错误和异常
+logger.error({ err: error, context }, '班次创建失败');
+
+// WARN 级别：警告信息
+logger.warn({ userId, reason }, '班次时间重叠');
+```
+
+---
+
 ### 阶段一：接收代码
 
 **目标**：获取需要检查的代码文件。

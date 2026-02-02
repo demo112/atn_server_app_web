@@ -370,16 +370,72 @@ npx stryker run
 
 ---
 
+## 维度5: DoD (Definition of Done) 检查
+
+**目标**: 确保任务满足完成标准，不遗漏文档和规范要求
+
+### 执行步骤（必须执行）
+
+#### 1. 代码规范检查
+
+```bash
+# 检查是否有 console.log（禁止）
+grep -r "console.log" packages/server/src --include="*.ts"
+# 如果有输出 → 必须替换为 logger
+
+# 检查是否有 throw new Error（应使用 AppError）
+grep -r "throw new Error" packages/server/src --include="*.ts"
+# 如果有输出 → 建议替换为 AppError
+```
+
+#### 2. 文档完整性检查
+
+```bash
+# 运行文档检查脚本
+npm run lint:docs
+
+# 检查项：
+# - docs/features/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
+# - 文件名无中文
+```
+
+#### 3. 编译和 Lint 检查
+
+```bash
+npm run build
+npm run lint
+```
+
+### DoD 检查清单
+
+| 检查项 | 命令/方法 | 状态 |
+|--------|----------|------|
+| 无 console.log | `grep -r "console.log"` | ✅/❌ |
+| 使用 AppError | `grep -r "throw new Error"` | ✅/⚠️ |
+| 文档三件套 | `npm run lint:docs` | ✅/❌ |
+| 编译通过 | `npm run build` | ✅/❌ |
+| Lint 通过 | `npm run lint` | ✅/❌ |
+| design.md 已同步 | 人工确认 | ✅/❌ |
+
+### 质量门控
+
+- [ ] 无 console.log
+- [ ] 文档检查通过
+- [ ] 编译和 Lint 通过
+
+---
+
 ## 可信度评分
 
 ### 评分标准
 
 | 维度 | 权重 | 评分依据 |
 |------|------|----------|
-| 契约验证 | 30% | 契约覆盖率 × 属性测试通过率 |
-| 自洽性验证 | 20% | 类型检查通过 + 断言覆盖率 |
-| 对抗性验证 | 30% | 变异覆盖率 × 模糊测试存活率 |
-| 交叉验证 | 20% | 多视角一致性评分 |
+| 契约验证 | 25% | 契约覆盖率 × 属性测试通过率 |
+| 自洽性验证 | 15% | 类型检查通过 + 断言覆盖率 |
+| 对抗性验证 | 25% | 变异覆盖率 × 模糊测试存活率 |
+| 交叉验证 | 15% | 多视角一致性评分 |
+| DoD 检查 | 20% | 完成标准符合率 |
 
 ### 评分等级
 
