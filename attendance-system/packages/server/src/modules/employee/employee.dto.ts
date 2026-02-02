@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const createEmployeeSchema = z.object({
   employeeNo: z.string().min(1, 'Employee No is required'),
   name: z.string().min(1, 'Name is required'),
-  deptId: z.number().int().positive().optional(),
-  hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)').optional(),
+  deptId: z.number().int().positive('Department is required'),
+  hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
   phone: z.string().optional(),
   email: z.string().email().optional(),
   position: z.string().optional(),
