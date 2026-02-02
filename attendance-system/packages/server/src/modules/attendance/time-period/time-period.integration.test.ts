@@ -151,9 +151,9 @@ describe('TimePeriod Integration', () => {
 
   describe('DELETE /time-periods/:id', () => {
     it('should delete successfully', async () => {
-      prismaMock.attTimePeriod.findUnique.mockResolvedValue({ id: 1 } as any);
+      prismaMock.attTimePeriod.findUnique.mockResolvedValue({ id: 1, name: 'Shift 1' } as any);
       prismaMock.attShiftPeriod.count.mockResolvedValue(0);
-      prismaMock.attTimePeriod.delete.mockResolvedValue({ id: 1 } as any);
+      prismaMock.attTimePeriod.delete.mockResolvedValue({ id: 1, name: 'Shift 1' } as any);
 
       const res = await request(app).delete('/api/v1/attendance/time-periods/1');
 
@@ -161,7 +161,7 @@ describe('TimePeriod Integration', () => {
     });
 
     it('should fail if in use', async () => {
-      prismaMock.attTimePeriod.findUnique.mockResolvedValue({ id: 1 } as any);
+      prismaMock.attTimePeriod.findUnique.mockResolvedValue({ id: 1, name: 'Shift 1' } as any);
       prismaMock.attShiftPeriod.count.mockResolvedValue(1);
 
       const res = await request(app).delete('/api/v1/attendance/time-periods/1');

@@ -1,8 +1,11 @@
 
 import { Request, Response } from 'express';
 import { TimePeriodService } from './time-period.service';
-import { CreateTimePeriodDto, UpdateTimePeriodDto } from './time-period.dto';
-import { logger } from '../../../../common/logger';
+import { CreateTimePeriodReqDto, UpdateTimePeriodReqDto } from './time-period.dto';
+import { logger } from '../../../common/logger';
+import { AppError } from '../../../common/errors';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 
 export class TimePeriodController {
   private timePeriodService: TimePeriodService;
@@ -13,7 +16,20 @@ export class TimePeriodController {
 
   async create(req: Request, res: Response) {
     try {
-      const dto = req.body as CreateTimePeriodDto;
+      const dto = plainToInstance(CreateTimePeriodReqDto, req.body);
+      const errors = await validate(dto);
+
+      if (errors.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'ERR_VALIDATION_FAILED',
+            message: 'Validation failed',
+            details: errors.map(e => Object.values(e.constraints || {})).flat(),
+          }
+        });
+      }
+
       const result = await this.timePeriodService.create(dto);
       res.status(201).json({
         success: true,
@@ -21,6 +37,13 @@ export class TimePeriodController {
       });
     } catch (error: any) {
       logger.error('[TimePeriod] Create failed', { error, body: req.body });
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message },
+        });
+        return;
+      }
       res.status(400).json({
         success: false,
         error: {
@@ -40,6 +63,13 @@ export class TimePeriodController {
       });
     } catch (error: any) {
       logger.error('[TimePeriod] Find all failed', { error });
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message },
+        });
+        return;
+      }
       res.status(500).json({
         success: false,
         error: {
@@ -70,6 +100,13 @@ export class TimePeriodController {
       });
     } catch (error: any) {
       logger.error('[TimePeriod] Find one failed', { error, id: req.params.id });
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message },
+        });
+        return;
+      }
       res.status(500).json({
         success: false,
         error: {
@@ -82,8 +119,21 @@ export class TimePeriodController {
 
   async update(req: Request, res: Response) {
     try {
-      const id = req.params.id;
-      const dto = req.body as UpdateTimePeriodDto;
+      const id = Number(req.params.id);
+      const dto = plainToInstance(UpdateTimePeriodReqDto, req.body);
+      const errors = await validate(dto);
+
+      if (errors.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'ERR_VALIDATION_FAILED',
+            message: 'Validation failed',
+            details: errors.map(e => Object.values(e.constraints || {})).flat(),
+          }
+        });
+      }
+
       const result = await this.timePeriodService.update(id, dto);
       res.status(200).json({
         success: true,
@@ -91,6 +141,13 @@ export class TimePeriodController {
       });
     } catch (error: any) {
       logger.error('[TimePeriod] Update failed', { error, id: req.params.id, body: req.body });
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message },
+        });
+        return;
+      }
       res.status(400).json({
         success: false,
         error: {
@@ -111,6 +168,13 @@ export class TimePeriodController {
       });
     } catch (error: any) {
       logger.error('[TimePeriod] Remove failed', { error, id: req.params.id });
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message },
+        });
+        return;
+      }
       res.status(400).json({
         success: false,
         error: {

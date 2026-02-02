@@ -6,4 +6,5 @@ export * from './user';
 export * from './attendance/base';
 export * from './attendance/schedule';
 export * from './attendance/record';
+export * from './attendance/correction';
 export * from './attendance/stats';

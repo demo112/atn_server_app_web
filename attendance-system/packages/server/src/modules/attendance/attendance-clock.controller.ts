@@ -94,6 +94,12 @@ export class AttendanceClockController {
       });
     } catch (error: any) {
       logger.error('[AttendanceClock] Get list failed', { error, query: req.query });
+      if (error instanceof AppError) {
+        return res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message }
+        });
+      }
       res.status(500).json({
         success: false,
         error: {

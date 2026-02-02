@@ -3,7 +3,8 @@ import { ScheduleService } from './schedule.service';
 import { CreateScheduleReqDto, BatchCreateScheduleReqDto } from './schedule.dto';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { logger } from '../../../../common/logger';
+import { logger } from '../../../common/logger';
+import { AppError } from '../../../common/errors';
 
 const service = new ScheduleService();
 
@@ -37,17 +38,10 @@ export class ScheduleController {
     } catch (error: any) {
       logger.error('[Schedule] Create failed', { error, body: req.body });
       
-      if (error.message.startsWith('ERR_SCHEDULE_CONFLICT')) {
-        return res.status(409).json({
+      if (error instanceof AppError) {
+        return res.status(error.statusCode).json({
           success: false,
-          error: { code: 'ERR_SCHEDULE_CONFLICT', message: error.message }
-        });
-      }
-
-      if (['ERR_EMPLOYEE_NOT_FOUND', 'ERR_SHIFT_NOT_FOUND'].includes(error.message)) {
-         return res.status(404).json({
-          success: false,
-          error: { code: error.message, message: error.message }
+          error: { code: error.code, message: error.message }
         });
       }
 
@@ -148,10 +142,10 @@ export class ScheduleController {
     } catch (error: any) {
       logger.error('[Schedule] Delete failed', { error, params: req.params });
       
-      if (error.message === 'ERR_SCHEDULE_NOT_FOUND') {
-        return res.status(404).json({
+      if (error instanceof AppError) {
+        return res.status(error.statusCode).json({
           success: false,
-          error: { code: 'ERR_SCHEDULE_NOT_FOUND', message: 'Schedule not found' }
+          error: { code: error.code, message: error.message }
         });
       }
 

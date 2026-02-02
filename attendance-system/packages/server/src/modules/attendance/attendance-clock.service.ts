@@ -1,5 +1,6 @@
 import { prisma } from '../../common/db/prisma';
 import { createLogger } from '../../common/logger';
+import { AppError } from '../../common/errors';
 import { CreateClockDto, ClockQueryDto, AttClockRecordVo } from './attendance-clock.dto';
 import { Prisma } from '@prisma/client';
 import invariant from 'tiny-invariant';
@@ -36,7 +37,7 @@ export class AttendanceClockService {
   async create(data: CreateClockDto) {
     // 维度2: Consistency - 前置条件断言
     if (data.employeeId <= 0) {
-      throw new Error('ERR_EMPLOYEE_NOT_FOUND');
+      throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
     }
     invariant(data.type, 'Clock type is required');
     invariant(data.source, 'Clock source is required');
@@ -46,7 +47,7 @@ export class AttendanceClockService {
 
     // 1. 禁止未来时间打卡 (允许 1 分钟容错)
     if (clockTime.getTime() > now.getTime() + 60 * 1000) {
-      throw new Error('ERR_CLOCK_FUTURE_TIME_NOT_ALLOWED');
+      throw new AppError('ERR_CLOCK_FUTURE_TIME_NOT_ALLOWED', 'Future clock time not allowed', 400);
     }
 
     // 2. 处理重复打卡 (1 分钟内禁止重复)
@@ -62,7 +63,7 @@ export class AttendanceClockService {
     });
 
     if (lastClock) {
-      throw new Error('ERR_CLOCK_TOO_FREQUENT');
+      throw new AppError('ERR_CLOCK_TOO_FREQUENT', 'Clock in too frequent', 400);
     }
 
     // 检查员工是否存在
@@ -70,7 +71,7 @@ export class AttendanceClockService {
       where: { id: data.employeeId }
     });
     if (!employee) {
-      throw new Error('ERR_EMPLOYEE_NOT_FOUND');
+      throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
     }
 
     // 创建记录

@@ -41,7 +41,7 @@ describe('AttendanceClockService - Adversarial Verification', () => {
               });
             } catch (e: any) {
               // Should throw handled error, not crash with undefined reference etc.
-              expect(e.message).toBe('ERR_EMPLOYEE_NOT_FOUND');
+              expect(e.message).toBe('Employee not found');
             }
           }
         )
