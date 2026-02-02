@@ -140,7 +140,7 @@ export class TimePeriodController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[TimePeriod] Update failed', { error, id: req.params.id, body: req.body });
+      logger.error({ error, id: req.params.id, body: req.body }, '[TimePeriod] Update failed');
       if (error instanceof AppError) {
         res.status(error.statusCode).json({
           success: false,

@@ -140,7 +140,7 @@ export class ScheduleController {
         success: true,
       });
     } catch (error: any) {
-      logger.error('[Schedule] Delete failed', { error, params: req.params });
+      logger.error({ error, params: req.params }, '[Schedule] Delete failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({

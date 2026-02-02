@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { authService } from './auth.service';
 import { loginSchema } from './auth.dto';
-import { logger } from '../../common/utils/logger';
+import { createLogger } from '../../common/logger';
+
+const logger = createLogger('auth');
 
 export class AuthController {
   async login(req: Request, res: Response) {
@@ -11,7 +13,7 @@ export class AuthController {
       res.json({ success: true, data: result });
     } catch (error: any) {
       if (error.name === 'ZodError') {
-        logger.info('auth', 'anonymous', 'Login validation error', { errors: error.errors });
+        logger.info({ userId: 'anonymous', errors: error.errors }, 'Login validation error');
         return res.status(400).json({ success: false, error: { code: 'ERR_VALIDATION', message: 'Validation failed' } });
       }
       
@@ -20,7 +22,7 @@ export class AuthController {
         return res.status(401).json({ success: false, error: { code: 'ERR_AUTH_FAILED', message: error.message } });
       }
 
-      logger.error('auth', 'anonymous', 'Login unexpected error', { error: error.message, stack: error.stack });
+      logger.error({ userId: 'anonymous', error: error.message, stack: error.stack }, 'Login unexpected error');
       res.status(500).json({ success: false, error: { code: 'ERR_INTERNAL', message: 'Internal server error' } });
     }
   }
@@ -32,7 +34,7 @@ export class AuthController {
       const result = await authService.getMe(userId);
       res.json({ success: true, data: result });
     } catch (error: any) {
-      logger.error('auth', req.user?.id || 'unknown', 'Me error', { error: error.message, stack: error.stack });
+      logger.error({ userId: req.user?.id || 'unknown', error: error.message, stack: error.stack }, 'Me error');
       res.status(500).json({ success: false, error: { code: 'ERR_INTERNAL', message: 'Internal server error' } });
     }
   }

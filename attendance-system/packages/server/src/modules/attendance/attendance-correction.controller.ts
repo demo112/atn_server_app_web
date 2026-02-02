@@ -35,7 +35,7 @@ export class AttendanceCorrectionController {
         data: result
       });
     } catch (error: any) {
-      logger.error('CheckIn correction failed', { error, body: req.body });
+      logger.error({ err: error, body: req.body }, 'CheckIn correction failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
@@ -73,7 +73,7 @@ export class AttendanceCorrectionController {
         data: result
       });
     } catch (error: any) {
-      logger.error({ error, body: req.body }, 'CheckOut correction failed');
+      logger.error({ err: error, body: req.body }, 'CheckOut correction failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
@@ -104,7 +104,7 @@ export class AttendanceCorrectionController {
         data: result
       });
     } catch (error: any) {
-      logger.error({ error, query: req.query }, 'Get daily records failed');
+      logger.error({ err: error, query: req.query }, 'Get daily records failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
