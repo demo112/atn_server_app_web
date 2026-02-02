@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { getSchedules, ScheduleVo } from '../../services/attendance';
-import { getMe } from '../../services/auth';
+import { authService } from '../../services/auth';
 import { getUser, setUser } from '../../utils/auth';
 
 const ScheduleScreen = () => {
@@ -21,7 +21,7 @@ const ScheduleScreen = () => {
       // 如果本地没有 employeeId，尝试从服务器获取最新用户信息
       if (user && !user.employeeId) {
         try {
-          const meRes = await getMe();
+          const meRes = await authService.getMe();
           if (meRes.success && meRes.data) {
              // 合并新数据
              user = { ...user, ...meRes.data };

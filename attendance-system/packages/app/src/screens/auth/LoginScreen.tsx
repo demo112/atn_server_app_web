@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import request from '../../utils/request';
-import { setToken, setUser } from '../../utils/auth';
+import { authService } from '../../services/auth';
 import type { LoginVo } from '@attendance/shared';
 
 const LoginScreen = ({ navigation }: any) => {
@@ -17,13 +17,10 @@ const LoginScreen = ({ navigation }: any) => {
 
     setLoading(true);
     try {
-      const res = await request.post<any, LoginVo>('/auth/login', {
+      await authService.login({
         username,
         password
       });
-      
-      await setToken(res.token);
-      await setUser(res.user);
       
       // Navigate to Home
       navigation.replace('Home');
