@@ -56,6 +56,7 @@ export default function App() {
           }>
             <Route index element={<Home />} />
             <Route path="users" element={<UserList />} />
+            <Route path="employees" element={<EmployeeList />} />
             <Route path="attendance">
                <Route path="time-periods" element={<TimePeriodPage />} />
                <Route path="schedule" element={<SchedulePage />} />
