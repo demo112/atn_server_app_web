@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 
 // Mock Prisma
 vi.mock('../../common/db/prisma', () => ({
+  __esModule: true,
   prisma: {
     user: {
       findUnique: vi.fn(),
@@ -42,18 +43,18 @@ describe('User Module Verification', () => {
 
       await expect(userService.create({
         username: 'existing',
-        role: UserRole.user,
+        role: 'user',
         password: 'password'
       })).rejects.toThrow('Username already exists');
     });
 
     it('Create User: Post-condition (User Created)', async () => {
-      // Setup: user does not exist
+      // Setup: user not exists
       (prisma.user.findUnique as any).mockResolvedValue(null);
       (prisma.user.create as any).mockResolvedValue({
         id: 1,
         username: 'newuser',
-        role: UserRole.user,
+        role: 'user',
         status: 'active',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -61,7 +62,7 @@ describe('User Module Verification', () => {
 
       const result = await userService.create({
         username: 'newuser',
-        role: UserRole.user,
+        role: 'user',
         password: 'password'
       });
 
@@ -80,7 +81,7 @@ describe('User Module Verification', () => {
           (prisma.user.create as any).mockResolvedValue({
             id: 1,
             username: username, // Might need sanitization in real DB, but service should handle it
-            role: UserRole.user,
+            role: 'user',
             status: 'active',
             createdAt: new Date(),
             updatedAt: new Date()
@@ -92,7 +93,7 @@ describe('User Module Verification', () => {
             await userService.create({
                 username,
                 password,
-                role: UserRole.user
+                role: 'user'
             });
             return true;
           } catch (e) {

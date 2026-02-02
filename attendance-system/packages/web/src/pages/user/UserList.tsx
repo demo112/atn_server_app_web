@@ -46,14 +46,14 @@ const UserList: React.FC = () => {
   const handleCreate = () => {
     setModalMode('create');
     setCurrentUser(null);
-    form.resetFields();
+    (form as any).resetFields();
     setIsModalOpen(true);
   };
 
   const handleEdit = (record: UserListItem) => {
     setModalMode('edit');
     setCurrentUser(record);
-    form.setFieldsValue({
+    (form as any).setFieldsValue({
       username: record.username,
       role: record.role,
       status: record.status,
@@ -79,7 +79,7 @@ const UserList: React.FC = () => {
 
   const handleModalOk = async () => {
     try {
-      const values = await form.validateFields();
+      const values = await (form as any).validateFields();
       if (modalMode === 'create') {
         await createUser(values);
         message.success('创建成功');
@@ -100,40 +100,44 @@ const UserList: React.FC = () => {
     {
       title: 'ID',
       dataIndex: 'id',
-      width: 80,
+      key: 'id',
     },
     {
       title: '用户名',
       dataIndex: 'username',
+      key: 'username',
     },
     {
       title: '角色',
       dataIndex: 'role',
-      render: (role: string) => (
-        <Tag color={role === 'admin' ? 'blue' : 'green'}>{role}</Tag>
+      key: 'role',
+      render: (role: UserRole) => (
+        <Tag color={role === 'admin' ? 'red' : 'blue'}>{role}</Tag>
       ),
     },
     {
       title: '状态',
       dataIndex: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'error'}>{status}</Tag>
+      key: 'status',
+      render: (status: UserStatus) => (
+        <Tag color={status === 'active' ? 'green' : 'default'}>{status}</Tag>
       ),
     },
     {
-      title: '关联人员',
+      title: '关联员工',
       dataIndex: 'employeeName',
-      render: (text: string) => text || '-',
+      key: 'employeeName',
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (text: string) => new Date(text).toLocaleString(),
     },
     {
       title: '操作',
       key: 'action',
-      render: (_, record) => (
+      render: (_: unknown, record: UserListItem) => (
         <Space size="middle">
           <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
           <Button type="link" danger onClick={() => handleDelete(record.id)}>删除</Button>
@@ -143,7 +147,7 @@ const UserList: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
         <h2>用户管理</h2>
         <Button type="primary" onClick={handleCreate}>新增用户</Button>
@@ -158,7 +162,7 @@ const UserList: React.FC = () => {
           current: page,
           pageSize: pageSize,
           total: total,
-          onChange: (p, s) => {
+          onChange: (p: number, s: number) => {
             setPage(p);
             setPageSize(s);
           },
