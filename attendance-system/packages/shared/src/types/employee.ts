@@ -2,7 +2,23 @@
 // 员工状态枚举
 export enum EmployeeStatus {
   Active = 'active',
+  Inactive = 'inactive',
   Deleted = 'deleted'
+}
+
+export interface Employee {
+  id: number;
+  employeeNo: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  deptId?: number | null;
+  deptName?: string; // 冗余字段，方便显示
+  status: EmployeeStatus;
+  hireDate?: string;
+  leaveDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 员工视图对象

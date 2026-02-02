@@ -1,3 +1,12 @@
+export interface Department {
+  id: number;
+  name: string;
+  parentId?: number;
+  sortOrder: number;
+  children?: Department[];
+  employeeCount?: number; // 部门人数（含子部门）
+}
+
 export interface DepartmentVO {
   id: number;
   name: string;
