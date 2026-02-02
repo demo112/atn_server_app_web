@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, message } from 'antd';
-import { getUsers } from '../../../../api/user';
+import { getUsers } from "../../../api/user";
 
 interface BindUserModalProps {
   open: boolean;
