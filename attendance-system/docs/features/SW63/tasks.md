@@ -65,21 +65,21 @@
 
 ### 阶段6：Web 前端开发
 
-#### Task 7: 实现时间段 Service (Web)
+#### Task 7: 实现时间段 Service (Web) (已完成)
 - **文件**: `packages/web/src/services/time-period.ts`
 - **内容**: 封装 `getTimePeriods`, `createTimePeriod`, `updateTimePeriod`, `deleteTimePeriod` API 调用
 - **验证**: 无（作为后续任务依赖）
 - **依赖**: Task 5
 - **预计**: 10 分钟
 
-#### Task 8: 实现时间段列表页 (Web)
+#### Task 8: 实现时间段列表页 (Web) (已完成)
 - **文件**: `packages/web/src/pages/attendance/time-period/TimePeriodPage.tsx`
 - **内容**: 使用 Table 展示时间段列表，支持删除操作；添加“新增”按钮
 - **验证**: 页面可展示数据，删除功能正常
 - **依赖**: Task 7
 - **预计**: 20 分钟
 
-#### Task 9: 实现时间段表单组件 (Web)
+#### Task 9: 实现时间段表单组件 (Web) (已完成)
 - **文件**: `packages/web/src/pages/attendance/time-period/components/TimePeriodDialog.tsx`
 - **内容**: 
     - 实现新增/编辑弹窗
@@ -89,7 +89,7 @@
 - **依赖**: Task 8
 - **预计**: 30 分钟
 
-#### Task 10: Web 路由集成与联调
+#### Task 10: Web 路由集成与联调 (已完成)
 - **文件**: `packages/web/src/App.tsx` (或路由配置)
 - **内容**: 配置 `/attendance/settings/time-periods` 路由，进行端到端手动测试
 - **验证**: 浏览器中访问页面，完成一次完整的增删改查流程

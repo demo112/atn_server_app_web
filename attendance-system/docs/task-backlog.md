@@ -472,12 +472,12 @@ flowchart LR
     Backlog --> Todo --> InProgress --> Review --> Done
 ```
 
-### 当前状态（Sprint 1）
+### 当前状态（Sprint 2）
 
 | 状态 | sasuke 任务 | naruto 任务 |
 |------|-------------|-------------|
-| ✅ Done | - | - |
+| ✅ Done | - | SW62-01~04, SW63-01~07, SW65-01~08, SW66-01~06 |
 | 👀 Review | - | - |
 | 🔨 In Progress | - | - |
-| 📝 To Do | UA1-01~12, UA2-01~06, UA3-01~06 | SW62-01~04, SW63-01~07, SW64-01~06, SW69-01~09 |
-| 📋 Backlog | SW70, SW71, SW72 | SW65, SW66, SW67, SW68 |
+| 📝 To Do | UA1-01~12, UA2-01~06, UA3-01~06 | SW64-01~06, SW67-01~06, SW68-01~05, SW69-01~09 |
+| 📋 Backlog | SW70, SW71, SW72 | - |
