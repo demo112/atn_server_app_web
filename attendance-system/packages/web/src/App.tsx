@@ -1,4 +1,8 @@
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 
 // 临时占位组件，后续会移动到 components/layouts
 const MainLayout = () => (
@@ -17,21 +21,36 @@ const MainLayout = () => (
   </div>
 );
 
-const Home = () => <div><h2>Welcome to Attendance System</h2></div>;
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+};
 
-import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
+const Home = () => <div><h2>Welcome to Attendance System</h2></div>;
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="attendance">
-             <Route path="schedule" element={<SchedulePage />} />
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+            <PrivateRoute>
+              <MainLayout />
+            </PrivateRoute>
+          }>
+            <Route index element={<Home />} />
+            <Route path="attendance">
+               <Route path="schedule" element={<SchedulePage />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
