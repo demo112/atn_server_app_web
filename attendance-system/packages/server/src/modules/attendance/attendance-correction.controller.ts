@@ -246,7 +246,13 @@ export class AttendanceCorrectionController {
       
       res.json({
         success: true,
-        data: result
+        data: result.items,
+        pagination: {
+          total: result.total,
+          page: Number(query.page) || 1,
+          pageSize: Number(query.pageSize) || 20,
+          totalPages: Math.ceil(result.total / (Number(query.pageSize) || 20))
+        }
       });
     } catch (error: any) {
       logger.error({ err: error, query: req.query }, 'Get daily records failed');

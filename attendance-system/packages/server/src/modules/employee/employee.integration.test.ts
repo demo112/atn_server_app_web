@@ -89,6 +89,24 @@ describe('Employee API Integration', () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
     });
+
+    it('should return 400 if deptId is missing (Regression Test)', async () => {
+      const dto = {
+        employeeNo: 'E1000',
+        name: 'No Dept',
+        hireDate: '2023-01-01',
+        // deptId is missing
+      };
+
+      const res = await request(app)
+        .post('/api/v1/employees')
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      // Verify specific error message if possible, but status 400 is enough for now
+    });
   });
 
   describe('DELETE /api/v1/employees/:id', () => {
