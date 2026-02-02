@@ -20,6 +20,7 @@ export class EmployeeService {
     const employee = await prisma.employee.create({
       data: {
         ...dto,
+        hireDate: dto.hireDate ? new Date(dto.hireDate) : undefined,
         status: EmployeeStatus.active,
       },
     });

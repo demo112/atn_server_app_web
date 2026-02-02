@@ -7,6 +7,7 @@ interface JwtPayload {
   id: number;
   username: string;
   role: UserRole;
+  employeeId?: number;
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {

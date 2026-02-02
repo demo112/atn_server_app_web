@@ -49,58 +49,30 @@ async function verify() {
     }
 
     // ==========================================
-    // 3. Create Test Employee
+    // 3. Creating Test Employee
     // ==========================================
     console.log('\n🔹 3. Creating Test Employee...');
-    const empCode = `E2E_${Date.now()}`;
-    const empRes = await fetch(`${baseUrl}/employees`, { // Check route prefix
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({
-            name: 'E2E Test Employee',
-            code: empCode,
-            departmentId: departmentId,
-            status: 'active',
-            position: 'Tester',
-            email: `${empCode}@test.com`,
-            phone: '13800000000',
-            hireDate: new Date().toISOString()
-        })
+    const empRes = await fetch(`${baseUrl}/employees`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({
+        name: `Test Emp ${Date.now()}`,
+        employeeNo: `EMP${Date.now()}`,
+        email: `test${Date.now()}@example.com`,
+        deptId: departmentId,
+        hireDate: new Date().toISOString().split('T')[0]
+      })
     });
 
     if (!empRes.ok) {
-         // Try /attendance/employees if /employees failed
-         const empRes2 = await fetch(`${baseUrl}/attendance/employees`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminToken}`
-            },
-            body: JSON.stringify({
-                name: 'E2E Test Employee',
-                code: empCode,
-                departmentId: departmentId,
-                status: 'active',
-                position: 'Tester',
-                email: `${empCode}@test.com`,
-                phone: '13800000000',
-                hireDate: new Date().toISOString()
-            })
-         });
-         
-         if (!empRes2.ok) {
-            const text = await empRes2.text();
-            throw new Error(`Create Employee failed: ${empRes2.status} - ${text}`);
-         }
-         const empData = await empRes2.json();
-         createdEmployeeId = empData.data.id;
-    } else {
-        const empData = await empRes.json();
-        createdEmployeeId = empData.data.id;
+        const text = await empRes.text();
+        throw new Error(`Create Employee failed: ${empRes.status} - ${text}`);
     }
+    const empData = await empRes.json();
+    createdEmployeeId = empData.data.id;
     console.log(`✅ Employee created: ID ${createdEmployeeId}`);
 
     // ==========================================

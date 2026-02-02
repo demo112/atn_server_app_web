@@ -17,6 +17,10 @@ export class AuthService {
       include: { employee: true }
     });
 
+    if (user) {
+        logger.info({ userId: user.id, employeeId: user.employeeId }, 'AuthService.login found user');
+    }
+
     if (!user) {
       logger.info({ userId: 'anonymous', username: dto.username }, 'Login failed: User not found');
       throw AppError.badRequest('Invalid credentials');
@@ -34,7 +38,12 @@ export class AuthService {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: (user as any).role } as object,
+      { 
+        id: user.id, 
+        username: user.username, 
+        role: (user as any).role,
+        employeeId: user.employeeId 
+      } as object,
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN as any }
     );
