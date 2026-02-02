@@ -1,25 +1,23 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+// import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { app } from '../../app'; // We exported this earlier
 import { prisma } from '../../common/db/prisma';
 import { EmployeeStatus } from '@prisma/client';
 
 // Mock logger
-vi.mock('../../common/logger', () => ({
-  logger: {
+vi.mock('../../common/logger', () => {
+  const mockLogger = {
     info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
+    error: vi.fn((msg, ...args) => console.error('[MOCK ERROR]', msg, ...args)),
+    warn: vi.fn((msg, ...args) => console.warn('[MOCK WARN]', msg, ...args)),
     debug: vi.fn(),
-  },
-  createLogger: vi.fn().mockReturnValue({
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-  }),
-}));
+  };
+  return {
+    logger: mockLogger,
+    createLogger: vi.fn().mockReturnValue(mockLogger),
+  };
+});
 
 // Mock Prisma
 vi.mock('../../common/db/prisma', () => ({
@@ -95,7 +93,15 @@ describe('Employee API Integration', () => {
 
   describe('DELETE /api/v1/employees/:id', () => {
     it('should soft delete employee', async () => {
-      const employee = { id: 1, employeeNo: 'E999', status: 'active', userId: 100 };
+      const employee = { 
+        id: 1, 
+        employeeNo: 'E999', 
+        status: 'active', 
+        userId: 100,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        hireDate: new Date(),
+      };
       (prisma.employee.findUnique as any).mockResolvedValue(employee);
       (prisma.employee.update as any).mockResolvedValue({ ...employee, status: 'deleted' });
 
@@ -117,8 +123,8 @@ describe('Employee API Integration', () => {
   describe('GET /api/v1/employees', () => {
     it('should return list of employees', async () => {
       (prisma.employee.findMany as any).mockResolvedValue([
-        { id: 1, name: 'Emp1', status: 'active' },
-        { id: 2, name: 'Emp2', status: 'active' },
+        { id: 1, name: 'Emp1', status: 'active', createdAt: new Date(), updatedAt: new Date(), hireDate: new Date() },
+        { id: 2, name: 'Emp2', status: 'active', createdAt: new Date(), updatedAt: new Date(), hireDate: new Date() },
       ]);
       (prisma.employee.count as any).mockResolvedValue(2);
 
