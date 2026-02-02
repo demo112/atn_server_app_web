@@ -49,7 +49,7 @@ export interface Department {
 // Auth
 export interface LoginDto {
   username: string;
-  password?: string; // Optional for scenarios where password might not be required or handled differently
+  password: string;
 }
 
 export interface LoginVo {

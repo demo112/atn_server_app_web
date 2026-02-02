@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { attendanceRouter } from './modules/attendance';
+import { authRouter } from './modules/auth';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.get('/health', (req, res) => {
 });
 
 // API 路由挂载点
+app.use('/api/v1/auth', authRouter);
 // app.use('/api/v1/user', userRoutes);       // 人A负责
 app.use('/api/v1/attendance', attendanceRouter);  // 人B负责
 
