@@ -1,5 +1,6 @@
 import { prisma } from '../../common/db/prisma';
 import { createLogger } from '../../common/logger';
+import { AppError } from '../../common/errors';
 import { AttendanceSettings, UpdateSettingsDto } from './attendance-settings.dto';
 
 export class AttendanceSettingsService {
@@ -9,7 +10,7 @@ export class AttendanceSettingsService {
    * 初始化默认配置
    */
   async initDefaults() {
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendanceSettings] System - Initializing defaults`);
+    this.logger.info('System - Initializing defaults');
     const defaultSettings = [
       { key: 'day_switch_time', value: '05:00', description: '考勤日切换时间' },
     ];
@@ -23,7 +24,7 @@ export class AttendanceSettingsService {
         await prisma.attSetting.create({
           data: setting,
         });
-        console.log(`[${new Date().toISOString()}] [INFO] [AttendanceSettings] System - Initialized default setting: ${setting.key}`);
+        this.logger.info(`System - Initialized default setting: ${setting.key}`);
       }
     }
   }
@@ -58,7 +59,7 @@ export class AttendanceSettingsService {
       // 简单的格式校验
       const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
       if (!timeRegex.test(dto.day_switch_time)) {
-        throw new Error('INVALID_TIME_FORMAT');
+        throw AppError.badRequest('Invalid time format', 'ERR_INVALID_TIME_FORMAT');
       }
 
       await prisma.attSetting.upsert({

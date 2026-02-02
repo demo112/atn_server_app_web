@@ -36,7 +36,7 @@ export class TimePeriodController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[TimePeriod] Create failed', { error, body: req.body });
+      logger.error({ error, body: req.body }, '[TimePeriod] Create failed');
       if (error instanceof AppError) {
         res.status(error.statusCode).json({
           success: false,
@@ -62,7 +62,7 @@ export class TimePeriodController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[TimePeriod] Find all failed', { error });
+      logger.error({ error }, '[TimePeriod] Find all failed');
       if (error instanceof AppError) {
         res.status(error.statusCode).json({
           success: false,
@@ -82,7 +82,7 @@ export class TimePeriodController {
 
   async findOne(req: Request, res: Response) {
     try {
-      const id = req.params.id;
+      const id = Number(req.params.id);
       const result = await this.timePeriodService.findOne(id);
       if (!result) {
         res.status(404).json({
@@ -99,7 +99,7 @@ export class TimePeriodController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[TimePeriod] Find one failed', { error, id: req.params.id });
+      logger.error({ error, id: req.params.id }, '[TimePeriod] Find one failed');
       if (error instanceof AppError) {
         res.status(error.statusCode).json({
           success: false,
@@ -167,7 +167,7 @@ export class TimePeriodController {
         data: null,
       });
     } catch (error: any) {
-      logger.error('[TimePeriod] Remove failed', { error, id: req.params.id });
+      logger.error({ error, id: req.params.id }, '[TimePeriod] Remove failed');
       if (error instanceof AppError) {
         res.status(error.statusCode).json({
           success: false,

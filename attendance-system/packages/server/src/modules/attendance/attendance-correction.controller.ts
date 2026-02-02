@@ -73,7 +73,7 @@ export class AttendanceCorrectionController {
         data: result
       });
     } catch (error: any) {
-      logger.error('CheckOut correction failed', { error, body: req.body });
+      logger.error({ error, body: req.body }, 'CheckOut correction failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({

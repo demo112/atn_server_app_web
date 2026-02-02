@@ -36,7 +36,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[Schedule] Create failed', { error, body: req.body });
+      logger.error({ error, body: req.body }, '[Schedule] Create failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
@@ -78,7 +78,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[Schedule] Batch create failed', { error, body: req.body });
+      logger.error({ error, body: req.body }, '[Schedule] Batch create failed');
       
       if (error.message.startsWith('ERR_SCHEDULE_CONFLICT')) {
         return res.status(409).json({

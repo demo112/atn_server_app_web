@@ -48,7 +48,7 @@ export class AttendanceClockController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[AttendanceClock] Create failed', { error, body: req.body });
+      logger.error({ error, body: req.body }, '[AttendanceClock] Create failed');
       
       if (error.message === 'ERR_EMPLOYEE_NOT_FOUND') {
         return res.status(404).json({
@@ -93,7 +93,7 @@ export class AttendanceClockController {
         ...result, // items, pagination
       });
     } catch (error: any) {
-      logger.error('[AttendanceClock] Get list failed', { error, query: req.query });
+      logger.error({ error, query: req.query }, '[AttendanceClock] Get list failed');
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
           success: false,
