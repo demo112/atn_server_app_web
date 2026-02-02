@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "**/*.test.ts",
+    "**/__tests__/**",
+    "**/*.spec.ts",
+    "src/verify_api.ts",
+    "seed_admin.ts"
+  ]
+}
