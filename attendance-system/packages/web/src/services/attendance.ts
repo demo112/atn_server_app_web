@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Schedule, ApiResponse, PaginatedResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
+import { Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
 
 export const attendanceService = {
   // 获取排班列表

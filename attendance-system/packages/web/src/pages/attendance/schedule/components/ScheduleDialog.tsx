@@ -38,7 +38,7 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
         
         if (empRes.data) {
             // PaginatedResponse
-            setEmployees(empRes.data.items || []);
+            setEmployees(empRes.data || []);
         }
         if (shiftRes.data) {
              // ApiResponse<Shift[]> or any[]

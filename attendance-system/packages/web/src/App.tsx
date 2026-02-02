@@ -8,6 +8,7 @@ const MainLayout = () => (
       <nav>
         <ul>
           <li><a href="/attendance/schedule">排班管理</a></li>
+          <li><a href="/attendance/correction">异常考勤处理</a></li>
         </ul>
       </nav>
     </div>
