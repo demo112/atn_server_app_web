@@ -10,5 +10,6 @@ const controller = new StatisticsController();
 router.use(authenticate);
 
 router.get('/summary', controller.getDepartmentSummary);
+router.post('/calculate', controller.triggerCalculation);
 
 export const statisticsRouter = router;

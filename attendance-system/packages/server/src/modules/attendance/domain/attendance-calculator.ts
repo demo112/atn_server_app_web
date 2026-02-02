@@ -10,6 +10,7 @@ export interface CalculationResult {
   lateMinutes: number;
   earlyLeaveMinutes: number;
   absentMinutes: number;
+  leaveMinutes: number;
   actualMinutes: number;
   effectiveMinutes: number;
   workDate: dayjs.Dayjs;
@@ -106,6 +107,7 @@ export class AttendanceCalculator {
          lateMinutes: 0,
          earlyLeaveMinutes: 0,
          absentMinutes: 0,
+         leaveMinutes: coveredMinutes,
          actualMinutes: 0,
          effectiveMinutes: 0,
          workDate
@@ -133,7 +135,7 @@ export class AttendanceCalculator {
       status = 'absent';
       // 缺勤时长 = 班次时长 - 请假覆盖时长
       absentMinutes = Math.max(0, shiftDuration - coveredMinutes);
-      return { status, lateMinutes, earlyLeaveMinutes, absentMinutes, actualMinutes, effectiveMinutes: 0, workDate };
+      return { status, lateMinutes, earlyLeaveMinutes, absentMinutes, leaveMinutes: coveredMinutes, actualMinutes, effectiveMinutes: 0, workDate };
     }
 
     if (!checkIn || !checkOut) {
@@ -141,7 +143,7 @@ export class AttendanceCalculator {
       // 缺卡暂时无法精确计算迟到早退，记为缺勤
       // 也可以扣除请假部分，但缺卡本身就是异常
       absentMinutes = Math.max(0, shiftDuration - coveredMinutes); 
-      return { status, lateMinutes, earlyLeaveMinutes, absentMinutes, actualMinutes, effectiveMinutes: 0, workDate };
+      return { status, lateMinutes, earlyLeaveMinutes, absentMinutes, leaveMinutes: coveredMinutes, actualMinutes, effectiveMinutes: 0, workDate };
     }
 
     // 6. 计算迟到 (扣除请假)
@@ -219,6 +221,7 @@ export class AttendanceCalculator {
       lateMinutes,
       earlyLeaveMinutes,
       absentMinutes,
+      leaveMinutes: coveredMinutes,
       actualMinutes,
       effectiveMinutes: actualMinutes, // Logic B: 请假不计入有效工时
       workDate

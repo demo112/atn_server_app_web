@@ -41,6 +41,66 @@
 }
 ```
 
+## 四、统计模块
+
+### GET /api/v1/statistics/summary
+
+获取考勤汇总数据
+
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| startDate | string | 是 | 开始日期 (YYYY-MM-DD) |
+| endDate | string | 是 | 结束日期 (YYYY-MM-DD) |
+| deptId | number | 否 | 部门ID |
+| employeeId | number | 否 | 员工ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "employeeId": 1,
+      "employeeNo": "EMP001",
+      "name": "张三",
+      "deptName": "研发部",
+      "shouldAttendanceDays": 22,
+      "actualAttendanceDays": 21,
+      "lateTimes": 1,
+      "lateMinutes": 15,
+      "earlyLeaveTimes": 0,
+      "earlyLeaveMinutes": 0,
+      "absentDays": 1,
+      "leaveMinutes": 0
+    }
+  ]
+}
+```
+
+### POST /api/v1/statistics/calculate
+
+手动触发考勤计算 (Admin Only)
+
+**请求体：**
+```json
+{
+  "startDate": "2024-02-01",
+  "endDate": "2024-02-28",
+  "employeeIds": [1, 2]
+}
+```
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Calculation triggered successfully"
+  }
+}
+```
+
 ### POST /attendance/corrections/check-in
 
 补签到

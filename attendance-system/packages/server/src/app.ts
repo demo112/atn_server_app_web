@@ -8,8 +8,14 @@ import { employeeRouter } from './modules/employee';
 import { departmentRouter } from './modules/department';
 import { statisticsRouter } from './modules/statistics/statistics.routes';
 import { errorHandler } from './common/error-handler';
+import { attendanceScheduler } from './modules/attendance/attendance-scheduler';
 
 export const app = express();
+
+// 初始化调度器
+attendanceScheduler.init().catch(err => {
+  console.error('Failed to initialize attendance scheduler', err);
+});
 
 // 中间件
 app.use(cors());

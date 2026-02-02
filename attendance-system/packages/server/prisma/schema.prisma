@@ -228,6 +228,7 @@ model AttDailyRecord {
   lateMinutes       Int?             @map("late_minutes")
   earlyLeaveMinutes Int?             @map("early_leave_minutes")
   absentMinutes     Int?             @map("absent_minutes")
+  leaveMinutes      Int?             @map("leave_minutes")
   remark            String?          @db.VarChar(500)
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
