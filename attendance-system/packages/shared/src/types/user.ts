@@ -16,7 +16,7 @@ export interface User {
   employee?: Employee;
 }
 
-export type EmployeeStatus = 'active' | 'inactive';
+export type UserEmployeeStatus = 'active' | 'inactive';
 
 export interface Employee {
   id: number;
@@ -26,7 +26,7 @@ export interface Employee {
   email?: string;
   deptId?: number;
   deptName?: string; // 冗余字段，方便显示
-  status: EmployeeStatus;
+  status: UserEmployeeStatus;
   hireDate?: string;
   leaveDate?: string;
   createdAt: string;
