@@ -160,7 +160,7 @@ export class TimePeriodController {
 
   async remove(req: Request, res: Response) {
     try {
-      const id = req.params.id;
+      const id = Number(req.params.id);
       await this.timePeriodService.remove(id);
       res.status(200).json({
         success: true,

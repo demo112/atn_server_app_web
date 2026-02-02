@@ -3,6 +3,7 @@ import { AttendanceClockService } from './attendance-clock.service';
 import { CreateClockDto, ClockQueryDto } from './attendance-clock.dto';
 import { ClockSource } from '@prisma/client';
 import { logger } from '../../common/logger';
+import { AppError } from '../../common/errors';
 
 const service = new AttendanceClockService();
 

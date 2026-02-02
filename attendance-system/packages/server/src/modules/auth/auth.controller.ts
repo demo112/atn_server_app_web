@@ -30,11 +30,11 @@ export class AuthController {
   async me(req: Request, res: Response) {
     try {
       // req.user is set by authMiddleware
-      const userId = req.user!.id;
+      const userId = (req as any).user!.id;
       const result = await authService.getMe(userId);
       res.json({ success: true, data: result });
     } catch (error: any) {
-      logger.error({ userId: req.user?.id || 'unknown', error: error.message, stack: error.stack }, 'Me error');
+      logger.error({ userId: (req as any).user?.id || 'unknown', error: error.message, stack: error.stack }, 'Me error');
       res.status(500).json({ success: false, error: { code: 'ERR_INTERNAL', message: 'Internal server error' } });
     }
   }

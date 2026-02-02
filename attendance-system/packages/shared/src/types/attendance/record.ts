@@ -75,38 +75,6 @@ export interface Correction {
   operatorName?: string;
 }
 
-export type LeaveType =
-  | 'annual'
-  | 'sick'
-  | 'personal'
-  | 'business_trip'
-  | 'maternity'
-  | 'paternity'
-  | 'marriage'
-  | 'bereavement'
-  | 'other';
-
-export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
-
-export interface Leave {
-  id: number;
-  employeeId: number;
-  type: LeaveType;
-  startTime: string;
-  endTime: string;
-  reason?: string;
-  status: LeaveStatus;
-  approverId?: number;
-  approvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  // 冗余字段
-  employeeNo?: string;
-  employeeName?: string;
-  deptName?: string;
-  approverName?: string;
-}
-
 // Queries
 export interface ClockRecordQuery extends QueryParams {
   startTime?: string;
@@ -125,11 +93,3 @@ export interface DailyRecordQuery extends QueryParams {
   status?: AttendanceStatus;
 }
 
-export interface LeaveQuery extends QueryParams {
-  startTime?: string;
-  endTime?: string;
-  deptId?: number;
-  employeeId?: number;
-  type?: LeaveType;
-  status?: LeaveStatus;
-}

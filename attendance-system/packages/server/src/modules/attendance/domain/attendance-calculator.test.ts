@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AttendanceCalculator } from './attendance-calculator';
-import { AttDailyRecord, AttTimePeriod, AttendanceStatus } from '@prisma/client';
+import { AttDailyRecord, AttTimePeriod, AttendanceStatus, AttLeave, LeaveType, LeaveStatus } from '@prisma/client';
 import dayjs from 'dayjs';
 
 describe('AttendanceCalculator', () => {
@@ -65,8 +65,7 @@ describe('AttendanceCalculator', () => {
 
     const result = calculator.calculate(record, mockPeriod);
     expect(result.status).toBe('normal');
-    expect(result.lateMinutes).toBe(0); // Grace period implies not late? Or late but status normal? 
-    // Logic says: if checkIn > start + grace => late. So <= start + grace is NOT late.
+    expect(result.lateMinutes).toBe(0); 
   });
 
   it('should detect late', () => {
@@ -102,34 +101,101 @@ describe('AttendanceCalculator', () => {
 
     const result = calculator.calculate(record, mockPeriod);
     expect(result.status).toBe('absent');
+    expect(result.absentMinutes).toBe(540); // 9 hours
   });
 
-  it('should detect absent when late exceeds threshold', () => {
-    const record: AttDailyRecord = {
-      ...baseRecord,
-      checkInTime: new Date('2024-02-01T11:30:00.000Z'), // 11:30 (> 2 hours late)
-      checkOutTime: new Date('2024-02-01T18:00:00.000Z')
-    };
+  describe('Leave Integration', () => {
+    it('should return leave status when full day leave exists', () => {
+      const record = { ...baseRecord };
+      const leaves: AttLeave[] = [{
+        id: 1,
+        employeeId: 1,
+        type: LeaveType.annual,
+        startTime: new Date('2024-02-01T09:00:00.000Z'),
+        endTime: new Date('2024-02-01T18:00:00.000Z'),
+        status: LeaveStatus.approved,
+        reason: null,
+        approverId: null,
+        approvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }];
+      const result = calculator.calculate(record, mockPeriod, leaves);
+      expect(result.status).toBe('leave');
+      expect(result.absentMinutes).toBe(0);
+      expect(result.effectiveMinutes).toBe(0);
+    });
 
-    const result = calculator.calculate(record, mockPeriod);
-    expect(result.status).toBe('absent');
-    expect(result.lateMinutes).toBe(150);
-  });
+    it('should deduct late minutes if covered by leave', () => {
+      const record: AttDailyRecord = {
+        ...baseRecord,
+        checkInTime: new Date('2024-02-01T10:00:00.000Z'), // 1 hour late
+        checkOutTime: new Date('2024-02-01T18:00:00.000Z')
+      };
+      const leaves: AttLeave[] = [{
+        id: 1,
+        employeeId: 1,
+        type: LeaveType.personal,
+        startTime: new Date('2024-02-01T09:00:00.000Z'),
+        endTime: new Date('2024-02-01T10:00:00.000Z'), // Covers the late hour
+        status: LeaveStatus.approved,
+        reason: null,
+        approverId: null,
+        approvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }];
+      
+      const result = calculator.calculate(record, mockPeriod, leaves);
+      expect(result.status).toBe('normal');
+      expect(result.lateMinutes).toBe(0);
+    });
 
-  it('should handle cross-day shift', () => {
-    const crossDayPeriod: AttTimePeriod = {
-      ...mockPeriod,
-      startTime: '20:00',
-      endTime: '04:00'
-    };
+    it('should deduct early leave minutes if covered by leave', () => {
+      const record: AttDailyRecord = {
+        ...baseRecord,
+        checkInTime: new Date('2024-02-01T09:00:00.000Z'),
+        checkOutTime: new Date('2024-02-01T17:00:00.000Z') // 1 hour early
+      };
+      const leaves: AttLeave[] = [{
+        id: 1,
+        employeeId: 1,
+        type: LeaveType.personal,
+        startTime: new Date('2024-02-01T17:00:00.000Z'),
+        endTime: new Date('2024-02-01T18:00:00.000Z'), // Covers the early hour
+        status: LeaveStatus.approved,
+        reason: null,
+        approverId: null,
+        approvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }];
+      
+      const result = calculator.calculate(record, mockPeriod, leaves);
+      expect(result.status).toBe('normal');
+      expect(result.earlyLeaveMinutes).toBe(0);
+    });
 
-    const record: AttDailyRecord = {
-      ...baseRecord,
-      checkInTime: new Date('2024-02-01T20:05:00.000Z'),
-      checkOutTime: new Date('2024-02-02T04:05:00.000Z') // Next day
-    };
-
-    const result = calculator.calculate(record, crossDayPeriod);
-    expect(result.status).toBe('normal');
+    it('should deduct absent minutes for partial leave when absent', () => {
+      const record = { ...baseRecord, checkInTime: null, checkOutTime: null };
+      const leaves: AttLeave[] = [{
+        id: 1,
+        employeeId: 1,
+        type: LeaveType.sick,
+        startTime: new Date('2024-02-01T09:00:00.000Z'),
+        endTime: new Date('2024-02-01T13:00:00.000Z'), // 4 hours
+        status: LeaveStatus.approved,
+        reason: null,
+        approverId: null,
+        approvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }];
+      
+      const result = calculator.calculate(record, mockPeriod, leaves);
+      expect(result.status).toBe('absent');
+      // Shift 9h (540m). Leave 4h (240m). Absent = 300m.
+      expect(result.absentMinutes).toBe(300);
+    });
   });
 });

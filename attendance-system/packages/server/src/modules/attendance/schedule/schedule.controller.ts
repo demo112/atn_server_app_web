@@ -78,7 +78,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      logger.error({ error, body: req.body }, '[Schedule] Batch create failed');
+      logger.error({ err: error, body: req.body }, '[Schedule] Batch create failed');
       
       if (error.message.startsWith('ERR_SCHEDULE_CONFLICT')) {
         return res.status(409).json({
@@ -113,7 +113,7 @@ export class ScheduleController {
         data: result,
       });
     } catch (error: any) {
-      logger.error('[Schedule] Get overview failed', { error, query: req.query });
+      logger.error({ err: error, query: req.query }, '[Schedule] Get overview failed');
       res.status(500).json({
         success: false,
         error: { code: 'ERR_INTERNAL_ERROR', message: error.message }
@@ -140,7 +140,7 @@ export class ScheduleController {
         success: true,
       });
     } catch (error: any) {
-      logger.error({ error, params: req.params }, '[Schedule] Delete failed');
+      logger.error({ err: error, params: req.params }, '[Schedule] Delete failed');
       
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({

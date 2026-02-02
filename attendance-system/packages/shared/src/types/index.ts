@@ -8,3 +8,4 @@ export * from './attendance/schedule';
 export * from './attendance/record';
 export * from './attendance/correction';
 export * from './attendance/stats';
+export * from './attendance/leave';

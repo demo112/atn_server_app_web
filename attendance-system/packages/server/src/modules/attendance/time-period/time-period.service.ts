@@ -3,7 +3,8 @@ import { prisma } from '../../../common/db/prisma';
 import { createLogger } from '../../../common/logger';
 import { AppError } from '../../../common/errors';
 import { CreateTimePeriodReqDto, UpdateTimePeriodReqDto } from './time-period.dto';
-import { TimePeriod } from '@attendance/shared';
+import { TimePeriod, TimePeriodRules } from '@attendance/shared';
+import { AttTimePeriod } from '@prisma/client';
 
 export class TimePeriodService {
   private logger = createLogger('TimePeriod');
@@ -52,7 +53,7 @@ export class TimePeriodService {
     const periods = await prisma.attTimePeriod.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return periods.map(this.mapToVo);
+    return periods.map(p => this.mapToVo(p));
   }
 
   /**
@@ -123,16 +124,16 @@ export class TimePeriodService {
   /**
    * 映射数据库模型到 VO
    */
-  private mapToVo(entity: any): TimePeriod {
+  private mapToVo(entity: AttTimePeriod): TimePeriod {
     return {
       id: entity.id,
       name: entity.name,
       type: entity.type,
-      startTime: entity.startTime,
-      endTime: entity.endTime,
-      restStartTime: entity.restStartTime,
-      restEndTime: entity.restEndTime,
-      rules: entity.rules as any, // Json type handling
+      startTime: entity.startTime || undefined,
+      endTime: entity.endTime || undefined,
+      restStartTime: entity.restStartTime || undefined,
+      restEndTime: entity.restEndTime || undefined,
+      rules: (entity.rules as unknown as TimePeriodRules) || undefined,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
     };

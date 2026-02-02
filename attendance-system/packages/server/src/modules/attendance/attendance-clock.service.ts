@@ -11,17 +11,22 @@ export class AttendanceClockService {
   /**
    * 将 Prisma 原始记录转换为 VO (处理 BigInt)
    */
-  private mapToVo(record: any): AttClockRecordVo {
+  private mapToVo(record: Prisma.AttClockRecordGetPayload<{
+    include: {
+      employee: { include: { department: true } },
+      operator: true
+    }
+  }>): AttClockRecordVo {
     return {
       id: record.id.toString(),
       employeeId: record.employeeId,
       clockTime: record.clockTime,
       type: record.type,
       source: record.source,
-      deviceInfo: record.deviceInfo,
-      location: record.location,
-      operatorId: record.operatorId,
-      remark: record.remark,
+      deviceInfo: record.deviceInfo as any, // Json type
+      location: record.location as any, // Json type
+      operatorId: record.operatorId || undefined,
+      remark: record.remark || undefined,
       createdAt: record.createdAt,
       
       // 关联信息
