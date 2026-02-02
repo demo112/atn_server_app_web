@@ -31,6 +31,7 @@ const AttendanceSettingsPage: React.FC = () => {
       setSaving(true);
       await updateSettings({
         day_switch_time: settings.day_switch_time,
+        auto_calc_time: settings.auto_calc_time,
       });
       alert('保存成功');
     } catch (error) {
@@ -68,6 +69,23 @@ const AttendanceSettingsPage: React.FC = () => {
                 setSettings({ ...settings, day_switch_time: e.target.value })
               }
               required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              自动计算时间
+            </label>
+            <p className="text-sm text-gray-500 mb-2">
+              系统每天自动计算前一天考勤结果的时间。建议设置在凌晨，如 04:00。
+            </p>
+            <input
+              type="time"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              value={settings.auto_calc_time || '04:00'}
+              onChange={(e) =>
+                setSettings({ ...settings, auto_calc_time: e.target.value })
+              }
             />
           </div>
 

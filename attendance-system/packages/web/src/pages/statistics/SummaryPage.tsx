@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Form, DatePicker, Button, Select, message, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
+import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 // import * as XLSX from 'xlsx';
 import request from '../../utils/request';
@@ -61,6 +61,31 @@ const SummaryPage: React.FC = () => {
     }
   };
 
+  const handleRecalculate = async () => {
+    try {
+      const values = form.getFieldsValue();
+      const { dateRange } = values;
+      if (!dateRange || dateRange.length !== 2) {
+          message.error('请选择日期范围');
+          return;
+      }
+
+      setLoading(true);
+      await request.post('/statistics/calculate', {
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD'),
+      });
+      message.success('已触发重新计算，请稍后刷新查看结果');
+      // 延迟刷新
+      setTimeout(() => handleSearch(values), 2000);
+    } catch (error) {
+      console.error(error);
+      message.error('触发计算失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleExport = () => {
     if (data.length === 0) {
       message.warning('暂无数据可导出');
@@ -85,11 +110,11 @@ const SummaryPage: React.FC = () => {
     //   '有效出勤时长': item.effectiveMinutes,
     // }));
 
-    // const ws = XLSX.utils.json_to_sheet(exportData);
-    // const wb = XLSX.utils.book_new();
-    // XLSX.utils.book_append_sheet(wb, ws, "考勤汇总");
-    // XLSX.writeFile(wb, `考勤汇总_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`);
-    message.warning('导出功能暂时不可用 (Missing xlsx dependency)');
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "考勤汇总");
+    XLSX.writeFile(wb, `考勤汇总_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`);
+    // message.warning('导出功能暂时不可用 (Missing xlsx dependency)');
   };
 
   useEffect(() => {
@@ -155,6 +180,9 @@ const SummaryPage: React.FC = () => {
             </Button>
             <Button icon={<DownloadOutlined />} onClick={handleExport}>
                 导出
+            </Button>
+            <Button icon={<SyncOutlined />} onClick={handleRecalculate}>
+                重新计算
             </Button>
           </Space>
         </Form.Item>
