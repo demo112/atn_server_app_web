@@ -4,7 +4,7 @@ import { getToken, clearAuth } from './auth';
 // Use local IP for Android Emulator or physical device
 // localhost works for iOS simulator but not Android
 // You might need to change this to your machine's IP
-const BASE_URL = 'http://10.0.2.2:3000/api/v1'; // Android Emulator default
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.134:3000/api/v1';
 
 const request = axios.create({
   baseURL: BASE_URL,
