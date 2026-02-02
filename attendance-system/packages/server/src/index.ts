@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { attendanceRouter } from './modules/attendance';
+import { errorHandler } from './common/error-handler';
+import { logger } from './common/logger';
 
 dotenv.config();
 
@@ -22,6 +24,9 @@ app.get('/health', (req, res) => {
 // app.use('/api/v1/user', userRoutes);       // 人A负责
 app.use('/api/v1/attendance', attendanceRouter);  // 人B负责
 
+// 错误处理中间件
+app.use(errorHandler);
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });
