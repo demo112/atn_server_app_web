@@ -1,9 +1,6 @@
 import { QueryParams } from '../common';
 import { AttendanceStatus, CorrectionType } from './record';
 
-// Re-export for convenience
-export { CorrectionType };
-
 // 查询每日考勤记录参数
 export interface QueryDailyRecordsDto extends QueryParams {
   deptId?: number;

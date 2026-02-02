@@ -1,0 +1,10 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm.
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+npm error Lifecycle script `dev` failed with error:
+npm error code 4294967295
+npm error path D:\atn_server\atn_server_app_web\attendance-system\packages\web
+npm error workspace @attendance/web@0.1.0
+npm error location D:\atn_server\atn_server_app_web\attendance-system\packages\web
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c vite

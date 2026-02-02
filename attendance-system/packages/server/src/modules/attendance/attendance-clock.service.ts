@@ -25,8 +25,8 @@ export class AttendanceClockService {
       source: record.source,
       deviceInfo: record.deviceInfo as any, // Json type
       location: record.location as any, // Json type
-      operatorId: record.operatorId || undefined,
-      remark: record.remark || undefined,
+      operatorId: record.operatorId,
+      remark: record.remark,
       createdAt: record.createdAt,
       
       // 关联信息

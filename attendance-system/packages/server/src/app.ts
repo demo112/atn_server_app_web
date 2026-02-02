@@ -5,6 +5,7 @@ import { attendanceRouter } from './modules/attendance';
 import { authRouter } from './modules/auth';
 import { userRouter } from './modules/user';
 import { employeeRouter } from './modules/employee';
+import { departmentRouter } from './modules/department';
 import { errorHandler } from './common/error-handler';
 
 export const app = express();
@@ -22,6 +23,7 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/employees', employeeRouter);
+app.use('/api/v1/departments', departmentRouter);
 app.use('/api/v1/attendance', attendanceRouter);
 
 // 错误处理中间件
