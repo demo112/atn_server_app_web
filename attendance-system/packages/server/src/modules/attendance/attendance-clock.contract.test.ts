@@ -79,7 +79,7 @@ describe('AttendanceClockService - Contract Verification', () => {
               employeeId,
               type: 'sign_in' as any, // Hardcode to avoid enum issues
               source: 'app' as any
-            })).rejects.toThrow('ERR_EMPLOYEE_NOT_FOUND');
+            })).rejects.toThrow('Employee not found');
           }
         )
       );
@@ -95,7 +95,7 @@ describe('AttendanceClockService - Contract Verification', () => {
                  type: 'sign_in' as any,
                  source: 'app' as any,
                  clockTime: futureDate.toISOString()
-              })).rejects.toThrow('ERR_CLOCK_FUTURE_TIME_NOT_ALLOWED');
+              })).rejects.toThrow('Future clock time not allowed');
            }
         )
       );
@@ -109,7 +109,7 @@ describe('AttendanceClockService - Contract Verification', () => {
           employeeId: 1,
           type: 'sign_in' as any,
           source: 'app' as any
-       })).rejects.toThrow('ERR_CLOCK_TOO_FREQUENT');
+       })).rejects.toThrow('Clock in too frequent');
     });
 
   });

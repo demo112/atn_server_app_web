@@ -19,3 +19,7 @@
 
 ## 禁止记录
 密码、Token、身份证号、银行卡号等敏感信息
+
+## 强制执行 (DoD)
+- **禁止使用 `console.log` / `console.error`**：生产环境代码必须使用统一的 Logger。
+- **统一工具**：Server 端使用 `src/common/logger.ts`。

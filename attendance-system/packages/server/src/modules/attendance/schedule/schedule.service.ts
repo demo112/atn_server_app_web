@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../../common/db/prisma';
+import { AppError } from '../../../common/errors';
 import { CreateScheduleDto, BatchCreateScheduleDto, ScheduleVo, ScheduleQueryDto } from '@attendance/shared';
 
 export class ScheduleService {
@@ -13,15 +14,15 @@ export class ScheduleService {
 
     // 验证日期顺序
     if (start > end) {
-      throw new Error('ERR_INVALID_DATE_RANGE: Start date must be before end date');
+      throw new AppError('ERR_INVALID_DATE_RANGE', 'Start date must be before end date', 400);
     }
 
     // 验证员工和班次是否存在
     const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
-    if (!employee) throw new Error('ERR_EMPLOYEE_NOT_FOUND');
+    if (!employee) throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
     
     const shift = await prisma.attShift.findUnique({ where: { id: shiftId } });
-    if (!shift) throw new Error('ERR_SHIFT_NOT_FOUND');
+    if (!shift) throw new AppError('ERR_SHIFT_NOT_FOUND', 'Shift not found', 404);
 
     return await prisma.$transaction(async (tx) => {
       await this.createWithTx(tx, data);
@@ -40,7 +41,7 @@ export class ScheduleService {
         orderBy: { id: 'desc' } // Get the one just created
       });
 
-      if (!created) throw new Error('ERR_CREATE_FAILED');
+      if (!created) throw new AppError('ERR_CREATE_FAILED', 'Failed to create schedule', 500);
 
       return this.mapToVo(created);
     });
@@ -114,7 +115,7 @@ export class ScheduleService {
 
     if (conflicts.length > 0) {
       if (!force) {
-        throw new Error(`ERR_SCHEDULE_CONFLICT: Employee ${employeeId} has conflicts`);
+        throw new AppError('ERR_SCHEDULE_CONFLICT', `Employee ${employeeId} has conflicts`, 409);
       }
       
       for (const conflict of conflicts) {
@@ -267,7 +268,7 @@ export class ScheduleService {
   async delete(id: number): Promise<void> {
     const exists = await prisma.attSchedule.findUnique({ where: { id } });
     if (!exists) {
-      throw new Error('ERR_SCHEDULE_NOT_FOUND');
+      throw new AppError('ERR_SCHEDULE_NOT_FOUND', 'Schedule not found', 404);
     }
     await prisma.attSchedule.delete({ where: { id } });
   }

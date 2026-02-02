@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AttendanceClockService } from './attendance-clock.service';
 import { CreateClockDto, ClockQueryDto } from './attendance-clock.dto';
 import { ClockSource } from '@prisma/client';
+import { logger } from '../../common/logger';
 
 const service = new AttendanceClockService();
 
@@ -47,7 +48,7 @@ export class AttendanceClockController {
         data: result,
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceClock] Create failed`, error);
+      logger.error({ error, body: req.body }, '[AttendanceClock] Create failed');
       
       if (error.message === 'ERR_EMPLOYEE_NOT_FOUND') {
         return res.status(404).json({
@@ -92,7 +93,13 @@ export class AttendanceClockController {
         ...result, // items, pagination
       });
     } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [ERROR] [AttendanceClock] Get list failed`, error);
+      logger.error({ error, query: req.query }, '[AttendanceClock] Get list failed');
+      if (error instanceof AppError) {
+        return res.status(error.statusCode).json({
+          success: false,
+          error: { code: error.code, message: error.message }
+        });
+      }
       res.status(500).json({
         success: false,
         error: {

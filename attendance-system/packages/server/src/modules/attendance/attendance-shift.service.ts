@@ -1,7 +1,10 @@
 import { prisma } from '../../common/db/prisma';
+import { createLogger } from '../../common/logger';
 import { CreateShiftDto, UpdateShiftDto, AttShiftVo } from './attendance-shift.dto';
 
 export class AttendanceShiftService {
+  private logger = createLogger('AttendanceShift');
+
   /**
    * 创建班次
    */
@@ -35,7 +38,7 @@ export class AttendanceShiftService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendanceShift] Created shift: ${shift.name} (ID: ${shift.id})`);
+    this.logger.info(`Created shift: ${shift.name} (ID: ${shift.id})`);
     return this.formatShift(shift);
   }
 

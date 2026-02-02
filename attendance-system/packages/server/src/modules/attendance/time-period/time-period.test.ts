@@ -56,7 +56,7 @@ describe('TimePeriodService', () => {
       
       mockPrisma.attTimePeriod.findFirst.mockResolvedValue({ id: 1 } as any);
 
-      await expect(service.create(dto)).rejects.toThrow('ERR_ATT_PERIOD_NAME_EXISTS');
+      await expect(service.create(dto)).rejects.toThrow('Time period name already exists');
     });
   });
 
@@ -77,7 +77,7 @@ describe('TimePeriodService', () => {
 
     it('should throw if not found', async () => {
       mockPrisma.attTimePeriod.findUnique.mockResolvedValue(null);
-      await expect(service.update(999, {})).rejects.toThrow('ERR_ATT_PERIOD_NOT_FOUND');
+      await expect(service.update(999, {})).rejects.toThrow('Time period not found');
     });
   });
 
@@ -97,7 +97,7 @@ describe('TimePeriodService', () => {
       mockPrisma.attTimePeriod.findUnique.mockResolvedValue({ id, name: 'Test' } as any);
       mockPrisma.attShiftPeriod.count.mockResolvedValue(1);
 
-      await expect(service.remove(id)).rejects.toThrow('ERR_ATT_PERIOD_IN_USE');
+      await expect(service.remove(id)).rejects.toThrow('Time period is in use by shifts');
     });
   });
 });

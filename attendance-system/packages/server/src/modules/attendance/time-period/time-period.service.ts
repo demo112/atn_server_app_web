@@ -1,9 +1,13 @@
 
 import { prisma } from '../../../common/db/prisma';
+import { createLogger } from '../../../common/logger';
+import { AppError } from '../../../common/errors';
 import { CreateTimePeriodReqDto, UpdateTimePeriodReqDto } from './time-period.dto';
 import { TimePeriod } from '@attendance/shared';
 
 export class TimePeriodService {
+  private logger = createLogger('TimePeriod');
+
   /**
    * 创建时间段
    */
@@ -14,13 +18,13 @@ export class TimePeriodService {
     });
 
     if (existing) {
-      throw new Error('ERR_ATT_PERIOD_NAME_EXISTS');
+      throw new AppError('ERR_ATT_PERIOD_NAME_EXISTS', 'Time period name already exists', 409);
     }
 
     // 2. 验证规则 (业务逻辑验证)
     if (data.type === 1 && !data.rules) {
       // 弹性班制建议有规则，但不强制
-      console.warn(`[WARN] Creating flexible time period ${data.name} without rules`);
+      this.logger.warn(`Creating flexible time period ${data.name} without rules`);
     }
 
     // 3. 创建
@@ -36,7 +40,7 @@ export class TimePeriodService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [TimePeriod] Created: ${period.name} (ID: ${period.id})`);
+    this.logger.info(`Created: ${period.name} (ID: ${period.id})`);
     
     return this.mapToVo(period);
   }
@@ -54,7 +58,7 @@ export class TimePeriodService {
   /**
    * 获取详情
    */
-  async findById(id: number): Promise<TimePeriod | null> {
+  async findOne(id: number): Promise<TimePeriod | null> {
     const period = await prisma.attTimePeriod.findUnique({
       where: { id },
     });
@@ -68,7 +72,7 @@ export class TimePeriodService {
     // 检查是否存在
     const existing = await prisma.attTimePeriod.findUnique({ where: { id } });
     if (!existing) {
-      throw new Error('ERR_ATT_PERIOD_NOT_FOUND');
+      throw new AppError('ERR_ATT_PERIOD_NOT_FOUND', 'Time period not found', 404);
     }
 
     // 如果修改了名称，检查重复
@@ -77,7 +81,7 @@ export class TimePeriodService {
         where: { name: data.name },
       });
       if (nameExists) {
-        throw new Error('ERR_ATT_PERIOD_NAME_EXISTS');
+        throw new AppError('ERR_ATT_PERIOD_NAME_EXISTS', 'Time period name already exists', 409);
       }
     }
 
@@ -89,7 +93,7 @@ export class TimePeriodService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [TimePeriod] Updated: ${updated.name} (ID: ${updated.id})`);
+    this.logger.info(`Updated: ${updated.name} (ID: ${updated.id})`);
     return this.mapToVo(updated);
   }
 
@@ -100,7 +104,7 @@ export class TimePeriodService {
     // 检查是否存在
     const existing = await prisma.attTimePeriod.findUnique({ where: { id } });
     if (!existing) {
-      throw new Error('ERR_ATT_PERIOD_NOT_FOUND');
+      throw new AppError('ERR_ATT_PERIOD_NOT_FOUND', 'Time period not found', 404);
     }
 
     // 检查是否被班次引用
@@ -109,11 +113,11 @@ export class TimePeriodService {
     });
 
     if (shiftCount > 0) {
-      throw new Error('ERR_ATT_PERIOD_IN_USE');
+      throw new AppError('ERR_ATT_PERIOD_IN_USE', 'Time period is in use by shifts', 409);
     }
 
     await prisma.attTimePeriod.delete({ where: { id } });
-    console.log(`[${new Date().toISOString()}] [INFO] [TimePeriod] Deleted: ${existing.name} (ID: ${id})`);
+    this.logger.info(`Deleted: ${existing.name} (ID: ${id})`);
   }
 
   /**

@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import { attendanceRouter } from './modules/attendance';
 import { authRouter } from './modules/auth';
 import { userRouter } from './modules/user';
+import { errorHandler } from './common/error-handler';
+import { logger } from './common/logger';
 
 dotenv.config();
 
@@ -25,6 +27,9 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/attendance', attendanceRouter);  // 人B负责
 
+// 错误处理中间件
+app.use(errorHandler);
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });

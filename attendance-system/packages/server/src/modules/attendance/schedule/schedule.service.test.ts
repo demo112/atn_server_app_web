@@ -68,7 +68,7 @@ describe('ScheduleService', () => {
         startDate: '2024-01-01',
         endDate: '2024-01-05',
         force: false,
-      })).rejects.toThrow('ERR_SCHEDULE_CONFLICT');
+      })).rejects.toThrow('Employee 1 has conflicts');
     });
 
     it('should resolve conflict when force=true (Obsolete)', async () => {

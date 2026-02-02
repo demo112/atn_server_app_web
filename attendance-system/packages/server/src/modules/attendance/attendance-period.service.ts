@@ -1,7 +1,10 @@
 import { prisma } from '../../common/db/prisma';
+import { createLogger } from '../../common/logger';
 import { CreateTimePeriodDto, UpdateTimePeriodDto } from './attendance-period.dto';
 
 export class AttendancePeriodService {
+  private logger = createLogger('AttendancePeriod');
+
   /**
    * 创建时间段
    */
@@ -32,7 +35,7 @@ export class AttendancePeriodService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendancePeriod] Created time period: ${period.name} (ID: ${period.id})`);
+    this.logger.info(`Created time period: ${period.name} (ID: ${period.id})`);
     return period;
   }
 
@@ -82,7 +85,7 @@ export class AttendancePeriodService {
       },
     });
 
-    console.log(`[${new Date().toISOString()}] [INFO] [AttendancePeriod] Updated time period: ${updated.name} (ID: ${updated.id})`);
+    this.logger.info(`Updated time period: ${updated.name} (ID: ${updated.id})`);
     return updated;
   }
 
