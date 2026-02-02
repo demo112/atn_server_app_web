@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
+import UserList from './pages/user/UserList';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 
 // 临时占位组件，后续会移动到 components/layouts
@@ -12,6 +13,7 @@ const MainLayout = () => (
       <nav>
         <ul>
           <li><a href="/attendance/schedule">排班管理</a></li>
+          <li><a href="/users">用户管理</a></li>
         </ul>
       </nav>
     </div>
@@ -45,6 +47,7 @@ export default function App() {
             </PrivateRoute>
           }>
             <Route index element={<Home />} />
+            <Route path="users" element={<UserList />} />
             <Route path="attendance">
                <Route path="schedule" element={<SchedulePage />} />
             </Route>
