@@ -105,13 +105,15 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
           label="请假类型"
           rules={[{ required: true, message: '请选择类型' }]}
         >
-          <Select>
-            <Select.Option value={LeaveType.annual}>年假</Select.Option>
-            <Select.Option value={LeaveType.sick}>病假</Select.Option>
-            <Select.Option value={LeaveType.personal}>事假</Select.Option>
-            <Select.Option value={LeaveType.business_trip}>出差</Select.Option>
-            <Select.Option value={LeaveType.other}>其他</Select.Option>
-          </Select>
+          <Select
+            options={[
+              { value: LeaveType.annual, label: '年假' },
+              { value: LeaveType.sick, label: '病假' },
+              { value: LeaveType.personal, label: '事假' },
+              { value: LeaveType.business_trip, label: '出差' },
+              { value: LeaveType.other, label: '其他' }
+            ]}
+          />
         </Form.Item>
 
         <Form.Item

@@ -159,11 +159,11 @@ const ClockRecordPage: React.FC = () => {
             placeholder="选择员工"
             allowClear
             onChange={(val) => setParams({ ...params, employeeId: val })}
-          >
-            {users.map(u => (
-              <Select.Option key={u.id} value={u.id}>{u.username}</Select.Option>
-            ))}
-          </Select>
+            options={users.map(u => ({
+              label: u.username,
+              value: u.id
+            }))}
+          />
         </Space>
       </div>
 
@@ -188,20 +188,23 @@ const ClockRecordPage: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="employeeId" label="员工" rules={[{ required: true }]}>
-            <Select>
-              {users.map(u => (
-                <Select.Option key={u.id} value={u.id}>{u.username}</Select.Option>
-              ))}
-            </Select>
+            <Select
+              options={users.map(u => ({
+                label: u.username,
+                value: u.id
+              }))}
+            />
           </Form.Item>
           <Form.Item name="clockTime" label="打卡时间" rules={[{ required: true }]}>
             <DatePicker showTime style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="sign_in">上班</Select.Option>
-              <Select.Option value="sign_out">下班</Select.Option>
-            </Select>
+            <Select
+              options={[
+                { value: 'sign_in', label: '上班' },
+                { value: 'sign_out', label: '下班' }
+              ]}
+            />
           </Form.Item>
         </Form>
       </Modal>

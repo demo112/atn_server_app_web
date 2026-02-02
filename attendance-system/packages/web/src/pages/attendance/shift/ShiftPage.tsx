@@ -215,13 +215,11 @@ const ShiftPage: React.FC = () => {
                       placeholder="选择时间段"
                       value={currentPeriodIds}
                       onChange={(ids) => updateDayPeriods(day, ids)}
-                    >
-                      {periods.map(p => (
-                        <Select.Option key={p.id} value={p.id}>
-                          {p.name} ({p.startTime}-{p.endTime})
-                        </Select.Option>
-                      ))}
-                    </Select>
+                      options={periods.map(p => ({
+                        label: `${p.name} (${p.startTime}-${p.endTime})`,
+                        value: p.id
+                      }))}
+                    />
                   </Col>
                 </Row>
               );

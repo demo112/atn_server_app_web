@@ -166,13 +166,14 @@ const LeavePage: React.FC = () => {
           allowClear 
           style={{ width: 120 }}
           onChange={val => setFilters({...filters, type: val})}
-        >
-          <Select.Option value={LeaveType.annual}>年假</Select.Option>
-          <Select.Option value={LeaveType.sick}>病假</Select.Option>
-          <Select.Option value={LeaveType.personal}>事假</Select.Option>
-          <Select.Option value={LeaveType.business_trip}>出差</Select.Option>
-          <Select.Option value={LeaveType.other}>其他</Select.Option>
-        </Select>
+          options={[
+            { value: LeaveType.annual, label: '年假' },
+            { value: LeaveType.sick, label: '病假' },
+            { value: LeaveType.personal, label: '事假' },
+            { value: LeaveType.business_trip, label: '出差' },
+            { value: LeaveType.other, label: '其他' }
+          ]}
+        />
         <DatePicker.RangePicker 
           showTime
           onChange={dates => setFilters({...filters, dateRange: dates})}

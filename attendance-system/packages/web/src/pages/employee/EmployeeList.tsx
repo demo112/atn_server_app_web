@@ -24,8 +24,8 @@ const EmployeeList: React.FC = () => {
     setLoading(true);
     try {
       const res = await employeeService.getEmployees(params);
-      setData(res.items);
-      setTotal(res.total);
+      setData(res.data || []);
+      setTotal(res.pagination.total);
     } catch (error) {
       message.error('Failed to load employees');
     } finally {

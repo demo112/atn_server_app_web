@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, TreeSelect, message } from 'antd';
 import { DepartmentVO, CreateDepartmentDto, UpdateDepartmentDto } from '@attendance/shared';
-import { departmentService } from '../../services/department';
+import { departmentService } from '../../../services/department';
 
 interface DepartmentFormProps {
   visible: boolean;
