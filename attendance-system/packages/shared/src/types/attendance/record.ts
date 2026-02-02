@@ -85,6 +85,16 @@ export interface ClockRecordQuery extends QueryParams {
   source?: ClockSource;
 }
 
+export interface CreateClockDto {
+  employeeId: number;
+  clockTime: string;
+  type: ClockType;
+  source: ClockSource;
+  deviceInfo?: any;
+  location?: any;
+  remark?: string;
+}
+
 export interface DailyRecordQuery extends QueryParams {
   startDate?: string;
   endDate?: string;

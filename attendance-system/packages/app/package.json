@@ -6,13 +6,19 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios"
+    "ios": "expo start --ios",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@attendance/shared": "workspace:*",
+    "@react-navigation/native": "^7.1.28",
+    "@react-navigation/stack": "^7.6.16",
     "expo": "~50.0.0",
+    "expo-secure-store": "^15.0.8",
     "react": "18.2.0",
-    "react-native": "0.73.0"
+    "react-native": "0.73.0",
+    "react-native-safe-area-context": "^5.6.2",
+    "react-native-screens": "^4.20.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

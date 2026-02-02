@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Card, Tag, DatePicker } from 'antd';
 import { DepartmentTree } from '@/components/common/DepartmentTree';
-import { attendanceCorrectionService } from '@/services/attendance-correction';
+import * as correctionService from '@/services/correction';
 import { DailyRecordVo } from '@attendance/shared';
 import { CheckInDialog } from './components/CheckInDialog';
 import { CheckOutDialog } from './components/CheckOutDialog';
+import dayjs from 'dayjs';
 
 const CorrectionPage: React.FC = () => {
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
@@ -12,8 +14,7 @@ const CorrectionPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   // Filters
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([dayjs(), dayjs()]);
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -24,17 +25,17 @@ const CorrectionPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedDeptId, startDate, endDate, page]);
+  }, [selectedDeptId, dateRange, page]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await attendanceCorrectionService.getDailyRecords({
+      const res = await correctionService.getDailyRecords({
         page,
         pageSize,
         deptId: selectedDeptId ? selectedDeptId : undefined,
-        startDate,
-        endDate
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD')
       });
       if (res.data) {
         setRecords(res.data);
@@ -42,6 +43,7 @@ const CorrectionPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to load records', err);
+      // message.error('加载记录失败'); // Optional: suppress if daily records API not ready
     } finally {
       setLoading(false);
     }
@@ -57,153 +59,131 @@ const CorrectionPage: React.FC = () => {
     setCheckOutOpen(true);
   };
 
-  const formatTime = (isoString?: string | null) => {
-    if (!isoString) return '-';
-    return new Date(isoString).toLocaleString();
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'normal': return 'green';
-      case 'late': return 'orange';
-      case 'early_leave': return 'orange';
-      case 'absent': return 'red';
-      default: return 'black';
-    }
-  };
+  const columns = [
+    {
+      title: '日期',
+      dataIndex: 'workDate',
+      key: 'workDate',
+    },
+    {
+      title: '员工ID',
+      dataIndex: 'employeeId',
+      key: 'employeeId',
+    },
+    {
+      title: '签到时间',
+      dataIndex: 'checkInTime',
+      key: 'checkInTime',
+      render: (text: string) => text ? dayjs(text).format('HH:mm:ss') : '-'
+    },
+    {
+      title: '签退时间',
+      dataIndex: 'checkOutTime',
+      key: 'checkOutTime',
+      render: (text: string) => text ? dayjs(text).format('HH:mm:ss') : '-'
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        const colors: Record<string, string> = {
+          normal: 'green',
+          late: 'orange',
+          early_leave: 'orange',
+          absent: 'red',
+        };
+        const labels: Record<string, string> = {
+          normal: '正常',
+          late: '迟到',
+          early_leave: '早退',
+          absent: '缺勤',
+        };
+        return <Tag color={colors[status] || 'default'}>{labels[status] || status}</Tag>;
+      }
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: any, record: DailyRecordVo) => (
+        <Space size="middle">
+          {!record.checkInTime && (
+            <Button type="link" onClick={() => handleCheckIn(record)}>补签到</Button>
+          )}
+          {!record.checkOutTime && (
+            <Button type="link" onClick={() => handleCheckOut(record)}>补签退</Button>
+          )}
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ display: 'flex', height: '100%', gap: '20px', padding: '10px' }}>
+    <div style={{ display: 'flex', height: '100%', gap: '20px' }}>
       {/* Left: Department Tree */}
-      <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid #eee' }}>
+      <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid #eee', paddingRight: 20 }}>
         <DepartmentTree onSelect={setSelectedDeptId} />
       </div>
 
       {/* Right: Content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header style={{ marginBottom: '20px' }}>
-          <h2 style={{ margin: '0 0 10px 0' }}>异常考勤处理</h2>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <label>日期范围:</label>
-            <input 
-              type="date" 
-              value={startDate} 
-              onChange={e => setStartDate(e.target.value)}
-              style={{ padding: '4px' }}
+        <Card title="异常考勤处理">
+          <Space style={{ marginBottom: 16 }}>
+            <DatePicker.RangePicker 
+              value={dateRange}
+              onChange={(dates) => {
+                if (dates && dates[0] && dates[1]) {
+                  setDateRange([dates[0], dates[1]]);
+                }
+              }}
+              allowClear={false}
             />
-            <span>至</span>
-            <input 
-              type="date" 
-              value={endDate} 
-              onChange={e => setEndDate(e.target.value)}
-              style={{ padding: '4px' }}
-            />
-            <button 
-              onClick={loadData}
-              style={{ padding: '4px 12px', cursor: 'pointer', marginLeft: '10px' }}
-            >
-              查询
-            </button>
-          </div>
-        </header>
+            <Button type="primary" onClick={loadData}>查询</Button>
+          </Space>
 
-        {/* Table */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #eee' }}>
-            <thead style={{ backgroundColor: '#fafafa' }}>
-              <tr>
-                <th style={thStyle}>日期</th>
-                <th style={thStyle}>姓名</th>
-                <th style={thStyle}>部门</th>
-                <th style={thStyle}>班次</th>
-                <th style={thStyle}>签到时间</th>
-                <th style={thStyle}>签退时间</th>
-                <th style={thStyle}>状态</th>
-                <th style={thStyle}>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>加载中...</td></tr>
-              ) : records.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>暂无数据</td></tr>
-              ) : (
-                records.map(record => (
-                  <tr key={record.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={tdStyle}>{new Date(record.workDate).toLocaleDateString()}</td>
-                    <td style={tdStyle}>{record.employeeName}</td>
-                    <td style={tdStyle}>{record.deptName}</td>
-                    <td style={tdStyle}>{record.shiftName}</td>
-                    <td style={tdStyle}>{formatTime(record.checkInTime)}</td>
-                    <td style={tdStyle}>{formatTime(record.checkOutTime)}</td>
-                    <td style={{ ...tdStyle, color: getStatusColor(record.status) }}>
-                      {record.status}
-                    </td>
-                    <td style={tdStyle}>
-                      <button 
-                        onClick={() => handleCheckIn(record)}
-                        style={{ marginRight: '5px', cursor: 'pointer' }}
-                      >
-                        补签到
-                      </button>
-                      <button 
-                        onClick={() => handleCheckOut(record)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        补签退
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-          <button 
-            disabled={page === 1} 
-            onClick={() => setPage(p => p - 1)}
-          >
-            上一页
-          </button>
-          <span>第 {page} 页 / 共 {Math.ceil(total / pageSize)} 页 (总数: {total})</span>
-          <button 
-            disabled={page * pageSize >= total} 
-            onClick={() => setPage(p => p + 1)}
-          >
-            下一页
-          </button>
-        </div>
+          <Table 
+            columns={columns} 
+            dataSource={records} 
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              current: page,
+              total,
+              pageSize,
+              onChange: p => setPage(p)
+            }}
+          />
+        </Card>
       </div>
 
-      {/* Dialogs */}
       {selectedRecord && (
         <>
           <CheckInDialog 
             isOpen={checkInOpen} 
             onClose={() => setCheckInOpen(false)} 
-            onSuccess={loadData}
+            onSuccess={() => {
+              setCheckInOpen(false);
+              loadData();
+            }}
             dailyRecordId={selectedRecord.id}
-            employeeName={selectedRecord.employeeName}
-            workDate={new Date(selectedRecord.workDate).toLocaleDateString()}
+            employeeName={`ID: ${selectedRecord.employeeId}`} // Would be nice to have name
+            workDate={selectedRecord.workDate}
           />
           <CheckOutDialog 
             isOpen={checkOutOpen} 
             onClose={() => setCheckOutOpen(false)} 
-            onSuccess={loadData}
+            onSuccess={() => {
+              setCheckOutOpen(false);
+              loadData();
+            }}
             dailyRecordId={selectedRecord.id}
-            employeeName={selectedRecord.employeeName}
-            workDate={new Date(selectedRecord.workDate).toLocaleDateString()}
+            employeeName={`ID: ${selectedRecord.employeeId}`}
+            workDate={selectedRecord.workDate}
           />
         </>
       )}
     </div>
   );
 };
-
-const thStyle = { padding: '12px', textAlign: 'left' as const, borderBottom: '1px solid #ddd' };
-const tdStyle = { padding: '12px' };
 
 export default CorrectionPage;

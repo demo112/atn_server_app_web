@@ -133,6 +133,8 @@ interface UpdateShiftDto {
 | `packages/server/src/modules/attendance/attendance-shift.service.ts` | 新增 | 班次 CRUD 逻辑 |
 | `packages/server/src/modules/attendance/attendance-shift.controller.ts` | 新增 | 班次 API 控制器 |
 | `packages/server/src/modules/attendance/attendance.routes.ts` | 修改 | 注册 `/shifts` 路由 |
+| `packages/web/src/pages/attendance/shift/ShiftPage.tsx` | 新增 | Web端班次管理页 |
+| `packages/web/src/services/shift.ts` | 新增 | Web端班次服务 |
 
 ## 影响分析
 
