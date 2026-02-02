@@ -8,9 +8,18 @@ importers:
 
   .:
     devDependencies:
+      fast-check:
+        specifier: ^4.5.3
+        version: 4.5.3
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@types/node@20.19.30)(terser@5.46.0)(yaml@2.8.2)
+      vitest-mock-extended:
+        specifier: ^3.1.0
+        version: 3.1.0(typescript@5.9.3)(vitest@4.0.18(@types/node@20.19.30)(terser@5.46.0)(yaml@2.8.2))
 
   packages/app:
     dependencies:
