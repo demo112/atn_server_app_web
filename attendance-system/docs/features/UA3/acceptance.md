@@ -12,12 +12,18 @@
 
 ## 验证结果
 
-### 单元测试
-- **测试文件**: `packages/server/src/modules/department/department.service.test.ts`
+### 单元测试 & ACV 测试
+- **测试文件**:
+  - `packages/server/src/modules/department/department.service.test.ts`
+  - `packages/server/src/modules/department/department.acv.test.ts`
+
 - **覆盖范围**:
   - `getTree`: 树形结构构建正确性
   - `create`: 基础创建及循环引用检查
   - `checkCircularReference`: 深度循环引用检测
+  - `delete`: 删除校验（子部门检查）
+  - `ACV`: 契约验证与边界测试
+
 - **结果**: 全部通过 (Vitest)
 
 ### DoD 检查
