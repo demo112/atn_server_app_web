@@ -72,7 +72,7 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error(err);
+      // console.error(err); // Prohibited by rules
       message.error(err.message || '操作失败');
     } finally {
       setLoading(false);
