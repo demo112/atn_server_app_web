@@ -119,16 +119,23 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input 
-                    type="checkbox" 
-                    id="batchForce" 
-                    checked={formData.force} 
-                    onChange={e => setFormData({...formData, force: e.target.checked})} 
-                />
-                <label htmlFor="batchForce" style={{ cursor: 'pointer' }}>
-                    强制覆盖 (忽略冲突)
-                </label>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <input 
+                        type="checkbox" 
+                        id="batchForce" 
+                        checked={formData.force} 
+                        onChange={e => setFormData({...formData, force: e.target.checked})} 
+                    />
+                    <label htmlFor="batchForce" style={{ cursor: 'pointer' }}>
+                        强制覆盖 (忽略冲突)
+                    </label>
+                </div>
+                {formData.force && (
+                    <div style={{ fontSize: '12px', color: '#faad14', marginLeft: '20px' }}>
+                        注意：存在跨天重叠时，新排班将优先，自动覆盖旧排班的重叠部分。
+                    </div>
+                )}
              </div>
              
              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>

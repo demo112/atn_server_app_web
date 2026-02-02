@@ -106,7 +106,7 @@ export class ScheduleController {
     try {
       const query = {
         employeeId: req.query.employeeId ? Number(req.query.employeeId) : undefined,
-        departmentId: req.query.departmentId ? Number(req.query.departmentId) : undefined,
+        deptId: req.query.deptId ? Number(req.query.deptId) : undefined,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
       };

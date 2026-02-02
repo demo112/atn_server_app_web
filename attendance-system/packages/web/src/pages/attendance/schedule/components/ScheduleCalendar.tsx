@@ -35,13 +35,13 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }) =>
         const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`;
         
         const res = await attendanceService.getSchedules({
-          departmentId: deptId,
+          deptId: deptId,
           startDate,
           endDate
         });
         
         if (res.success && res.data) {
-          setSchedules(res.data.items);
+          setSchedules(res.data);
         }
       } catch (error) {
         console.error('Failed to fetch schedules', error);
@@ -56,12 +56,10 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }) =>
   // 辅助函数：获取某天的排班
   const getSchedulesForDay = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const checkDate = new Date(dateStr).getTime();
 
     return schedules.filter(s => {
-      const start = new Date(s.startDate).getTime();
-      const end = new Date(s.endDate).getTime();
-      return checkDate >= start && checkDate <= end;
+      // 直接比较 YYYY-MM-DD 字符串，避免时区问题
+      return dateStr >= s.startDate && dateStr <= s.endDate;
     });
   };
 

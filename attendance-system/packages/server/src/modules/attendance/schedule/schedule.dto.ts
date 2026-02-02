@@ -6,19 +6,19 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 export class CreateScheduleReqDto implements CreateScheduleDto {
   @IsInt()
   @IsPositive()
-  employeeId: number;
+  employeeId!: number;
 
   @IsInt()
   @IsPositive()
-  shiftId: number;
+  shiftId!: number;
 
   @IsString()
   @Matches(DATE_REGEX, { message: 'startDate must be in YYYY-MM-DD format' })
-  startDate: string;
+  startDate!: string;
 
   @IsString()
   @Matches(DATE_REGEX, { message: 'endDate must be in YYYY-MM-DD format' })
-  endDate: string;
+  endDate!: string;
 
   @IsBoolean()
   @IsOptional()
@@ -29,19 +29,19 @@ export class BatchCreateScheduleReqDto implements BatchCreateScheduleDto {
   @IsArray()
   @IsInt({ each: true })
   @IsPositive({ each: true })
-  departmentIds: number[];
+  departmentIds!: number[];
 
   @IsInt()
   @IsPositive()
-  shiftId: number;
+  shiftId!: number;
 
   @IsString()
   @Matches(DATE_REGEX, { message: 'startDate must be in YYYY-MM-DD format' })
-  startDate: string;
+  startDate!: string;
 
   @IsString()
   @Matches(DATE_REGEX, { message: 'endDate must be in YYYY-MM-DD format' })
-  endDate: string;
+  endDate!: string;
 
   @IsBoolean()
   @IsOptional()

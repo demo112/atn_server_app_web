@@ -105,7 +105,7 @@ export class TimePeriodService {
 
     // 检查是否被班次引用
     const shiftCount = await prisma.attShiftPeriod.count({
-      where: { timePeriodId: id },
+      where: { periodId: id },
     });
 
     if (shiftCount > 0) {

@@ -1,34 +1,10 @@
 import { api } from './api';
-import { Schedule, ApiResponse, PaginatedResponse } from '@attendance/shared';
-
-export interface GetSchedulesParams {
-  departmentId?: number;
-  employeeId?: number;
-  startDate: string;
-  endDate: string;
-}
-
-export interface CreateScheduleDto {
-  employeeId: number;
-  shiftId: number;
-  startDate: string;
-  endDate: string;
-  force?: boolean;
-}
-
-export interface BatchCreateScheduleDto {
-  departmentIds: number[];
-  shiftId: number;
-  startDate: string;
-  endDate: string;
-  force?: boolean;
-  includeSubDepartments?: boolean;
-}
+import { Schedule, ApiResponse, PaginatedResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
 
 export const attendanceService = {
   // 获取排班列表
-  getSchedules: (params: GetSchedulesParams) => {
-    return api.get<any, ApiResponse<{ items: Schedule[] }>>('/attendance/schedules', { params });
+  getSchedules: (params: ScheduleQueryDto) => {
+    return api.get<any, ApiResponse<Schedule[]>>('/attendance/schedules', { params });
   },
 
   // 创建单人排班

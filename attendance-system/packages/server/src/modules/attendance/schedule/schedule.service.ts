@@ -1,13 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../../common/db/prisma';
-import { CreateScheduleReqDto, BatchCreateScheduleReqDto } from './schedule.dto';
-import { ScheduleVo } from '@attendance/shared';
+import { CreateScheduleDto, BatchCreateScheduleDto, ScheduleVo, ScheduleQueryDto } from '@attendance/shared';
 
 export class ScheduleService {
   /**
    * 创建排班 (单人)
    */
-  async create(data: CreateScheduleReqDto): Promise<ScheduleVo> {
+  async create(data: CreateScheduleDto): Promise<ScheduleVo> {
     const { employeeId, shiftId, startDate, endDate, force } = data;
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -25,39 +24,23 @@ export class ScheduleService {
     if (!shift) throw new Error('ERR_SHIFT_NOT_FOUND');
 
     return await prisma.$transaction(async (tx) => {
-      // 1. 检查冲突
-      const conflicts = await tx.attSchedule.findMany({
+      await this.createWithTx(tx, data);
+      
+      const created = await tx.attSchedule.findFirst({
         where: {
-          employeeId,
-          startDate: { lte: end },
-          endDate: { gte: start },
-        },
-      });
-
-      if (conflicts.length > 0) {
-        if (!force) {
-          throw new Error(`ERR_SCHEDULE_CONFLICT: Found ${conflicts.length} conflicting schedules`);
-        }
-        
-        // Force mode: Resolve conflicts
-        for (const conflict of conflicts) {
-          await this.resolveConflict(tx, conflict, start, end);
-        }
-      }
-
-      // 2. 创建新排班
-      const created = await tx.attSchedule.create({
-        data: {
           employeeId,
           shiftId,
           startDate: start,
-          endDate: end,
+          endDate: end
         },
         include: {
           shift: true,
           employee: true,
         },
+        orderBy: { id: 'desc' } // Get the one just created
       });
+
+      if (!created) throw new Error('ERR_CREATE_FAILED');
 
       return this.mapToVo(created);
     });
@@ -66,16 +49,13 @@ export class ScheduleService {
   /**
    * 批量排班 (部门)
    */
-  async batchCreate(data: BatchCreateScheduleReqDto): Promise<{ count: number }> {
+  async batchCreate(data: BatchCreateScheduleDto): Promise<{ count: number }> {
     const { departmentIds, shiftId, startDate, endDate, force, includeSubDepartments } = data;
     
     // 1. 获取目标员工 ID 列表
     let targetDeptIds = [...departmentIds];
     
     if (includeSubDepartments) {
-      // 递归查找子部门
-      // 简化实现：先查所有部门，在内存中构建树或查找
-      // 考虑到部门数量通常不多，查全量部门可行
       const allDepts = await prisma.department.findMany({ select: { id: true, parentId: true } });
       const subDeptIds = this.findAllSubDepartmentIds(departmentIds, allDepts);
       targetDeptIds = [...new Set([...targetDeptIds, ...subDeptIds])];
@@ -91,16 +71,8 @@ export class ScheduleService {
     }
 
     // 2. 批量执行
-    // 为了保证原子性，应该在一个事务中吗？
-    // 如果人数过多，事务可能会过大。建议分批或允许部分成功？
-    // 需求未明确，这里采用单一大事务保证一致性
-    
     await prisma.$transaction(async (tx) => {
       for (const emp of employees) {
-        // 复用 create 逻辑 (需要重构 create 以支持传入 tx，或者在 create 内部不再开启新事务？)
-        // Prisma 嵌套事务支持：如果 create 内部使用了 prisma.$transaction，它会自动复用外部 tx 吗？
-        // Prisma 交互式事务支持嵌套，但需要传递 tx 客户端。
-        // 为了复用，我将核心逻辑提取为 `createWithTx`
         await this.createWithTx(tx, {
           employeeId: emp.id,
           shiftId,
@@ -119,7 +91,7 @@ export class ScheduleService {
   /**
    * 核心创建逻辑 (支持事务传递)
    */
-  private async createWithTx(tx: Prisma.TransactionClient, data: CreateScheduleReqDto) {
+  private async createWithTx(tx: Prisma.TransactionClient, data: CreateScheduleDto) {
     const { employeeId, shiftId, startDate, endDate, force } = data;
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -131,12 +103,17 @@ export class ScheduleService {
         startDate: { lte: end },
         endDate: { gte: start },
       },
+      select: {
+        id: true,
+        employeeId: true,
+        shiftId: true,
+        startDate: true,
+        endDate: true,
+      },
     });
 
     if (conflicts.length > 0) {
       if (!force) {
-        // 在批量模式下，如果 force=false 且有冲突，整个批量失败？
-        // 是的，默认行为。
         throw new Error(`ERR_SCHEDULE_CONFLICT: Employee ${employeeId} has conflicts`);
       }
       
@@ -230,9 +207,6 @@ export class ScheduleService {
     while (queue.length > 0) {
       const currentId = queue.shift()!;
       if (result.has(currentId)) continue;
-      // Note: rootIds are already added to result in the caller? 
-      // No, caller says: targetDeptIds = [...departmentIds, ...subDeptIds]
-      // So here we strictly find children.
       
       const children = allDepts.filter(d => d.parentId === currentId);
       for (const child of children) {
@@ -256,20 +230,15 @@ export class ScheduleService {
   /**
    * 查询排班
    */
-  async getOverview(query: { 
-    employeeId?: number; 
-    departmentId?: number; 
-    startDate?: string; 
-    endDate?: string 
-  }): Promise<ScheduleVo[]> {
+  async getOverview(query: ScheduleQueryDto): Promise<ScheduleVo[]> {
     const where: any = {};
 
     if (query.employeeId) {
       where.employeeId = Number(query.employeeId);
     }
 
-    if (query.departmentId) {
-      where.employee = { deptId: Number(query.departmentId) };
+    if (query.deptId) {
+      where.employee = { deptId: Number(query.deptId) };
     }
 
     if (query.startDate) {
@@ -297,8 +266,9 @@ export class ScheduleService {
    */
   async delete(id: number): Promise<void> {
     const exists = await prisma.attSchedule.findUnique({ where: { id } });
-    if (!exists) throw new Error('ERR_SCHEDULE_NOT_FOUND');
-    
+    if (!exists) {
+      throw new Error('ERR_SCHEDULE_NOT_FOUND');
+    }
     await prisma.attSchedule.delete({ where: { id } });
   }
 }

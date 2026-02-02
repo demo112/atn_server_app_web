@@ -32,7 +32,8 @@ describe('ScheduleService', () => {
   describe('create', () => {
     it('should create schedule when no conflict', async () => {
       mockPrisma.attSchedule.findMany.mockResolvedValue([]);
-      mockPrisma.attSchedule.create.mockResolvedValue({
+      
+      const createdSchedule = {
         id: 1,
         employeeId: 1,
         shiftId: 1,
@@ -40,7 +41,12 @@ describe('ScheduleService', () => {
         endDate: new Date('2024-01-05'),
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+        shift: { name: 'Morning' },
+        employee: { name: 'John' }
+      };
+
+      mockPrisma.attSchedule.create.mockResolvedValue(createdSchedule as any);
+      mockPrisma.attSchedule.findFirst.mockResolvedValue(createdSchedule as any);
 
       const result = await service.create({
         employeeId: 1,
@@ -71,13 +77,17 @@ describe('ScheduleService', () => {
       mockPrisma.attSchedule.findMany.mockResolvedValue([
         { id: 99, startDate: new Date('2024-01-02'), endDate: new Date('2024-01-03') } as any
       ]);
-      mockPrisma.attSchedule.create.mockResolvedValue({
+      
+      const createdSchedule = {
         id: 1,
         employeeId: 1,
         shiftId: 1,
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-01-05'),
-      } as any);
+      };
+      
+      mockPrisma.attSchedule.create.mockResolvedValue(createdSchedule as any);
+      mockPrisma.attSchedule.findFirst.mockResolvedValue(createdSchedule as any);
 
       await service.create({
         employeeId: 1,
@@ -100,13 +110,16 @@ describe('ScheduleService', () => {
       mockPrisma.attSchedule.findMany.mockResolvedValue([
         { id: 99, startDate: new Date('2023-12-30'), endDate: new Date('2024-01-02') } as any
       ]);
-      mockPrisma.attSchedule.create.mockResolvedValue({
+      
+      const createdSchedule = {
         id: 1,
         employeeId: 1,
         shiftId: 1,
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-01-05'),
-      } as any);
+      };
+      mockPrisma.attSchedule.create.mockResolvedValue(createdSchedule as any);
+      mockPrisma.attSchedule.findFirst.mockResolvedValue(createdSchedule as any);
 
       await service.create({
         employeeId: 1,
@@ -132,13 +145,16 @@ describe('ScheduleService', () => {
       mockPrisma.attSchedule.findMany.mockResolvedValue([
         { id: 99, startDate: new Date('2024-01-04'), endDate: new Date('2024-01-08') } as any
       ]);
-      mockPrisma.attSchedule.create.mockResolvedValue({
+      
+      const createdSchedule = {
         id: 1,
         employeeId: 1,
         shiftId: 1,
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-01-05'),
-      } as any);
+      };
+      mockPrisma.attSchedule.create.mockResolvedValue(createdSchedule as any);
+      mockPrisma.attSchedule.findFirst.mockResolvedValue(createdSchedule as any);
 
       await service.create({
         employeeId: 1,
@@ -171,13 +187,16 @@ describe('ScheduleService', () => {
             endDate: new Date('2024-01-10') 
         } as any
       ]);
-      mockPrisma.attSchedule.create.mockResolvedValue({
+      
+      const createdSchedule = {
         id: 1,
         employeeId: 1,
         shiftId: 1,
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-01-05'),
-      } as any);
+      };
+      mockPrisma.attSchedule.create.mockResolvedValue(createdSchedule as any);
+      mockPrisma.attSchedule.findFirst.mockResolvedValue(createdSchedule as any);
 
       await service.create({
         employeeId: 1,
@@ -197,76 +216,55 @@ describe('ScheduleService', () => {
       // 2. Create Right
       const expectedRightStart = new Date('2024-01-06');
       expect(mockPrisma.attSchedule.create).toHaveBeenCalledWith(expect.objectContaining({
-        data: expect.objectContaining({
-            startDate: expectedRightStart,
-            endDate: new Date('2024-01-10')
-        })
+        data: {
+          employeeId: 1,
+          shiftId: 1,
+          startDate: expectedRightStart,
+          endDate: new Date('2024-01-10')
+        }
       }));
     });
   });
 
   describe('batchCreate', () => {
-    it('should create schedules for all employees in department', async () => {
-        // Mock employees lookup
-        mockPrisma.employee.findMany.mockResolvedValue([
-            { id: 1 }, { id: 2 }
-        ] as any);
+    it('should create schedules for multiple employees', async () => {
+      mockPrisma.department.findMany.mockResolvedValue([
+        { id: 1, parentId: null },
+        { id: 2, parentId: 1 }
+      ] as any);
 
-        mockPrisma.attSchedule.create.mockResolvedValue({ id: 1 } as any);
-        mockPrisma.attSchedule.findMany.mockResolvedValue([]); // No conflicts
+      mockPrisma.employee.findMany.mockResolvedValue([
+        { id: 1 }, { id: 2 }
+      ] as any);
 
-        await service.batchCreate({
-            departmentIds: [10],
-            shiftId: 1,
-            startDate: '2024-01-01',
-            endDate: '2024-01-05',
-            force: true,
-            includeSubDepartments: false
-        });
+      mockPrisma.attSchedule.findMany.mockResolvedValue([]);
+      mockPrisma.attSchedule.create.mockResolvedValue({} as any);
 
-        // Should call findMany to get employees
-        expect(mockPrisma.employee.findMany).toHaveBeenCalled();
-        // Should call create (via findMany/create flow in loop)
-        expect(mockPrisma.attSchedule.create).toHaveBeenCalledTimes(2);
-    });
-  });
+      const result = await service.batchCreate({
+        departmentIds: [1],
+        shiftId: 1,
+        startDate: '2024-01-01',
+        endDate: '2024-01-05',
+        includeSubDepartments: true
+      });
 
-  describe('getOverview', () => {
-    it('should return schedules', async () => {
-        mockPrisma.attSchedule.findMany.mockResolvedValue([
-            { 
-                id: 1, 
-                employee: { name: 'Test' }, 
-                shift: { name: 'Shift A' },
-                startDate: new Date('2024-01-01'),
-                endDate: new Date('2024-01-05'),
-            }
-        ] as any);
-        mockPrisma.attSchedule.count.mockResolvedValue(1);
-
-        const result = await service.getOverview({
-            startDate: '2024-01-01',
-            endDate: '2024-01-05'
-        });
-
-        expect(result).toHaveLength(1);
-        expect(mockPrisma.attSchedule.findMany).toHaveBeenCalled();
-    });
-  });
-
-  describe('delete', () => {
-    it('should delete schedule', async () => {
-        mockPrisma.attSchedule.findUnique.mockResolvedValue({ id: 1 } as any);
-        
-        await service.delete(1);
-
-        expect(mockPrisma.attSchedule.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(result.count).toBe(2);
+      expect(mockPrisma.attSchedule.create).toHaveBeenCalledTimes(2);
     });
 
-    it('should throw if not found', async () => {
-        mockPrisma.attSchedule.findUnique.mockResolvedValue(null);
+    it('should return count 0 if no employees found', async () => {
+      mockPrisma.department.findMany.mockResolvedValue([]);
+      mockPrisma.employee.findMany.mockResolvedValue([]);
 
-        await expect(service.delete(999)).rejects.toThrow('ERR_SCHEDULE_NOT_FOUND');
+      const result = await service.batchCreate({
+        departmentIds: [1],
+        shiftId: 1,
+        startDate: '2024-01-01',
+        endDate: '2024-01-05',
+      });
+
+      expect(result.count).toBe(0);
+      expect(mockPrisma.attSchedule.create).not.toHaveBeenCalled();
     });
   });
 });

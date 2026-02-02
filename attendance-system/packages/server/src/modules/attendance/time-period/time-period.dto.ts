@@ -42,11 +42,11 @@ export class TimePeriodRulesDto implements TimePeriodRules {
 
 export class CreateTimePeriodReqDto implements CreateTimePeriodDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsInt()
   @IsIn([0, 1])
-  type: number;
+  type!: number;
 
   @IsOptional()
   @IsString()
