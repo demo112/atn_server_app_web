@@ -59,6 +59,12 @@ const CorrectionPage: React.FC = () => {
     setCheckOutOpen(true);
   };
 
+  const handleSuccess = () => {
+    loadData();
+    setCheckInOpen(false);
+    setCheckOutOpen(false);
+  };
+
   const columns = [
     {
       title: '日期',
@@ -160,25 +166,20 @@ const CorrectionPage: React.FC = () => {
         <>
           <CheckInDialog 
             isOpen={checkInOpen} 
-            onClose={() => setCheckInOpen(false)} 
-            onSuccess={() => {
-              setCheckInOpen(false);
-              loadData();
-            }}
-            dailyRecordId={selectedRecord.id}
-            employeeName={`ID: ${selectedRecord.employeeId}`} // Would be nice to have name
-            workDate={selectedRecord.workDate}
+            onClose={() => setCheckInOpen(false)}
+            onSuccess={handleSuccess}
+            dailyRecordId={String(selectedRecord?.id || '')}
+            employeeName={selectedRecord?.employeeName}
+            workDate={selectedRecord?.workDate}
           />
+          
           <CheckOutDialog 
             isOpen={checkOutOpen} 
-            onClose={() => setCheckOutOpen(false)} 
-            onSuccess={() => {
-              setCheckOutOpen(false);
-              loadData();
-            }}
-            dailyRecordId={selectedRecord.id}
-            employeeName={`ID: ${selectedRecord.employeeId}`}
-            workDate={selectedRecord.workDate}
+            onClose={() => setCheckOutOpen(false)}
+            onSuccess={handleSuccess}
+            dailyRecordId={String(selectedRecord?.id || '')}
+            employeeName={selectedRecord?.employeeName}
+            workDate={selectedRecord?.workDate}
           />
         </>
       )}

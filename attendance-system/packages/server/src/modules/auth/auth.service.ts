@@ -47,7 +47,8 @@ export class AuthService {
         id: user.id,
         username: user.username,
         role: (user as any).role as UserRole,
-        name: user.employee?.name
+        name: user.employee?.name,
+        employeeId: user.employeeId ?? undefined
       }
     };
   }
@@ -66,6 +67,7 @@ export class AuthService {
       id: user.id,
       username: user.username,
       role: (user as any).role as UserRole,
+      employeeId: user.employeeId ?? undefined,
       permissions: [] // TODO: Implement permissions based on role
     };
   }

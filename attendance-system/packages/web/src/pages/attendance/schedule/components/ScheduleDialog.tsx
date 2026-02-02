@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { attendanceService } from '@/services/attendance';
 import { employeeService } from '@/services/employee';
-import { Employee, Shift } from '@attendance/shared';
+import { EmployeeVo, Shift } from '@attendance/shared';
 
 interface ScheduleDialogProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface ScheduleDialogProps {
 
 export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<EmployeeVo[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   
   const [formData, setFormData] = useState({

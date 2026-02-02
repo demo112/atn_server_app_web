@@ -35,6 +35,7 @@ export interface LoginVo {
     username: string;
     role: UserRole;
     name?: string;
+    employeeId?: number;
   };
 }
 
@@ -42,6 +43,7 @@ export interface MeVo {
   id: number;
   username: string;
   role: UserRole;
+  employeeId?: number;
   permissions: string[];
 }
 
