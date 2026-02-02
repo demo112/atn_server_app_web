@@ -39,6 +39,8 @@ enum EmployeeStatus {
 
 ## API定义
 
+> **注意**: 所有接口响应均遵循标准格式 `{ success: true, data: T }`。
+
 ### 1. 员工管理 (Employee)
 
 #### GET /api/v1/employees
