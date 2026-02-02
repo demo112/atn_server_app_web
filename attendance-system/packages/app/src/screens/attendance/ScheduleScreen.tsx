@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { getSchedules } from '../../services/attendance';
-import { getUser } from '../../utils/auth';
+import { getSchedules, ScheduleVo } from '../../services/attendance';
+import { getMe } from '../../services/auth';
+import { getUser, setUser } from '../../utils/auth';
 
 const ScheduleScreen = () => {
-  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<{date: string, shift?: any}[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -15,26 +16,75 @@ const ScheduleScreen = () => {
   const fetchSchedules = async () => {
     setLoading(true);
     try {
-      const user = await getUser();
+      let user = await getUser();
+      
+      // 如果本地没有 employeeId，尝试从服务器获取最新用户信息
+      if (user && !user.employeeId) {
+        try {
+          const meRes = await getMe();
+          if (meRes.success && meRes.data) {
+             // 合并新数据
+             user = { ...user, ...meRes.data };
+             await setUser(user);
+          }
+        } catch (e) {
+          console.warn('Failed to fetch user details', e);
+        }
+      }
+
       if (!user || !user.employeeId) {
         // Fallback or error handling if employeeId is missing
         console.warn('No employeeId found for user');
-        // For demo, maybe we don't block? But usually we need it.
-        // Assuming user object has employeeId.
+        setLoading(false);
+        return; 
       }
 
       // Get first and last day of current month
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+      // Adjust to local time or keep ISO date part
+      // Note: new Date(year, month, 1) creates local date
+      const start = new Date(year, month, 1);
+      const end = new Date(year, month + 1, 0);
+      
+      // Format as YYYY-MM-DD manually to avoid timezone issues with toISOString()
+      const formatDate = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
+      const startDate = formatDate(start);
+      const endDate = formatDate(end);
 
       const res = await getSchedules({
-        employeeId: user?.employeeId, // Assuming user has employeeId
+        employeeId: user.employeeId, 
         startDate,
         endDate
       });
-      setSchedules(res.data || []);
+      
+      // Expand schedule ranges into daily items
+      const expandedSchedules: {date: string, shift?: any}[] = [];
+      const current = new Date(start);
+      const last = new Date(end);
+      
+      while (current <= last) {
+        const dateStr = formatDate(current);
+        // Find matching schedule for this day
+        const match = (res.data || []).find(s => 
+          dateStr >= s.startDate && dateStr <= s.endDate
+        );
+        
+        expandedSchedules.push({
+          date: dateStr,
+          shift: match?.shift
+        });
+        
+        current.setDate(current.getDate() + 1);
+      }
+      
+      setSchedules(expandedSchedules);
     } catch (error) {
       console.error(error);
     } finally {
@@ -42,7 +92,7 @@ const ScheduleScreen = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => (
+  const renderItem = ({ item }: { item: {date: string, shift?: any} }) => (
     <View style={styles.item}>
       <Text style={styles.date}>{item.date}</Text>
       <View style={styles.shiftInfo}>
@@ -82,7 +132,7 @@ const ScheduleScreen = () => {
         <FlatList
           data={schedules}
           renderItem={renderItem}
-          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          keyExtractor={(item) => item.date}
           contentContainerStyle={styles.list}
           ListEmptyComponent={<Text style={styles.emptyText}>本月无排班</Text>}
         />

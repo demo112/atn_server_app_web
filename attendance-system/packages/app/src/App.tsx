@@ -7,6 +7,7 @@ import HomeScreen from './screens/HomeScreen';
 import ClockInScreen from './screens/attendance/ClockInScreen';
 import LeaveScreen from './screens/attendance/LeaveScreen';
 import CorrectionScreen from './screens/attendance/CorrectionScreen';
+import HistoryScreen from './screens/attendance/HistoryScreen';
 import ScheduleScreen from './screens/attendance/ScheduleScreen';
 import { getToken } from './utils/auth';
 

@@ -3,10 +3,10 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
   Modal, TextInput, Alert, ActivityIndicator 
 } from 'react-native';
-import { getCorrections, supplementCheckIn, supplementCheckOut, Correction, CorrectionType } from '../../services/attendance';
+import { getCorrections, supplementCheckIn, supplementCheckOut, CorrectionVo, CorrectionType } from '../../services/attendance';
 
 const CorrectionScreen = () => {
-  const [corrections, setCorrections] = useState<Correction[]>([]);
+  const [corrections, setCorrections] = useState<CorrectionVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   
@@ -42,7 +42,7 @@ const CorrectionScreen = () => {
 
     try {
       const data = {
-        dailyRecordId: parseInt(formData.dailyRecordId),
+        dailyRecordId: formData.dailyRecordId,
         remark: formData.remark,
       };
 
@@ -60,7 +60,7 @@ const CorrectionScreen = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: Correction }) => (
+  const renderItem = ({ item }: { item: CorrectionVo }) => (
     <View style={styles.item}>
       <View style={styles.itemHeader}>
         <Text style={styles.itemType}>{item.type === 'check_in' ? '补上班卡' : '补下班卡'}</Text>

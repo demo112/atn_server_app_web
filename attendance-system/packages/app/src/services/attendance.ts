@@ -6,12 +6,13 @@ import {
   LeaveVo, 
   CreateLeaveDto, 
   LeaveQueryDto,
-  Correction,
-  DailyRecord,
-  CorrectionType
+  CorrectionVo,
+  DailyRecordVo,
+  CorrectionType,
+  ScheduleVo
 } from '@attendance/shared';
 
-export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, Correction, DailyRecord, CorrectionType };
+export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, CorrectionVo, DailyRecordVo, CorrectionType, ScheduleVo };
 
 /**
  * 打卡
@@ -52,20 +53,20 @@ export const cancelLeave = (id: number) => {
  * 获取补卡记录
  */
 export const getCorrections = (params: any) => {
-  return request.get<any, ApiResponse<Correction[]>>('/attendance/corrections', { params });
+  return request.get<any, ApiResponse<CorrectionVo[]>>('/attendance/corrections', { params });
 };
 
 /**
  * 申请补卡 (签到)
  */
-export const supplementCheckIn = (data: { dailyRecordId: number; checkInTime: string; remark: string }) => {
+export const supplementCheckIn = (data: { dailyRecordId: string; checkInTime: string; remark: string }) => {
   return request.post<any, ApiResponse<any>>('/attendance/corrections/check-in', data);
 };
 
 /**
  * 申请补卡 (签退)
  */
-export const supplementCheckOut = (data: { dailyRecordId: number; checkOutTime: string; remark: string }) => {
+export const supplementCheckOut = (data: { dailyRecordId: string; checkOutTime: string; remark: string }) => {
   return request.post<any, ApiResponse<any>>('/attendance/corrections/check-out', data);
 };
 
@@ -73,12 +74,12 @@ export const supplementCheckOut = (data: { dailyRecordId: number; checkOutTime: 
  * 获取每日考勤记录 (用于补卡选择)
  */
 export const getDailyRecords = (params: { startDate: string; endDate: string }) => {
-  return request.get<any, ApiResponse<DailyRecord[]>>('/attendance/daily', { params });
+  return request.get<any, ApiResponse<DailyRecordVo[]>>('/attendance/daily', { params });
 };
 
 /**
  * 获取排班记录
  */
 export const getSchedules = (params: { employeeId?: number; deptId?: number; startDate: string; endDate: string }) => {
-  return request.get<any, ApiResponse<any[]>>('/attendance/schedules', { params });
+  return request.get<any, ApiResponse<ScheduleVo[]>>('/attendance/schedules', { params });
 };

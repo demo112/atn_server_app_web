@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { getDailyRecords, DailyRecord } from '../../services/attendance';
+import { getDailyRecords, DailyRecordVo } from '../../services/attendance';
 import { useNavigation } from '@react-navigation/native';
 
 const HistoryScreen = () => {
-  const [records, setRecords] = useState<DailyRecord[]>([]);
+  const [records, setRecords] = useState<DailyRecordVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -56,7 +56,7 @@ const HistoryScreen = () => {
     return map[status] || status;
   };
 
-  const renderItem = ({ item }: { item: DailyRecord }) => (
+  const renderItem = ({ item }: { item: DailyRecordVo }) => (
     <View style={styles.item}>
       <View style={styles.itemHeader}>
         <Text style={styles.date}>{item.workDate} (ID: {item.id})</Text>
