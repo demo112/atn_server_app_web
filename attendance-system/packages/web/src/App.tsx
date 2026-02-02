@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
 import EmployeeList from './pages/employee/EmployeeList';
+import DepartmentPage from './pages/department/DepartmentPage';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import TimePeriodPage from '@/pages/attendance/time-period/TimePeriodPage';
 import CorrectionPage from '@/pages/attendance/correction/CorrectionPage';
@@ -22,6 +23,7 @@ const MainLayout = () => (
           <li><Link to="/attendance/leave">请假管理</Link></li>
           <li><Link to="/attendance/correction">异常考勤处理</Link></li>
           <li><Link to="/attendance/settings">考勤制度设置</Link></li>
+          <li><Link to="/departments">部门管理</Link></li>
           <li><Link to="/users">用户管理</Link></li>
         </ul>
       </nav>
@@ -58,6 +60,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="users" element={<UserList />} />
             <Route path="employees" element={<EmployeeList />} />
+            <Route path="departments" element={<DepartmentPage />} />
             <Route path="attendance">
                <Route path="time-periods" element={<TimePeriodPage />} />
                <Route path="schedule" element={<SchedulePage />} />
