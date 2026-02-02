@@ -127,6 +127,10 @@ interface ClockListVo {
 | packages/server/src/modules/attendance/attendance-clock.service.ts | 新增 | 业务逻辑 (写入、查询) |
 | packages/server/src/modules/attendance/attendance-clock.controller.ts | 新增 | 接口实现 |
 | packages/server/src/modules/attendance/attendance.routes.ts | 修改 | 注册 `/clock` 路由 |
+| packages/app/src/screens/attendance/ClockInScreen.tsx | 新增 | App打卡界面 |
+| packages/app/src/services/attendance.ts | 新增 | App打卡服务 |
+| packages/web/src/pages/attendance/clock/ClockRecordPage.tsx | 新增 | Web考勤记录页 |
+| packages/web/src/services/clock.ts | 新增 | Web打卡服务 |
 
 ## 影响分析
 

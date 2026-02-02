@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, Select, message } from 'antd';
+import { Table, Button, Space, Tag, Modal, Form, Input as AntdInput, Select as AntdSelect, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/user';
 import type { UserRole, UserStatus } from '@attendance/shared';
+import { fixAntd } from '../../utils/type-helpers';
+
+// Workaround for Antd v5 + React 18 type incompatibility
+const Select = fixAntd(AntdSelect);
+const FormItem = fixAntd(Form.Item);
+const Input = fixAntd(AntdInput);
 
 interface UserListItem {
   id: number;
@@ -178,49 +184,47 @@ const UserList: React.FC = () => {
         <Form
           form={form}
           layout="vertical"
+          name="userForm"
         >
-          <Form.Item
+          <FormItem
             name="username"
             label="用户名"
             rules={[{ required: true, message: '请输入用户名' }]}
           >
-            <Input disabled={modalMode === 'edit'} />
-          </Form.Item>
-          
-          {modalMode === 'create' && (
-            <Form.Item
-              name="password"
-              label="密码"
-              rules={[{ required: true, message: '请输入密码' }]}
-            >
-              <Input.Password />
-            </Form.Item>
-          )}
+            <Input placeholder="请输入用户名" />
+          </FormItem>
 
-          <Form.Item
+          <FormItem
+            name="password"
+            label="密码"
+            rules={[{ required: modalMode === 'create', message: '请输入密码' }]}
+          >
+            <Input.Password placeholder={modalMode === 'edit' ? '留空不修改' : '请输入密码'} />
+          </FormItem>
+
+          <FormItem
             name="role"
             label="角色"
             rules={[{ required: true, message: '请选择角色' }]}
-            initialValue="user"
           >
-            <Select>
+            <Select placeholder="选择角色">
               <Select.Option value="user">普通用户</Select.Option>
               <Select.Option value="admin">管理员</Select.Option>
+              <Select.Option value="manager">部门经理</Select.Option>
             </Select>
-          </Form.Item>
+          </FormItem>
 
-          {modalMode === 'edit' && (
-             <Form.Item
-              name="status"
-              label="状态"
-              rules={[{ required: true, message: '请选择状态' }]}
-            >
-              <Select>
-                <Select.Option value="active">启用</Select.Option>
-                <Select.Option value="inactive">禁用</Select.Option>
-              </Select>
-            </Form.Item>
-          )}
+          <FormItem
+            name="status"
+            label="状态"
+            initialValue="active"
+            rules={[{ required: true, message: '请选择状态' }]}
+          >
+            <Select placeholder="选择状态">
+              <Select.Option value="active">正常</Select.Option>
+              <Select.Option value="inactive">禁用</Select.Option>
+            </Select>
+          </FormItem>
         </Form>
       </Modal>
     </div>

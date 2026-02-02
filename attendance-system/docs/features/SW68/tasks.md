@@ -78,6 +78,23 @@
 | 依赖 | Task 4 |
 | 状态 | ✅ 完成 |
 
+### 阶段4：Web/App端实现
+
+#### Task 6: Web 端补签管理页
+- **文件**: `packages/web/src/pages/attendance/correction/CorrectionPage.tsx`
+- **状态**: ✅ 已完成
+- **内容**: 
+  - 补签申请列表查询
+  - 补签申请表单（支持为员工补签）
+  - 补签记录展示与状态管理
+
+#### Task 7: App 端补签申请页
+- **文件**: `packages/app/src/screens/attendance/CorrectionScreen.tsx`
+- **状态**: ✅ 已完成
+- **内容**: 
+  - 补签申请表单（选择日期、时间、类型）
+  - 历史补签记录查询
+
 ## 检查点策略
 
 | 时机 | 操作 | 结果 |

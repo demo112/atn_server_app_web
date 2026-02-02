@@ -1,1 +1,10 @@
 .trae/rules/21-sasuke-rules.md
+.trae/rules/naruto-rules.md
+node_modules/
+.DS_Store
+dist/
+coverage/
+.env
+.trae/documents/
+*.log
+.expo/

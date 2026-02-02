@@ -26,7 +26,7 @@ const DepartmentPage: React.FC = () => {
       setLoading(true);
       const res = await departmentService.getTree();
       if (res.success) {
-        setTreeData(res.data);
+        setTreeData(res.data || []);
       }
     } catch (error) {
       message.error('获取部门树失败');
@@ -36,15 +36,14 @@ const DepartmentPage: React.FC = () => {
     }
   }, []);
 
-  const fetchDepartment = async (id: number) => {
+  const fetchDepartment = async (key: number) => {
     try {
-      const res = await departmentService.getDepartment(id);
+      const res = await departmentService.getDepartment(key);
       if (res.success) {
-        setSelectedDepartment(res.data);
+        setSelectedDepartment(res.data || null);
       }
     } catch (error) {
-      console.error(error);
-      message.error('获取部门详情失败');
+      message.error('Failed to load department details');
     }
   };
 
@@ -52,10 +51,10 @@ const DepartmentPage: React.FC = () => {
     fetchTree();
   }, [fetchTree]);
 
-  const handleSelect = (keys: React.Key[], info: any) => {
+  const handleSelect = (keys: React.Key[]) => {
     setSelectedKeys(keys);
     if (keys.length > 0) {
-      fetchDepartment(Number(keys[0]));
+      fetchDepartment(keys[0] as number);
     } else {
       setSelectedDepartment(null);
     }

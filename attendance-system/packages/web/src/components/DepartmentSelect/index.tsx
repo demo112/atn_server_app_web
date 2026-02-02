@@ -18,7 +18,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
         setLoading(true);
         const res = await departmentService.getTree();
         if (res.success) {
-          setTreeData(res.data);
+          setTreeData(res.data || []);
         }
       } catch (error) {
         console.error('Fetch department tree failed', error);

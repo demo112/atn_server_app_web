@@ -77,3 +77,15 @@ export interface Shift {
   cycleDays: number;
   periods?: ShiftPeriod[];
 }
+
+export interface CreateShiftDto {
+  name: string;
+  cycleDays: number;
+  periods: {
+    periodId: number;
+    dayOfCycle: number;
+    sortOrder?: number;
+  }[];
+}
+
+export interface UpdateShiftDto extends Partial<CreateShiftDto> {}

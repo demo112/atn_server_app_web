@@ -1,4 +1,4 @@
-import { Employee } from '../user';
+import { Employee } from '../employee';
 import { Shift } from './base';
 import { QueryParams } from '../common';
 
