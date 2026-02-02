@@ -2,7 +2,7 @@
 // 统计报表类型
 // ============================================
 
-export interface AttendanceSummary {
+export interface AttendanceSummaryVo {
   employeeId: number;
   employeeNo: string;
   employeeName: string;
@@ -22,9 +22,9 @@ export interface AttendanceSummary {
   effectiveMinutes: number;  // 有效出勤总分钟
 }
 
-export interface SummaryQuery {
-  startDate: string;
-  endDate: string;
+export interface GetSummaryDto {
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
   deptId?: number;
   employeeId?: number;
 }
