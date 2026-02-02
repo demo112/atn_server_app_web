@@ -57,6 +57,10 @@ export class DepartmentService {
   async create(data: CreateDepartmentDto): Promise<DepartmentVO> {
     const { name, parentId, sortOrder } = data;
 
+    if (!name || name.trim() === '') {
+      throw AppError.badRequest('Department name cannot be empty', 'ERR_DEPT_NAME_EMPTY');
+    }
+
     // 校验父节点是否存在
     if (parentId) {
       const parent = await prisma.department.findUnique({ where: { id: parentId } });

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../common/db/prisma';
 import { LoginDto, LoginVo, MeVo, UserRole } from '@attendance/shared';
 import { createLogger } from '../../common/logger';
+import { AppError } from '../../common/errors';
 
 const logger = createLogger('auth');
 
@@ -18,18 +19,18 @@ export class AuthService {
 
     if (!user) {
       logger.info({ userId: 'anonymous', username: dto.username }, 'Login failed: User not found');
-      throw new Error('Invalid credentials');
+      throw AppError.badRequest('Invalid credentials');
     }
 
     if (user.status !== 'active') {
        logger.info({ userId: user.id }, 'Login failed: User inactive');
-       throw new Error('Account is inactive');
+       throw AppError.badRequest('Account is inactive');
     }
 
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isValid) {
       logger.info({ userId: user.id }, 'Login failed: Invalid password');
-      throw new Error('Invalid credentials');
+      throw AppError.badRequest('Invalid credentials');
     }
 
     const token = jwt.sign(
@@ -58,7 +59,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw AppError.notFound('User');
     }
 
     return {

@@ -55,8 +55,8 @@ describe('DepartmentService - ACV Verification', () => {
               name: fc.string({ minLength: 1 }),
               parentId: fc.option(fc.integer({ min: 1 }), { nil: null }),
               sortOrder: fc.integer(),
-              createdAt: fc.date(),
-              updatedAt: fc.date()
+              createdAt: fc.integer({ min: 1600000000000, max: 1700000000000 }).map(t => new Date(t)),
+              updatedAt: fc.integer({ min: 1600000000000, max: 1700000000000 }).map(t => new Date(t))
             })
           ),
           async (depts) => {

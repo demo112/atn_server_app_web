@@ -2,34 +2,45 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../../common/db/prisma';
 import { UserListVo, UserRole } from '@attendance/shared';
 import { CreateUserInput, UpdateUserInput, GetUsersInput } from './user.dto';
+import { AppError } from '../../common/errors';
+import { createLogger } from '../../common/logger';
+
+const logger = createLogger('user-service');
 
 export class UserService {
   async create(dto: CreateUserInput) {
     const existing = await prisma.user.findUnique({ where: { username: dto.username } });
     if (existing) {
-      throw new Error('Username already exists');
+      throw AppError.conflict('Username already exists');
     }
 
     const password = dto.password || '123456'; // Default password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        username: dto.username,
-        passwordHash: hashedPassword,
-        role: dto.role as any,
-        employeeId: dto.employeeId,
-        status: 'active',
-      },
-    });
+    try {
+      const user = await prisma.user.create({
+        data: {
+          username: dto.username,
+          passwordHash: hashedPassword,
+          role: dto.role as any,
+          employeeId: dto.employeeId,
+          status: 'active',
+        },
+      });
 
-    return {
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      status: user.status,
-      employeeId: user.employeeId,
-    };
+      logger.info({ userId: user.id }, 'User created');
+
+      return {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        status: user.status,
+        employeeId: user.employeeId,
+      };
+    } catch (error) {
+      logger.error({ err: error, dto }, 'Failed to create user');
+      throw error;
+    }
   }
 
   async findAll(query: GetUsersInput): Promise<UserListVo> {
@@ -77,7 +88,7 @@ export class UserService {
       where: { id },
       include: { employee: true },
     });
-    if (!user) throw new Error('User not found');
+    if (!user) throw AppError.notFound('User');
     return {
         id: user.id,
         username: user.username,
