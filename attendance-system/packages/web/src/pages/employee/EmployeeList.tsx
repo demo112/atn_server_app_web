@@ -80,7 +80,9 @@ const EmployeeList: React.FC = () => {
       fetchEmployees();
     } catch (error: any) {
         // Error handling (e.g. duplication)
-        message.error(error.response?.data?.error?.message || 'Operation failed');
+        // Note: api interceptor returns error.response.data directly
+        const errorMsg = error.error?.message || error.message || 'Operation failed';
+        message.error(errorMsg);
     }
   };
 

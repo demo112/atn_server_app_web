@@ -36,11 +36,25 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      console.log('EmployeeModal validateFields result:', values);
+
       // Format date
       const formattedValues = {
         ...values,
         hireDate: values.hireDate ? values.hireDate.format('YYYY-MM-DD') : undefined,
       };
+
+      // Double check for employeeNo in create mode
+      if (mode === 'create' && !formattedValues.employeeNo) {
+        console.error('Critical Error: employeeNo is missing in create mode!', formattedValues);
+        // Fallback: try to get from getFieldValue directly (though validateFields should have covered it)
+        const rawEmployeeNo = form.getFieldValue('employeeNo');
+        if (rawEmployeeNo) {
+             formattedValues.employeeNo = rawEmployeeNo;
+        }
+      }
+
+      console.log('EmployeeModal submitting:', formattedValues);
       await onOk(formattedValues);
     } catch (error) {
       console.error('Validate Failed:', error);

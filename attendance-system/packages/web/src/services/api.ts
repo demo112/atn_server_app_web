@@ -1,21 +1,17 @@
-import axios from 'axios';
+import request from '@/utils/request';
 
-export const api = axios.create({
-  baseURL: '/api/v1',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const api = request;
 
-// 响应拦截器：直接返回 data 字段
-api.interceptors.response.use(
-  (response) => {
-    return response.data;
+// 请求拦截器
+api.interceptors.request.use(
+  (config) => {
+    // Debug log for request data
+    if (config.method === 'post' || config.method === 'put') {
+      console.log(`API Request [${config.method?.toUpperCase()} ${config.url}] Data:`, config.data);
+    }
+    return config;
   },
   (error) => {
-    // 统一错误处理
-    console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

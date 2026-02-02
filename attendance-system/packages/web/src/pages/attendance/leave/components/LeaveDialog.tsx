@@ -34,7 +34,7 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
         form.setFieldValue('type', LeaveType.annual);
       }
     }
-  }, [isOpen, initialData, form]);
+  }, [isOpen, initialData]);
 
   const handleSubmit = async () => {
     try {
