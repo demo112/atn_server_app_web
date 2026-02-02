@@ -1,4 +1,4 @@
-// 用户模块 - 人A负责
-// 包含：用户管理、认证、部门
-
-export {};
+export * from './user.routes';
+export * from './user.service';
+export * from './user.dto';
+export * from './user.controller';

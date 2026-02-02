@@ -1,2 +1,4 @@
-import { SHARED_CONST } from '@attendance/shared';
-// console.log('App:', SHARED_CONST);
+import { registerRootComponent } from 'expo';
+import App from './App';
+
+registerRootComponent(App);

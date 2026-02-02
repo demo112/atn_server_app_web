@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **[UA1] 用户管理与认证**
+  - 服务层: 实现 Auth 模块 (登录/JWT) 和 User 模块 (CRUD)
+  - Web端: 实现登录页面和用户管理页面
+  - App端: 实现登录功能和 Token 存储
+  - 公共: 定义 User 相关 DTO/VO 类型
+
 - **[SW69] 原始考勤/打卡功能**
   - 数据层: 更新 `AttClockRecord` 模型，支持 `ClockType` (签到/签退) 和 `ClockSource` (App/Web/Device)
   - 服务层: 实现打卡记录的创建与查询逻辑，支持关联信息 (员工/部门/操作人) 返回
