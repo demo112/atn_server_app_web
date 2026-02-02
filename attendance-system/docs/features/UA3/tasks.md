@@ -94,14 +94,43 @@
 | 预计 | 10 分钟 |
 | 依赖 | Task 5 |
 
+### 阶段5：App端实现 (App)
+
+#### Task 7: App端基础与Service
+
 | 属性 | 值 |
 |------|-----|
-| 文件 | `packages/web/src/components/DepartmentSelect/index.tsx` |
+| 文件 | `packages/app/src/services/department.ts`<br>`packages/app/src/components/DepartmentSelect.tsx` |
 | 操作 | 新增 |
-| 内容 | 封装 TreeSelect 组件，支持异步加载部门树 |
-| 验证 | 在 DepartmentForm 中替换原有的 Select/TreeSelect 并验证 |
+| 内容 | 1. 封装 Department API<br>2. 实现 App 端部门选择器 (Modal) |
+| 验证 | 单元测试 Service，组件渲染测试 |
+| 预计 | 15 分钟 |
+| 状态 | ✅ 已完成 |
+| 依赖 | Task 3 |
+
+#### Task 8: App端部门管理页面
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/screens/organization/department/DepartmentListScreen.tsx`<br>`packages/app/src/screens/organization/department/DepartmentEditScreen.tsx` |
+| 操作 | 新增 |
+| 内容 | 1. 部门层级展示 (Drill-down)<br>2. 部门增删改表单 |
+| 验证 | 模拟器中测试完整 CRUD 流程 |
+| 预计 | 25 分钟 |
+| 状态 | ✅ 已完成 |
+| 依赖 | Task 7 |
+
+#### Task 9: App端管理入口集成
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/App.tsx`<br>`packages/app/src/screens/HomeScreen.tsx` |
+| 操作 | 修改 |
+| 内容 | 1. 注册部门管理路由<br>2. 在 HomeScreen 增加管理入口 (Admin可见) |
+| 验证 | Admin 登录可见入口，跳转正常 |
 | 预计 | 10 分钟 |
-| 依赖 | Task 6 |
+| 状态 | ✅ 已完成 |
+| 依赖 | Task 8 |
 
 ## 检查点策略
 
