@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Outlet, Link, Navigate } from 'react-rout
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
+import EmployeeList from './pages/employee/EmployeeList';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import TimePeriodPage from '@/pages/attendance/time-period/TimePeriodPage';
 import CorrectionPage from '@/pages/attendance/correction/CorrectionPage';
