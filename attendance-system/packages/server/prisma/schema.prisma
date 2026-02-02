@@ -70,8 +70,8 @@ model Employee {
 }
 
 enum EmployeeStatus {
-  active // 在职
-  inactive // 离职
+  active   // 在职
+  deleted  // 已删除 (软删除)
 }
 
 /// 部门表 - 树形结构

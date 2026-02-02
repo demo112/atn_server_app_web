@@ -3,6 +3,8 @@
 
 export * from './common';
 export * from './user';
+export * from './employee';
+export * from './department';
 export * from './attendance/base';
 export * from './attendance/schedule';
 export * from './attendance/record';
