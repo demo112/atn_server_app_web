@@ -38,7 +38,7 @@ const DepartmentPage: React.FC = () => {
 
   const fetchDepartment = async (key: number) => {
     try {
-      const res = await departmentService.get(key);
+      const res = await departmentService.getDepartment(key);
       if (res.success) {
         setSelectedDepartment(res.data || null);
       }
