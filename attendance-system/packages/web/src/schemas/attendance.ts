@@ -179,3 +179,9 @@ export const SupplementResultVoSchema = z.object({
   success: z.boolean(),
   dailyRecord: DailyRecordVoSchema,
 });
+
+// Settings Schema
+export const AttendanceSettingsSchema = z.object({
+  day_switch_time: z.string(),
+  auto_calc_time: z.string().optional(),
+}).passthrough(); // Allow other keys as per interface [key: string]: any
