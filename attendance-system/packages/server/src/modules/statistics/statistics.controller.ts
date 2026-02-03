@@ -155,7 +155,7 @@ export class StatisticsController {
     }
   };
 
-  exportDepartmentSummary = async (req: Request, res: Response, next: NextFunction) => {
+  getDepartmentSummary = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { startDate, endDate, deptId, employeeId } = req.query as unknown as GetSummaryDto;
 

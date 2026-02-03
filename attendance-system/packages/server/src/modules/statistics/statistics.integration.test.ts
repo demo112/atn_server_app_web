@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StatisticsService } from './statistics.service';
 import { prisma } from '../../common/db/prisma';
@@ -19,16 +20,19 @@ vi.mock('../../common/db/prisma', () => ({
 
 // Mock exceljs to avoid dependency issues during test if not installed
 vi.mock('exceljs', () => {
-  const Workbook = vi.fn(() => ({
-    addWorksheet: vi.fn().mockReturnValue({
-      columns: [],
-      addRows: vi.fn(),
-    }),
-    xlsx: {
-      writeBuffer: vi.fn().mockResolvedValue(Buffer.from('PK...'))
-    },
-  }));
-
+  class Workbook {
+    addWorksheet() {
+      return {
+        columns: [],
+        addRows: vi.fn(),
+      };
+    }
+    get xlsx() {
+      return {
+        writeBuffer: vi.fn().mockResolvedValue(Buffer.from([0x50, 0x4B, 0x03, 0x04]))
+      };
+    }
+  }
   return {
     Workbook,
     default: { Workbook }
@@ -254,6 +258,9 @@ describe('Statistics Integration Test (SW70)', () => {
         ];
         
         (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
+        (prisma.employee.findMany as any).mockResolvedValue([
+            { id: 1, deptId: 1 }, { id: 2, deptId: 1 }, { id: 3, deptId: 2 }
+        ]);
         
         const dto: GetDeptStatsDto = {
           month: '2023-10',
@@ -269,6 +276,9 @@ describe('Statistics Integration Test (SW70)', () => {
         if (techStats) {
           expect(techStats.normalCount).toBe(1);
           expect(techStats.lateCount).toBe(1);
+          // Total headcount is calculated from unique employees in records for simplicity in this mock,
+          // or we should mock the behavior of counting distinct employees.
+          // In the service implementation: totalHeadcount = deptEmployees.get(stats.deptId)?.size
           expect(techStats.totalHeadcount).toBe(2);
         }
         
@@ -310,5 +320,29 @@ describe('Statistics Integration Test (SW70)', () => {
         expect(absentDist?.count).toBe(1);
       });
     });
+    
+    describe('Story 3: 导出统计报表', () => {
+        it('AC1/AC2: Should generate Excel buffer for stats', async () => {
+          // Re-mock getDeptStats behavior indirectly via prisma mocks
+          const mockRecords = [
+            {
+              employeeId: 1,
+              status: 'normal',
+              employee: {
+                id: 1,
+                department: { id: 101, name: 'Dev' }
+              }
+            }
+          ];
+          (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
+          (prisma.employee.findMany as any).mockResolvedValue([{ id: 1, deptId: 101 }]);
+  
+          const buffer = await service.exportStats({ month: '2023-10' });
+          
+          expect(buffer).toBeInstanceOf(Buffer);
+          expect(buffer[0]).toBe(0x50);
+          expect(buffer[1]).toBe(0x4B);
+        });
+      });
   });
 });
