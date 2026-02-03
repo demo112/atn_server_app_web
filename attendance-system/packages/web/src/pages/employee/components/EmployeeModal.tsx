@@ -36,7 +36,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      console.log('EmployeeModal validateFields result:', values);
+      // console.log('EmployeeModal validateFields result:', values);
 
       // Format date
       const formattedValues = {
@@ -54,7 +54,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         }
       }
 
-      console.log('EmployeeModal submitting:', formattedValues);
+      // console.log('EmployeeModal submitting:', formattedValues);
       await onOk(formattedValues);
     } catch (error) {
       console.error('Validate Failed:', error);

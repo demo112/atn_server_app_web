@@ -1,4 +1,6 @@
-console.log('Starting server initialization...');
+import { logger } from './common/logger';
+
+logger.info('Starting server initialization...');
 import dotenv from 'dotenv';
 import { app } from './app';
 import { logger } from './common/logger';

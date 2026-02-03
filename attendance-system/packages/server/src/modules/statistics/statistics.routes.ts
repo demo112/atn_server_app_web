@@ -10,6 +10,8 @@ const controller = new StatisticsController();
 router.use(authenticate);
 
 router.get('/summary', controller.getDepartmentSummary);
+router.get('/details', controller.getDailyRecords);
+router.get('/calendar', controller.getCalendar);
 router.post('/calculate', controller.triggerCalculation);
 
 export const statisticsRouter = router;

@@ -59,3 +59,17 @@ export const removeUser = async () => {
 export const clearAuth = async () => {
   await Promise.all([removeToken(), removeUser()]);
 };
+
+export const useAuth = () => {
+  const [user, setUserState] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getUser().then(u => {
+      setUserState(u);
+      setLoading(false);
+    });
+  }, []);
+
+  return { user, loading };
+};

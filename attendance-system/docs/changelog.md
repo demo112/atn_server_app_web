@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **[SW71] 考勤明细与日历**
+  - Server: 新增 `GET /statistics/details` (明细查询) 和 `GET /statistics/calendar` (日历视图)
+  - Web: 实现考勤明细页面，支持多维筛选与手动重算
+  - App: 新增考勤日历视图与管理员明细查询功能
+  - 架构: 统一 Web/App 明细查询接口，后端驱动权限过滤
+
 - **[SW70] 考勤汇总与定时计算**
   - 架构: 采用每日定时预计算 (BullMQ) + 实时SQL聚合的混合模式
   - Server: 实现 `AttendanceScheduler` 定时任务，优化 `StatisticsService` 聚合查询

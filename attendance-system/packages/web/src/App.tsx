@@ -10,6 +10,7 @@ import TimePeriodPage from '@/pages/attendance/time-period/TimePeriodPage';
 import CorrectionPage from '@/pages/attendance/correction/CorrectionPage';
 import AttendanceSettingsPage from '@/pages/attendance/settings/AttendanceSettingsPage';
 import LeavePage from '@/pages/attendance/leave/LeavePage';
+import DailyRecords from '@/pages/attendance/DailyRecords';
 import SummaryPage from '@/pages/statistics/SummaryPage';
 
 // 临时占位组件，后续会移动到 components/layouts
@@ -68,6 +69,7 @@ export default function App() {
                <Route path="leave" element={<LeavePage />} />
                <Route path="correction" element={<CorrectionPage />} />
                <Route path="settings" element={<AttendanceSettingsPage />} />
+               <Route path="daily-records" element={<DailyRecords />} />
             </Route>
             <Route path="statistics">
                 <Route path="summary" element={<SummaryPage />} />

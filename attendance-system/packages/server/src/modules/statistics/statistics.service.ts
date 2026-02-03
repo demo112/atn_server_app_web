@@ -1,10 +1,171 @@
 
 import { prisma } from '../../common/db/prisma';
-import { GetSummaryDto, AttendanceSummaryVo } from '@attendance/shared';
+import { GetSummaryDto, AttendanceSummaryVo, DailyRecordQuery, DailyRecordVo, CalendarDailyVo, PaginatedResponse, AttendanceStatus } from '@attendance/shared';
 import { Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 
 export class StatisticsService {
+  async getDailyRecords(query: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> {
+    const { startDate, endDate, deptId, employeeId, employeeName, status, page = 1, pageSize = 20 } = query;
+    const skip = (Number(page) - 1) * Number(pageSize);
+    const take = Number(pageSize);
+
+    const whereClause: any = {};
+
+    // 1. 日期范围筛选
+    if (startDate && endDate) {
+      whereClause.workDate = {
+        gte: new Date(startDate + 'T00:00:00'),
+        lte: new Date(endDate + 'T23:59:59.999'),
+      };
+    }
+
+    // 2. 状态筛选
+    if (status) {
+      whereClause.status = status;
+    }
+
+    // 3. 员工筛选 (支持ID或模糊搜索)
+    if (employeeId) {
+      whereClause.employeeId = Number(employeeId);
+    } else if (employeeName) {
+      // 需要关联查询员工姓名，这里我们先查出员工ID
+      const employees = await prisma.employee.findMany({
+        where: { name: { contains: employeeName } },
+        select: { id: true },
+      });
+      if (employees.length > 0) {
+        whereClause.employeeId = { in: employees.map(e => e.id) };
+      } else {
+        // 没找到员工，直接返回空
+        return {
+          items: [],
+          total: 0,
+          page: Number(page),
+          pageSize: Number(pageSize),
+          totalPages: 0,
+        };
+      }
+    }
+
+    // 4. 部门筛选
+    if (deptId) {
+      // 查找该部门下的所有员工
+      const employees = await prisma.employee.findMany({
+        where: { deptId: Number(deptId) },
+        select: { id: true },
+      });
+      if (employees.length > 0) {
+        // 如果已经有employeeId筛选，取交集
+        if (whereClause.employeeId) {
+          const existingIds = typeof whereClause.employeeId === 'number' 
+            ? [whereClause.employeeId] 
+            : (whereClause.employeeId.in as number[]);
+          
+          const deptEmployeeIds = employees.map(e => e.id);
+          const intersection = existingIds.filter(id => deptEmployeeIds.includes(id));
+          
+          if (intersection.length === 0) {
+            return {
+              items: [],
+              total: 0,
+              page: Number(page),
+              pageSize: Number(pageSize),
+              totalPages: 0,
+            };
+          }
+          whereClause.employeeId = { in: intersection };
+        } else {
+          whereClause.employeeId = { in: employees.map(e => e.id) };
+        }
+      } else {
+        return {
+          items: [],
+          total: 0,
+          page: Number(page),
+          pageSize: Number(pageSize),
+          totalPages: 0,
+        };
+      }
+    }
+
+    // 5. 执行查询
+    const [total, records] = await Promise.all([
+      prisma.attDailyRecord.count({ where: whereClause }),
+      prisma.attDailyRecord.findMany({
+        where: whereClause,
+        skip,
+        take,
+        orderBy: { workDate: 'desc' },
+      }),
+    ]);
+
+    // 6. 补充员工和部门信息
+    // 收集所有涉及的员工ID
+    const distinctEmployeeIds = [...new Set(records.map(r => r.employeeId))];
+    const employeesInfo = await prisma.employee.findMany({
+      where: { id: { in: distinctEmployeeIds } },
+      include: { department: true },
+    });
+    
+    const employeeMap = new Map(employeesInfo.map(e => [e.id, e]));
+
+    // 7. 组装结果
+    const items: DailyRecordVo[] = records.map(record => {
+      const emp = employeeMap.get(record.employeeId);
+      return {
+        id: record.id.toString(),
+        employeeId: record.employeeId,
+        employeeName: emp?.name || '未知',
+        employeeNo: emp?.employeeNo || '',
+        deptName: emp?.department?.name || '未分配',
+        workDate: record.workDate.toISOString().split('T')[0],
+        shiftName: record.shiftName || undefined,
+        checkInTime: record.checkInTime ? record.checkInTime.toISOString() : undefined,
+        checkOutTime: record.checkOutTime ? record.checkOutTime.toISOString() : undefined,
+        status: record.status as AttendanceStatus,
+        lateMinutes: record.lateMinutes || 0,
+        earlyLeaveMinutes: record.earlyLeaveMinutes || 0,
+        absentMinutes: record.absentMinutes || 0,
+        leaveMinutes: record.leaveMinutes || 0,
+      };
+    });
+
+    return {
+      items,
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+      totalPages: Math.ceil(total / Number(pageSize)),
+    };
+  }
+
+  async getCalendar(year: number, month: number, employeeId: number): Promise<CalendarDailyVo[]> {
+    // 构造月份起止时间
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const records = await prisma.attDailyRecord.findMany({
+      where: {
+        employeeId: Number(employeeId),
+        workDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        workDate: true,
+        status: true,
+      },
+    });
+
+    return records.map(record => ({
+      date: record.workDate.toISOString().split('T')[0],
+      status: record.status as AttendanceStatus,
+      isAbnormal: record.status !== 'normal',
+    }));
+  }
+
   async getDepartmentSummary(dto: GetSummaryDto): Promise<AttendanceSummaryVo[]> {
     const { startDate, endDate, deptId, employeeId } = dto;
     

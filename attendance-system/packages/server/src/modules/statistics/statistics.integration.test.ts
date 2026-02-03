@@ -22,7 +22,7 @@ vi.mock('exceljs', () => {
         addRows: vi.fn(),
       }),
       xlsx: {
-        writeBuffer: vi.fn().mockResolvedValue(Buffer.from([0x50, 0x4B])),
+        writeBuffer: vi.fn().mockResolvedValue(Buffer.from('PK...'))
       },
     })),
   };

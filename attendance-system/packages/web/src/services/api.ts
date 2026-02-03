@@ -6,9 +6,7 @@ export const api = request;
 api.interceptors.request.use(
   (config) => {
     // Debug log for request data
-    if (config.method === 'post' || config.method === 'put') {
-      console.log(`API Request [${config.method?.toUpperCase()} ${config.url}] Data:`, config.data);
-    }
+    // console.log(`API Request [${config.method?.toUpperCase()} ${config.url}] Data:`, config.data);
     return config;
   },
   (error) => {
