@@ -105,6 +105,39 @@ const Login: React.FC = (): React.ReactElement => {
             </div>
           </div>
 
+          {/* Code Form */}
+          <div className={`space-y-6 ${tab === 'code' ? '' : 'hidden'}`}>
+            <div className="relative">
+              <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                phone_iphone
+              </span>
+              <input
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                type="text"
+                placeholder="手机号"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            <div className="relative flex gap-3">
+              <div className="relative flex-1">
+                <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  verified_user
+                </span>
+                <input
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  type="text"
+                  placeholder="验证码"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </div>
+              <button className="px-4 py-3 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded font-medium whitespace-nowrap transition-colors">
+                获取验证码
+              </button>
+            </div>
+          </div>
+
           {/* Footer Actions */}
           <div className="mt-6 flex items-start">
             <div className="flex items-center h-5">
