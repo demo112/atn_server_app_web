@@ -23,14 +23,7 @@ const HistoryScreen = () => {
       const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
       const res = await getDailyRecords({ startDate, endDate });
-      if (res.data && 'items' in res.data) {
-        setRecords(res.data.items || []);
-      } else if (Array.isArray(res.data)) {
-        // Fallback if backend returns array directly
-        setRecords(res.data);
-      } else {
-        setRecords([]);
-      }
+      setRecords(res.items || []);
     } catch (error) {
       logger.error(error);
     } finally {

@@ -28,7 +28,7 @@ const CorrectionScreen = () => {
     setLoading(true);
     try {
       const res = await getCorrections({ page: 1, pageSize: 20 });
-      setCorrections(res.data || []);
+      setCorrections(res || []);
     } catch (error) {
       logger.error(error);
     } finally {

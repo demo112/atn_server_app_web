@@ -40,22 +40,19 @@ export const UserListScreen = () => {
     if (loading) return;
     setLoading(true);
     try {
-      const res = await getUsers({
+      const { items, total } = await getUsers({
         page: pageNum,
         pageSize: 20,
         keyword: keyword || undefined,
       });
 
-      if (res.success && res.data) {
-        const { items, total } = res.data;
-        if (isRefresh) {
-          setUsers(items);
-        } else {
-          setUsers(prev => [...prev, ...items]);
-        }
-        setPage(pageNum);
-        setHasMore(items.length === 20 && users.length + items.length < total);
+      if (isRefresh) {
+        setUsers(items);
+      } else {
+        setUsers(prev => [...prev, ...items]);
       }
+      setPage(pageNum);
+      setHasMore(items.length === 20 && users.length + items.length < total);
     } catch (error) {
       logger.error(error);
       Alert.alert('错误', '加载失败');

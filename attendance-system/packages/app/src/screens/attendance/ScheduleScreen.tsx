@@ -19,18 +19,11 @@ const ScheduleScreen = () => {
     try {
       let user = await getUser();
       
-      // 如果本地没有 employeeId，尝试从服务器获取最新用户信息
-      if (user && !user.employeeId) {
-        try {
-          const meRes = await authService.getMe();
-          if (meRes.success && meRes.data) {
-             // 合并新数据
-             user = { ...user, ...meRes.data };
-             await setUser(user);
-          }
-        } catch (e) {
-          logger.warn('Failed to fetch user details', e);
-        }
+      // 2. Load current user info
+      const meRes = await authService.getMe();
+      if (meRes) {
+        user = { ...user, ...meRes };
+        await setUser(user);
       }
 
       if (!user || !user.employeeId) {
@@ -73,7 +66,7 @@ const ScheduleScreen = () => {
       while (current <= last) {
         const dateStr = formatDate(current);
         // Find matching schedule for this day
-        const match = (res.data || []).find(s => 
+        const match = (res || []).find(s => 
           dateStr >= s.startDate && dateStr <= s.endDate
         );
         

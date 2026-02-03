@@ -33,22 +33,19 @@ export const EmployeeListScreen = () => {
     if (loading) return;
     setLoading(true);
     try {
-      const res = await getEmployees({
+      const { items, total } = await getEmployees({
         page: pageNum,
         pageSize: 20,
         keyword: keyword || undefined,
       });
 
-      if (res.success && res.data) {
-        const { items, total } = res.data;
-        if (isRefresh) {
-          setEmployees(items);
-        } else {
-          setEmployees(prev => [...prev, ...items]);
-        }
-        setPage(pageNum);
-        setHasMore(items.length === 20 && employees.length + items.length < total);
+      if (isRefresh) {
+        setEmployees(items);
+      } else {
+        setEmployees(prev => [...prev, ...items]);
       }
+      setPage(pageNum);
+      setHasMore(items.length === 20 && employees.length + items.length < total);
     } catch (error) {
       logger.error(error);
       Alert.alert('错误', '加载失败');

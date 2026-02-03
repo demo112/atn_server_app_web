@@ -40,10 +40,8 @@ export const DepartmentListScreen = () => {
     setLoading(true);
     try {
       const res = await getDepartmentTree();
-      if (res.success && res.data) {
-        const currentLevelNodes = findChildren(res.data, parentId);
-        setDepartments(currentLevelNodes);
-      }
+      const currentLevelNodes = findChildren(res, parentId);
+      setDepartments(currentLevelNodes);
     } catch (error) {
       logger.error(error);
       Alert.alert('错误', '加载失败');

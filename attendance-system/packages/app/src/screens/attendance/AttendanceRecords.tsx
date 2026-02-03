@@ -49,15 +49,13 @@ export default function AttendanceRecords() {
         endDate: dayjs(endDate).format('YYYY-MM-DD'),
       });
 
-      if (res.success && res.data) {
-        if (isRefresh) {
-          setData(res.data.items);
-        } else {
-          setData(prev => [...prev, ...(res.data?.items || [])]);
-        }
-        setHasMore(pageNum < (res.data.totalPages || 0));
-        setPage(pageNum);
+      if (isRefresh) {
+        setData(res.items);
+      } else {
+        setData(prev => [...prev, ...(res.items || [])]);
       }
+      setHasMore(pageNum < (res.totalPages || 0));
+      setPage(pageNum);
     } catch (error) {
       logger.error('Failed to fetch records:', error);
     } finally {

@@ -42,13 +42,11 @@ export const DepartmentEditScreen = () => {
     setLoading(true);
     try {
       const res = await getDepartmentById(route.params.id);
-      if (res.success && res.data) {
-        setName(res.data.name);
-        setParentId(res.data.parentId);
-        setSortOrder(res.data.sortOrder.toString());
-        if (res.data.parentId) {
-            loadParentDetail(res.data.parentId);
-        }
+      setName(res.name);
+      setParentId(res.parentId);
+      setSortOrder(res.sortOrder.toString());
+      if (res.parentId) {
+          loadParentDetail(res.parentId);
       }
     } catch (error) {
       logger.error(error);
@@ -60,9 +58,7 @@ export const DepartmentEditScreen = () => {
   const loadParentDetail = async (pid: number) => {
       try {
           const res = await getDepartmentById(pid);
-          if (res.success && res.data) {
-              setParentName(res.data.name);
-          }
+          setParentName(res.name);
       } catch (e) {
           logger.error(e);
       }

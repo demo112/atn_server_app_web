@@ -1,4 +1,4 @@
-import request from '../utils/request';
+import request, { validateResponse } from '../utils/request';
 import { 
   ClockRecord, 
   CreateClockDto, 
@@ -14,75 +14,113 @@ import {
   QueryDailyRecordsDto,
   PaginatedResponse
 } from '@attendance/shared';
+import { 
+  ClockRecordSchema, 
+  LeaveVoSchema, 
+  CorrectionVoSchema, 
+  PaginatedDailyRecordVoSchema, 
+  ScheduleVoSchema
+} from '../schemas/attendance';
+import { z } from 'zod';
 
 export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, CorrectionVo, DailyRecordVo, CorrectionType, ScheduleVo, Shift, QueryDailyRecordsDto, PaginatedResponse };
 
 /**
  * 打卡
  */
-export const clockIn = (data: CreateClockDto) => {
-  return request.post<any, ApiResponse<ClockRecord>>('/attendance/clock', data);
+export const clockIn = (data: CreateClockDto): Promise<ClockRecord> => {
+  return validateResponse(
+    request.post<any, ApiResponse<ClockRecord>>('/attendance/clock', data),
+    ClockRecordSchema
+  );
 };
 
 /**
  * 获取打卡记录
  */
-export const getClockRecords = (params: { startTime: string; endTime: string }) => {
-  return request.get<any, ApiResponse<ClockRecord[]>>('/attendance/clock', { params });
+export const getClockRecords = (params: { startTime: string; endTime: string }): Promise<ClockRecord[]> => {
+  return validateResponse(
+    request.get<any, ApiResponse<ClockRecord[]>>('/attendance/clock', { params }),
+    z.array(ClockRecordSchema)
+  );
 };
 
 /**
  * 获取请假列表
  */
-export const getLeaves = (params: LeaveQueryDto) => {
-  return request.get<any, ApiResponse<LeaveVo[]>>('/attendance/leaves', { params });
+export const getLeaves = (params: LeaveQueryDto): Promise<LeaveVo[]> => {
+  return validateResponse(
+    request.get<any, ApiResponse<LeaveVo[]>>('/attendance/leaves', { params }),
+    z.array(LeaveVoSchema)
+  );
 };
 
 /**
  * 申请请假
  */
-export const createLeave = (data: CreateLeaveDto) => {
-  return request.post<any, ApiResponse<LeaveVo>>('/attendance/leaves', data);
+export const createLeave = (data: CreateLeaveDto): Promise<LeaveVo> => {
+  return validateResponse(
+    request.post<any, ApiResponse<LeaveVo>>('/attendance/leaves', data),
+    LeaveVoSchema
+  );
 };
 
 /**
  * 撤销请假
  */
-export const cancelLeave = (id: number) => {
-  return request.delete<any, ApiResponse<void>>(`/attendance/leaves/${id}`);
+export const cancelLeave = (id: number): Promise<void> => {
+  return validateResponse(
+    request.delete<any, ApiResponse<void>>(`/attendance/leaves/${id}`),
+    z.void()
+  );
 };
 
 /**
  * 获取补卡记录
  */
-export const getCorrections = (params: any) => {
-  return request.get<any, ApiResponse<CorrectionVo[]>>('/attendance/corrections', { params });
+export const getCorrections = (params: any): Promise<CorrectionVo[]> => {
+  return validateResponse(
+    request.get<any, ApiResponse<CorrectionVo[]>>('/attendance/corrections', { params }),
+    z.array(CorrectionVoSchema)
+  );
 };
 
 /**
  * 申请补卡 (签到)
  */
-export const supplementCheckIn = (data: { dailyRecordId: string; checkInTime: string; remark: string }) => {
-  return request.post<any, ApiResponse<any>>('/attendance/corrections/check-in', data);
+export const supplementCheckIn = (data: { dailyRecordId: string; checkInTime: string; remark: string }): Promise<any> => {
+  return validateResponse(
+    request.post<any, ApiResponse<any>>('/attendance/corrections/check-in', data),
+    z.any()
+  );
 };
 
 /**
  * 申请补卡 (签退)
  */
-export const supplementCheckOut = (data: { dailyRecordId: string; checkOutTime: string; remark: string }) => {
-  return request.post<any, ApiResponse<any>>('/attendance/corrections/check-out', data);
+export const supplementCheckOut = (data: { dailyRecordId: string; checkOutTime: string; remark: string }): Promise<any> => {
+  return validateResponse(
+    request.post<any, ApiResponse<any>>('/attendance/corrections/check-out', data),
+    z.any()
+  );
 };
 
 /**
  * 获取每日考勤记录 (分页)
  */
-export const getDailyRecords = (params: QueryDailyRecordsDto) => {
-  return request.get<any, ApiResponse<PaginatedResponse<DailyRecordVo>>>('/attendance/daily', { params });
+export const getDailyRecords = (params: QueryDailyRecordsDto): Promise<PaginatedResponse<DailyRecordVo>> => {
+  return validateResponse(
+    request.get<any, ApiResponse<PaginatedResponse<DailyRecordVo>>>('/attendance/daily', { params }),
+    PaginatedDailyRecordVoSchema
+  );
 };
 
 /**
  * 获取排班记录
  */
-export const getSchedules = (params: { employeeId?: number; deptId?: number; startDate: string; endDate: string }) => {
-  return request.get<any, ApiResponse<ScheduleVo[]>>('/attendance/schedules', { params });
+export const getSchedules = (params: { employeeId?: number; deptId?: number; startDate: string; endDate: string }): Promise<ScheduleVo[]> => {
+  return validateResponse(
+    request.get<any, ApiResponse<ScheduleVo[]>>('/attendance/schedules', { params }),
+    z.array(ScheduleVoSchema)
+  );
 };

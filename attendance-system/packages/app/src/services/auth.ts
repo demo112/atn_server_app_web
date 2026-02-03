@@ -1,21 +1,17 @@
-import request from '../utils/request';
+import request, { validateResponse } from '../utils/request';
 import { LoginDto, LoginVo, MeVo, ApiResponse } from '@attendance/shared';
 import { setToken, setUser, clearAuth } from '../utils/auth';
+import { LoginVoSchema, MeVoSchema } from '../schemas/auth';
 
 export const authService = {
   /**
    * 用户登录
    */
   login: async (data: LoginDto) => {
-    // request.post returns the response body (ApiResponse or data)
-    // Assuming backend returns LoginVo directly or inside ApiResponse?
-    // Based on auth.service.ts, it returns LoginVo.
-    // Based on API contract, it usually returns { success: true, data: LoginVo } or just LoginVo.
-    // Let's assume request handles wrapping/unwrapping or returns what backend sends.
-    // However, existing LoginScreen uses request.post<any, LoginVo> and expects res.token.
-    // This implies the backend returns the object directly OR the interceptor unwraps 'data'.
-    
-    const res = await request.post<any, LoginVo>('/auth/login', data);
+    const res = await validateResponse(
+      request.post<any, ApiResponse<LoginVo>>('/auth/login', data),
+      LoginVoSchema
+    );
     
     if (res.token) {
       await setToken(res.token);
@@ -28,8 +24,10 @@ export const authService = {
    * 获取当前用户信息
    */
   getMe: async () => {
-    // Existing code returned ApiResponse<MeVo>
-    return request.get<any, ApiResponse<MeVo>>('/auth/me');
+    return validateResponse(
+      request.get<any, ApiResponse<MeVo>>('/auth/me'),
+      MeVoSchema
+    );
   },
 
   /**

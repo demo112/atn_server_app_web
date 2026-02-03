@@ -36,13 +36,10 @@ export const UserEditScreen = () => {
   const loadDetail = async () => {
     setLoading(true);
     try {
-      const res = await getUserById(route.params.id);
-      if (res.success && res.data) {
-        const user = res.data;
-        setUsername(user.username);
-        setRole(user.role);
-        setStatus(user.status);
-      }
+      const user = await getUserById(route.params.id);
+      setUsername(user.username);
+      setRole(user.role);
+      setStatus(user.status);
     } catch (error) {
       logger.error(error);
       Alert.alert('错误', '加载详情失败');

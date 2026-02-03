@@ -29,7 +29,7 @@ const LeaveScreen = () => {
     setLoading(true);
     try {
       const res = await getLeaves({ page: 1, pageSize: 20 });
-      setLeaves(res.data || []);
+      setLeaves(res || []);
     } catch (error) {
       logger.error(error);
     } finally {

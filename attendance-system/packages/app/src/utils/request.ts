@@ -1,6 +1,9 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { Alert } from 'react-native';
 import { getToken, clearAuth } from './auth';
+import { z } from 'zod';
+import { ApiResponse } from '@attendance/shared';
+import { logger } from './logger';
 
 // Use local IP for Android Emulator or physical device
 // localhost works for iOS simulator but not Android
@@ -11,6 +14,30 @@ const request = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
 });
+
+export const validateResponse = async <T>(
+  promise: Promise<ApiResponse<any>>, 
+  schema: z.ZodType<T, any, any>
+): Promise<T> => {
+  const response = await promise;
+  
+  if (!response.success) {
+    throw new Error(response.error?.message || 'Request failed');
+  }
+
+  // Handle void schema (for delete operations)
+  if (schema instanceof z.ZodVoid) {
+    return undefined as T;
+  }
+
+  const result = schema.safeParse(response.data);
+  if (!result.success) {
+    logger.error('Response validation failed:', result.error);
+    throw new Error('Response validation failed');
+  }
+  
+  return result.data;
+};
 
 request.interceptors.request.use(
   async (config) => {

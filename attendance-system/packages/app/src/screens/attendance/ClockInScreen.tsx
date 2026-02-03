@@ -42,7 +42,7 @@ const ClockInScreen = () => {
 
     try {
       const res = await getClockRecords({ startTime: start, endTime: end });
-      setRecords(res.data || []);
+      setRecords(res || []);
     } catch (error) {
       logger.error('Failed to load records', error);
     }

@@ -38,41 +38,39 @@ export default function AttendanceCalendar() {
       const date = dayjs(monthStr);
       const res = await getCalendar(date.year(), date.month() + 1, user?.id);
       
-      if (res.success && res.data) {
-        const marks: MarkedDates = {};
-        let normalCount = 0;
-        let abnormalCount = 0;
-        let leaveCount = 0;
+      const marks: MarkedDates = {};
+      let normalCount = 0;
+      let abnormalCount = 0;
+      let leaveCount = 0;
 
-        res.data.forEach((item: CalendarDailyVo) => {
-          const dotColor = statusColors[item.status] || '#d9d9d9';
-          
-          if (item.status === 'normal') normalCount++;
-          else if (['late', 'early_leave', 'absent'].includes(item.status)) abnormalCount++;
-          else leaveCount++;
+      res.forEach((item: CalendarDailyVo) => {
+        const dotColor = statusColors[item.status] || '#d9d9d9';
+        
+        if (item.status === 'normal') normalCount++;
+        else if (['late', 'early_leave', 'absent'].includes(item.status)) abnormalCount++;
+        else leaveCount++;
 
-          marks[item.date] = {
-            marked: true,
-            dotColor,
-            selected: item.date === selectedDate,
-            selectedColor: '#1890ff',
-          };
-        });
+        marks[item.date] = {
+          marked: true,
+          dotColor,
+          selected: item.date === selectedDate,
+          selectedColor: '#1890ff',
+        };
+      });
 
-        // Ensure selected date is marked as selected
-        if (marks[selectedDate]) {
-          marks[selectedDate].selected = true;
-        } else {
-          marks[selectedDate] = { selected: true, selectedColor: '#1890ff' };
-        }
-
-        setMarkedDates(marks);
-        setStats({
-          normal: normalCount,
-          abnormal: abnormalCount,
-          leave: leaveCount,
-        });
+      // Ensure selected date is marked as selected
+      if (marks[selectedDate]) {
+        marks[selectedDate].selected = true;
+      } else {
+        marks[selectedDate] = { selected: true, selectedColor: '#1890ff' };
       }
+
+      setMarkedDates(marks);
+      setStats({
+        normal: normalCount,
+        abnormal: abnormalCount,
+        leave: leaveCount,
+      });
     } catch (error) {
       logger.error('Failed to load calendar data:', error);
     }

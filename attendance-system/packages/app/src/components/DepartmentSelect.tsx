@@ -33,9 +33,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     setLoading(true);
     try {
       const res = await getDepartmentTree();
-      if (res.success && res.data) {
-        setDepartments(flattenTree(res.data));
-      }
+      setDepartments(flattenTree(res));
     } catch (error) {
       console.error(error);
     } finally {

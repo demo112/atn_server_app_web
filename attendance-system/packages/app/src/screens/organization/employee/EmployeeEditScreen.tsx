@@ -41,17 +41,14 @@ export const EmployeeEditScreen = () => {
   const loadDetail = async () => {
     setLoading(true);
     try {
-      const res = await getEmployeeById(route.params.id);
-      if (res.success && res.data) {
-        const emp = res.data;
-        setName(emp.name);
-        setEmployeeNo(emp.employeeNo);
-        setPhone(emp.phone || '');
-        setEmail(emp.email || '');
-        setDeptId(emp.deptId || null);
-        setDeptName(emp.deptName || '请选择部门');
-        setHireDate(emp.hireDate || new Date().toISOString().split('T')[0]);
-      }
+      const emp = await getEmployeeById(route.params.id);
+      setName(emp.name);
+      setEmployeeNo(emp.employeeNo);
+      setPhone(emp.phone || '');
+      setEmail(emp.email || '');
+      setDeptId(emp.deptId || null);
+      setDeptName(emp.deptName || '请选择部门');
+      setHireDate(emp.hireDate || new Date().toISOString().split('T')[0]);
     } catch (error) {
       logger.error(error);
       Alert.alert('错误', '加载详情失败');
