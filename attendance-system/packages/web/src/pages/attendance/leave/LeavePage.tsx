@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Button, Space, Card, Tag, Input, Select, DatePicker, message, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { LeaveVo, LeaveType, LeaveStatus } from '@attendance/shared';
 import * as leaveService from '@/services/leave';
 import { LeaveDialog } from './components/LeaveDialog';
 import dayjs from 'dayjs';
-import { logger } from '../../../utils/logger';
+import { logger } from '@/utils/logger';
 
 const LeavePage: React.FC = () => {
   const [data, setData] = useState<LeaveVo[]>([]);
@@ -19,10 +19,10 @@ const LeavePage: React.FC = () => {
   const [filters, setFilters] = useState({
     employeeId: undefined as number | undefined,
     type: undefined as LeaveType | undefined,
-    dateRange: null as any
+    dateRange: null as [dayjs.Dayjs, dayjs.Dayjs] | null
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await leaveService.getLeaves({
@@ -41,18 +41,18 @@ const LeavePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filters]);
 
   useEffect(() => {
     fetchData();
-  }, [page, filters]);
+  }, [fetchData]);
 
-  const handleCreate = () => {
+  const handleCreate = (): void => {
     setSelectedItem(undefined);
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (item: LeaveVo) => {
+  const handleEdit = (item: LeaveVo): void => {
     if (item.status === LeaveStatus.cancelled) {
       message.warning('已撤销记录不可编辑');
       return;
@@ -61,7 +61,7 @@ const LeavePage: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleCancel = async (id: number) => {
+  const handleCancel = async (id: number): Promise<void> => {
     Modal.confirm({
       title: '确认撤销',
       content: '确定要撤销这条记录吗？',
@@ -140,7 +140,7 @@ const LeavePage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: LeaveVo) => (
+      render: (_: unknown, record: LeaveVo) => (
         <Space size="middle">
           <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
           <Button type="link" danger onClick={() => handleCancel(record.id)}>撤销</Button>

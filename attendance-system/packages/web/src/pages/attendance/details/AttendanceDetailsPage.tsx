@@ -10,6 +10,8 @@ import { attendanceCorrectionService } from '../../../services/attendance-correc
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
 import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 
+import { logger } from '@/utils/logger';
+
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -39,36 +41,37 @@ const AttendanceDetailsPage: React.FC = () => {
     status: undefined as AttendanceStatus | undefined,
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [params]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await attendanceCorrectionService.getDailyRecords(params);
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {
+      logger.error('Failed to fetch attendance details', error);
       message.error('获取考勤明细失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
 
-  const handleSearch = (values: any) => {
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleSearch = (values: { dateRange?: [dayjs.Dayjs, dayjs.Dayjs], deptId?: number, employeeName?: string, status?: AttendanceStatus }): void => {
     setParams({
       ...params,
       page: 1,
-      startDate: values.dateRange?.[0]?.format('YYYY-MM-DD'),
-      endDate: values.dateRange?.[1]?.format('YYYY-MM-DD'),
+      startDate: values.dateRange?.[0]?.format('YYYY-MM-DD') || params.startDate,
+      endDate: values.dateRange?.[1]?.format('YYYY-MM-DD') || params.endDate,
       deptId: values.deptId,
       employeeName: values.employeeName,
       status: values.status,
     });
   };
 
-  const handleReset = () => {
+  const handleReset = (): void => {
     form.resetFields();
     setParams({
       page: 1,
@@ -81,7 +84,7 @@ const AttendanceDetailsPage: React.FC = () => {
     });
   };
 
-  const formatMinutes = (minutes: number) => {
+  const formatMinutes = (minutes: number): string => {
     if (!minutes) return '-';
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;

@@ -3,6 +3,8 @@ import { Modal, Form, Input, DatePicker, message } from 'antd';
 import * as correctionService from '@/services/correction';
 import dayjs from 'dayjs';
 
+import { logger } from '@/utils/logger';
+
 interface CheckInDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +16,7 @@ interface CheckInDialogProps {
 
 export const CheckInDialog: React.FC<CheckInDialogProps> = ({ 
   isOpen, onClose, onSuccess, dailyRecordId, employeeName, workDate 
-}) => {
+}): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
@@ -27,7 +29,7 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
     }
   }, [isOpen, form]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     try {
       const values = await form.validateFields();
       setLoading(true);
@@ -41,9 +43,9 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
       message.success('补签到成功');
       onSuccess();
       onClose();
-    } catch (err: any) {
-      console.error(err);
-      message.error(err.message || '补签失败');
+    } catch (err: unknown) {
+      logger.error('CheckIn failed', err);
+      message.error('补签失败');
     } finally {
       setLoading(false);
     }

@@ -25,7 +25,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res: any = await request.post('/auth/login', loginData);
       if (res.success) {
-        const { token, user } = res.data;
+        // Runtime validation
+        const { token, user } = validateResponse(LoginVoSchema, res);
+        
         setToken(token);
         setStorageUser(user);
         setTokenState(token);
