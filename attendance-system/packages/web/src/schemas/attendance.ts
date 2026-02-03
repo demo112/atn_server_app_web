@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import { 
+  LeaveType, 
+  LeaveStatus 
+} from '@attendance/shared';
 
 // TimePeriod Rules Schema
 export const TimePeriodRulesSchema = z.object({
@@ -63,8 +67,8 @@ export const ScheduleVoSchema = ScheduleSchema.extend({
 });
 
 // Leave Schemas
-export const LeaveTypeSchema = z.enum(['annual', 'sick', 'personal', 'business_trip', 'maternity', 'paternity', 'marriage', 'bereavement', 'other']);
-export const LeaveStatusSchema = z.enum(['pending', 'approved', 'rejected', 'cancelled']);
+export const LeaveTypeSchema = z.nativeEnum(LeaveType);
+export const LeaveStatusSchema = z.nativeEnum(LeaveStatus);
 
 export const LeaveVoSchema = z.object({
   id: z.number(),
@@ -88,7 +92,7 @@ export const PaginatedLeaveVoSchema = z.object({
   total: z.number(),
   page: z.number(),
   pageSize: z.number(),
-  totalPages: z.number().optional(),
+  totalPages: z.number(),
 });
 
 // Clock Record Schemas
@@ -101,8 +105,8 @@ export const ClockRecordSchema = z.object({
   clockTime: z.string(),
   type: ClockTypeSchema,
   source: ClockSourceSchema,
-  deviceInfo: z.record(z.unknown()).optional(),
-  location: z.record(z.unknown()).optional(),
+  deviceInfo: z.record(z.string(), z.unknown()).optional(),
+  location: z.record(z.string(), z.unknown()).optional(),
   operatorId: z.number().optional(),
   remark: z.string().optional(),
   createdAt: z.string(),
@@ -115,6 +119,9 @@ export const ClockRecordSchema = z.object({
 export const PaginatedClockRecordSchema = z.object({
   items: z.array(ClockRecordSchema),
   total: z.number(),
+  page: z.number(),
+  pageSize: z.number(),
+  totalPages: z.number(),
 });
 
 // Daily Record Schemas
@@ -139,20 +146,21 @@ export const DailyRecordVoSchema = z.object({
   checkInTime: z.string().optional(),
   checkOutTime: z.string().optional(),
   status: AttendanceStatusSchema,
-  lateMinutes: z.number().optional(),
-  earlyLeaveMinutes: z.number().optional(),
-  absentMinutes: z.number().optional(),
+  lateMinutes: z.number(),
+  earlyLeaveMinutes: z.number(),
+  absentMinutes: z.number(),
+  leaveMinutes: z.number(),
   workMinutes: z.number().optional(),
-  leaveMinutes: z.number().optional(),
   remark: z.string().optional(),
-  employeeNo: z.string().optional(),
+  employeeNo: z.string(),
 });
 
 export const PaginatedDailyRecordVoSchema = z.object({
   items: z.array(DailyRecordVoSchema),
   total: z.number(),
-  page: z.number().optional(),
-  pageSize: z.number().optional(),
+  page: z.number(),
+  pageSize: z.number(),
+  totalPages: z.number(),
 });
 
 // Correction Schemas
@@ -173,6 +181,9 @@ export const CorrectionVoSchema = z.object({
 export const PaginatedCorrectionVoSchema = z.object({
   items: z.array(CorrectionVoSchema),
   total: z.number(),
+  page: z.number(),
+  pageSize: z.number(),
+  totalPages: z.number(),
 });
 
 export const SupplementResultVoSchema = z.object({
