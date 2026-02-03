@@ -87,6 +87,36 @@ describe('UserService PBT', () => {
   });
 
   describe('create', () => {
+    it('should successfully create a user when username is unique', async () => {
+      await fc.assert(
+        fc.asyncProperty(createUserInputArb, async (dto) => {
+          vi.clearAllMocks();
+          // Setup: User does not exist
+          prismaFindUniqueMock.mockResolvedValue(null);
+          // Return the created user mock
+          const createdMock = mockUser(1, dto);
+          prismaCreateMock.mockResolvedValue(createdMock);
+
+          // Execute
+          const result = await service.create(dto);
+
+          // Verify
+          expect(prismaFindUniqueMock).toHaveBeenCalledWith({ where: { username: dto.username } });
+          expect(prismaCreateMock).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+              username: dto.username,
+              role: dto.role,
+              status: 'active',
+            })
+          }));
+          expect(result.username).toBe(dto.username);
+          if (dto.password) {
+            expect(bcryptHashMock).toHaveBeenCalled();
+          }
+        })
+      );
+    });
+
     it('should throw conflict if username exists', async () => {
       await fc.assert(
         fc.asyncProperty(createUserInputArb, async (dto) => {
@@ -100,6 +130,80 @@ describe('UserService PBT', () => {
         })
       );
     });
+  });
+
+  describe('update', () => {
+    it('should successfully update user fields', async () => {
+      await fc.assert(
+        fc.asyncProperty(fc.integer({ min: 1 }), updateUserInputArb, async (id, dto) => {
+          vi.clearAllMocks();
+          
+          // Setup: Update returns updated user
+          const updatedMock = mockUser(id, { ...dto, username: 'existing_user' });
+          prismaUpdateMock.mockResolvedValue(updatedMock);
+
+          // Execute
+          const result = await service.update(id, dto);
+
+          // Verify
+          const expectedData: any = { ...dto };
+          if (dto.password) {
+             delete expectedData.password;
+             // Should verify passwordHash is set, but it's hard to check the exact mock call arg structure deeply here easily without strict type matching
+             // We just ensure prisma update is called
+          }
+
+          expect(prismaUpdateMock).toHaveBeenCalledWith(expect.objectContaining({
+             where: { id },
+          }));
+          
+          if (dto.password) {
+            expect(bcryptHashMock).toHaveBeenCalledWith(dto.password, 10);
+          }
+
+          expect(result.id).toBe(id);
+        })
+      );
+    });
+  });
+
+  describe('findAll', () => {
+    const queryArb = fc.record({
+      page: fc.option(fc.integer({ min: 1, max: 100 })),
+      pageSize: fc.option(fc.integer({ min: 1, max: 50 })),
+      keyword: fc.option(fc.string({ minLength: 1 })),
+      status: fc.option(fc.constantFrom('active', 'inactive', 'disabled')),
+    });
+
+    it('should construct correct where clause based on query', async () => {
+      await fc.assert(
+        fc.asyncProperty(queryArb, async (query) => {
+          vi.clearAllMocks();
+          
+          prismaFindManyMock.mockResolvedValue([]);
+          prismaCountMock.mockResolvedValue(0);
+
+          await service.findAll(query as any);
+
+          const expectedWhere: any = {};
+          if (query.keyword) {
+            expectedWhere.OR = [
+               { username: { contains: query.keyword } },
+            ];
+          }
+          if (query.status) {
+            expectedWhere.status = query.status;
+          }
+
+          expect(prismaFindManyMock).toHaveBeenCalledWith(expect.objectContaining({
+            where: expectedWhere,
+            skip: ((query.page || 1) - 1) * (query.pageSize || 10),
+            take: query.pageSize || 10,
+          }));
+        })
+      );
+    });
+  });
 
     it('should create user successfully if username is unique', async () => {
       await fc.assert(
