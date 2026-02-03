@@ -4,7 +4,7 @@
   "description": "Attendance System Monorepo",
   "scripts": {
     "dev": "pnpm -r dev",
-    "dev:trae": "npx --yes concurrently -k -n \"SERVER,WEB,APP\" -c \"blue,green,magenta\" \"pnpm --filter @attendance/server dev\" \"pnpm --filter @attendance/web dev\" \"pnpm --filter @attendance/app start\"",
+    "dev:trae": "node scripts/dev-trae.js",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "eslint .",
