@@ -22,3 +22,4 @@ export type {
 } from './attendance/correction';
 export * from './attendance/stats';
 export * from './attendance/leave';
+export * from './attendance/settings';
