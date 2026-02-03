@@ -1,6 +1,19 @@
 
 import { prisma } from '../../common/db/prisma';
-import { GetSummaryDto, AttendanceSummaryVo, DailyRecordQuery, DailyRecordVo, CalendarDailyVo, PaginatedResponse, AttendanceStatus } from '@attendance/shared';
+import { 
+  GetSummaryDto, 
+  AttendanceSummaryVo, 
+  DailyRecordQuery, 
+  DailyRecordVo, 
+  CalendarDailyVo, 
+  PaginatedResponse, 
+  AttendanceStatus,
+  DeptStatsVo,
+  GetDeptStatsDto,
+  ChartStatsVo,
+  GetChartStatsDto,
+  ExportStatsDto
+} from '@attendance/shared';
 import { Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 
@@ -267,6 +280,169 @@ export class StatisticsService {
     
     sheet.addRows(data);
     
+    return await workbook.xlsx.writeBuffer() as Buffer;
+  }
+
+  async getDeptStats(dto: GetDeptStatsDto): Promise<DeptStatsVo[]> {
+    const { month, deptId } = dto;
+    const [yearStr, monthStr] = month.split('-');
+    const year = parseInt(yearStr);
+    const monthNum = parseInt(monthStr);
+    const startDate = new Date(year, monthNum - 1, 1);
+    const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+    const whereClause: any = {
+      workDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+
+    if (deptId) {
+      const employees = await prisma.employee.findMany({
+        where: { deptId: Number(deptId) },
+        select: { id: true },
+      });
+      whereClause.employeeId = { in: employees.map(e => e.id) };
+    }
+
+    const records = await prisma.attDailyRecord.findMany({
+      where: whereClause,
+      include: {
+        employee: {
+          include: {
+            department: true,
+          },
+        },
+      },
+    });
+
+    const statsMap = new Map<number, DeptStatsVo>();
+    const deptEmployees = new Map<number, Set<number>>();
+
+    for (const record of records) {
+      const dept = record.employee.department;
+      if (!dept) continue;
+
+      const dId = dept.id;
+      
+      // Track employees per dept for headcount
+      if (!deptEmployees.has(dId)) deptEmployees.set(dId, new Set());
+      deptEmployees.get(dId)!.add(record.employeeId);
+
+      // Initialize stats if not exists
+      if (!statsMap.has(dId)) {
+        statsMap.set(dId, {
+          deptId: dId,
+          deptName: dept.name,
+          totalHeadcount: 0,
+          normalCount: 0,
+          lateCount: 0,
+          earlyLeaveCount: 0,
+          absentCount: 0,
+          leaveCount: 0,
+          attendanceRate: 0,
+        });
+      }
+
+      const stats = statsMap.get(dId)!;
+      // Increment counts based on status
+      if (record.status === 'normal') stats.normalCount++;
+      else if (record.status === 'late') stats.lateCount++;
+      else if (record.status === 'early_leave') stats.earlyLeaveCount++;
+      else if (record.status === 'absent') stats.absentCount++;
+      else if (record.status === 'leave') stats.leaveCount++;
+    }
+
+    // Calculate rates and finalize result
+    return Array.from(statsMap.values()).map(stats => {
+      stats.totalHeadcount = deptEmployees.get(stats.deptId)?.size || 0;
+      
+      const presentCount = stats.normalCount + stats.lateCount + stats.earlyLeaveCount;
+      const totalRecords = presentCount + stats.absentCount + stats.leaveCount;
+      
+      stats.attendanceRate = totalRecords > 0 
+        ? Number(((presentCount / totalRecords) * 100).toFixed(2)) 
+        : 0;
+      
+      return stats;
+    });
+  }
+
+  async getChartStats(dto: GetChartStatsDto): Promise<ChartStatsVo> {
+    const { startDate, endDate } = dto;
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T23:59:59.999');
+
+    const records = await prisma.attDailyRecord.findMany({
+      where: {
+        workDate: {
+          gte: start,
+          lte: end,
+        },
+      },
+      select: {
+        workDate: true,
+        status: true,
+      },
+    });
+
+    // 1. Daily Trend
+    const dailyMap = new Map<string, { present: number; total: number }>();
+    
+    for (const r of records) {
+      const dateStr = r.workDate.toISOString().split('T')[0];
+      if (!dailyMap.has(dateStr)) dailyMap.set(dateStr, { present: 0, total: 0 });
+      
+      const day = dailyMap.get(dateStr)!;
+      day.total++;
+      
+      if (['normal', 'late', 'early_leave'].includes(r.status)) {
+        day.present++;
+      }
+    }
+
+    const dailyTrend = Array.from(dailyMap.entries())
+      .map(([date, stats]) => ({
+        date,
+        attendanceRate: stats.total > 0 ? Number(((stats.present / stats.total) * 100).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // 2. Status Distribution
+    const statusMap = new Map<string, number>();
+    for (const r of records) {
+      const s = r.status;
+      statusMap.set(s, (statusMap.get(s) || 0) + 1);
+    }
+
+    const statusDistribution = Array.from(statusMap.entries()).map(([status, count]) => ({
+      status,
+      count,
+    }));
+
+    return { dailyTrend, statusDistribution };
+  }
+
+  async exportStats(dto: ExportStatsDto): Promise<Buffer> {
+    const stats = await this.getDeptStats({ month: dto.month, deptId: dto.deptId });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('部门统计报表');
+
+    sheet.columns = [
+      { header: '部门', key: 'deptName', width: 20 },
+      { header: '总人数', key: 'totalHeadcount', width: 10 },
+      { header: '出勤率(%)', key: 'attendanceRate', width: 12 },
+      { header: '正常(次)', key: 'normalCount', width: 10 },
+      { header: '迟到(次)', key: 'lateCount', width: 10 },
+      { header: '早退(次)', key: 'earlyLeaveCount', width: 10 },
+      { header: '缺勤(次)', key: 'absentCount', width: 10 },
+      { header: '请假(次)', key: 'leaveCount', width: 10 },
+    ];
+
+    sheet.addRows(stats);
+
     return await workbook.xlsx.writeBuffer() as Buffer;
   }
 }

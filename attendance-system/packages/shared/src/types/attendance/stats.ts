@@ -28,3 +28,41 @@ export interface GetSummaryDto {
   deptId?: number;
   employeeId?: number;
 }
+
+export interface DeptStatsVo {
+  deptId: number;
+  deptName: string;
+  totalHeadcount: number; // 总人数
+  normalCount: number;    // 正常出勤人次
+  lateCount: number;      // 迟到人次
+  earlyLeaveCount: number;// 早退人次
+  absentCount: number;    // 缺勤人次
+  leaveCount: number;     // 请假人次
+  attendanceRate: number; // 出勤率 (0-100)
+}
+
+export interface GetDeptStatsDto {
+  month: string; // YYYY-MM
+  deptId?: number;
+}
+
+export interface ChartStatsVo {
+  dailyTrend: {
+    date: string;
+    attendanceRate: number;
+  }[];
+  statusDistribution: {
+    status: string; // normal/late/early/absent/leave
+    count: number;
+  }[];
+}
+
+export interface GetChartStatsDto {
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+}
+
+export interface ExportStatsDto {
+  month: string; // YYYY-MM
+  deptId?: number;
+}

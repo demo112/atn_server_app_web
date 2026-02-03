@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatisticsService } from './statistics.service';
 import { success } from '../../common/types/response';
-import { GetSummaryDto, DailyRecordQuery, AttendanceStatus } from '@attendance/shared';
+import { GetSummaryDto, DailyRecordQuery, AttendanceStatus, GetDeptStatsDto, GetChartStatsDto, ExportStatsDto } from '@attendance/shared';
 import { AppError } from '../../common/errors';
 import { attendanceScheduler } from '../attendance/attendance-scheduler';
 
@@ -76,7 +76,86 @@ export class StatisticsController {
     }
   };
 
-  getDepartmentSummary = async (req: Request, res: Response, next: NextFunction) => {
+  triggerCalculation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { startDate, endDate, employeeIds } = req.body;
+      
+      if (!startDate || !endDate) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required');
+      }
+
+      await attendanceScheduler.triggerDailyCalculation(startDate, endDate, employeeIds);
+      res.json(success(null));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getDeptStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { month, deptId } = req.query as unknown as GetDeptStatsDto;
+      
+      if (!month) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Month is required');
+      }
+
+      const dto: GetDeptStatsDto = {
+        month: month as string,
+        deptId: deptId ? Number(deptId) : undefined,
+      };
+
+      const data = await this.service.getDeptStats(dto);
+      res.json(success(data));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getChartStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { startDate, endDate, deptId } = req.query as unknown as GetChartStatsDto;
+      
+      if (!startDate || !endDate) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required');
+      }
+
+      const dto: GetChartStatsDto = {
+        startDate: startDate as string,
+        endDate: endDate as string,
+        deptId: deptId ? Number(deptId) : undefined,
+      };
+
+      const data = await this.service.getChartStats(dto);
+      res.json(success(data));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  exportStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { month, deptId } = req.query as unknown as ExportStatsDto;
+      
+      if (!month) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Month is required');
+      }
+
+      const dto: ExportStatsDto = {
+        month: month as string,
+        deptId: deptId ? Number(deptId) : undefined,
+      };
+
+      const buffer = await this.service.exportStats(dto);
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename=attendance_stats_${month}.xlsx`);
+      res.send(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  exportDepartmentSummary = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { startDate, endDate, deptId, employeeId } = req.query as unknown as GetSummaryDto;
 
@@ -127,6 +206,60 @@ export class StatisticsController {
       });
 
       res.json(success({ message: 'Calculation triggered successfully' }));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getDeptStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { month, deptId } = req.query;
+      if (!month) throw new AppError('ERR_INVALID_PARAMS', 'Month is required');
+      
+      const dto: GetDeptStatsDto = {
+        month: month as string,
+        deptId: deptId ? Number(deptId) : undefined,
+      };
+      
+      const data = await this.service.getDeptStats(dto);
+      res.json(success(data));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getChartStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { startDate, endDate } = req.query;
+      if (!startDate || !endDate) throw new AppError('ERR_INVALID_PARAMS', 'Start/End date required');
+      
+      const dto: GetChartStatsDto = {
+        startDate: startDate as string,
+        endDate: endDate as string,
+      };
+      
+      const data = await this.service.getChartStats(dto);
+      res.json(success(data));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  exportStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { month, deptId } = req.query;
+      if (!month) throw new AppError('ERR_INVALID_PARAMS', 'Month is required');
+      
+      const dto: ExportStatsDto = {
+        month: month as string,
+        deptId: deptId ? Number(deptId) : undefined,
+      };
+      
+      const buffer = await this.service.exportStats(dto);
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename=stats-${month}.xlsx`);
+      res.send(buffer);
     } catch (error) {
       next(error);
     }

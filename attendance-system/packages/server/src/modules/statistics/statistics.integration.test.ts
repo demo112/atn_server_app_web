@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StatisticsService } from './statistics.service';
 import { prisma } from '../../common/db/prisma';
-import { GetSummaryDto } from '@attendance/shared';
+import { GetSummaryDto, GetDeptStatsDto, GetChartStatsDto } from '@attendance/shared';
 
 // Mock prisma
 vi.mock('../../common/db/prisma', () => ({
@@ -19,16 +19,19 @@ vi.mock('../../common/db/prisma', () => ({
 
 // Mock exceljs to avoid dependency issues during test if not installed
 vi.mock('exceljs', () => {
+  const Workbook = vi.fn(() => ({
+    addWorksheet: vi.fn().mockReturnValue({
+      columns: [],
+      addRows: vi.fn(),
+    }),
+    xlsx: {
+      writeBuffer: vi.fn().mockResolvedValue(Buffer.from('PK...'))
+    },
+  }));
+
   return {
-    Workbook: vi.fn().mockImplementation(() => ({
-      addWorksheet: vi.fn().mockReturnValue({
-        columns: [],
-        addRows: vi.fn(),
-      }),
-      xlsx: {
-        writeBuffer: vi.fn().mockResolvedValue(Buffer.from('PK...'))
-      },
-    })),
+    Workbook,
+    default: { Workbook }
   };
 });
 
@@ -225,6 +228,86 @@ describe('Statistics Integration Test (SW70)', () => {
         expect(result[1].date).toBe('2023-10-02');
         expect(result[1].status).toBe('late');
         expect(result[1].isAbnormal).toBe(true);
+      });
+    });
+  });
+
+  describe('Statistics Integration Test (SW72)', () => {
+    describe('Story 1: 部门考勤统计', () => {
+      it('AC1: Should aggregate department stats', async () => {
+        const mockRecords = [
+          {
+            employeeId: 1,
+            status: 'normal',
+            employee: { deptId: 1, department: { id: 1, name: 'Tech' } }
+          },
+          {
+            employeeId: 2,
+            status: 'late',
+            employee: { deptId: 1, department: { id: 1, name: 'Tech' } }
+          },
+          {
+            employeeId: 3,
+            status: 'normal',
+            employee: { deptId: 2, department: { id: 2, name: 'HR' } }
+          }
+        ];
+        
+        (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
+        
+        const dto: GetDeptStatsDto = {
+          month: '2023-10',
+        };
+        
+        const result = await service.getDeptStats(dto);
+        
+        // Should have 2 departments
+        expect(result.length).toBeGreaterThanOrEqual(2);
+        
+        const techStats = result.find(r => r.deptId === 1);
+        expect(techStats).toBeDefined();
+        if (techStats) {
+          expect(techStats.normalCount).toBe(1);
+          expect(techStats.lateCount).toBe(1);
+          expect(techStats.totalHeadcount).toBe(2);
+        }
+        
+        const hrStats = result.find(r => r.deptId === 2);
+        expect(hrStats).toBeDefined();
+        if (hrStats) {
+            expect(hrStats.normalCount).toBe(1);
+            expect(hrStats.totalHeadcount).toBe(1);
+        }
+      });
+    });
+
+    describe('Story 2: 考勤概览图表', () => {
+      it('AC1: Should return daily trend and status distribution', async () => {
+        const mockRecords = [
+          { workDate: new Date('2023-10-01'), status: 'normal' },
+          { workDate: new Date('2023-10-01'), status: 'absent' }, // 50% rate
+          { workDate: new Date('2023-10-02'), status: 'normal' }, // 100% rate
+        ];
+        
+        (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
+        
+        const dto: GetChartStatsDto = {
+          startDate: '2023-10-01',
+          endDate: '2023-10-02'
+        };
+        
+        const result = await service.getChartStats(dto);
+        
+        expect(result.dailyTrend).toHaveLength(2);
+        expect(result.dailyTrend[0].date).toBe('2023-10-01');
+        expect(result.dailyTrend[0].attendanceRate).toBe(50);
+        expect(result.dailyTrend[1].attendanceRate).toBe(100);
+        
+        expect(result.statusDistribution).toHaveLength(2);
+        const normalDist = result.statusDistribution.find(d => d.status === 'normal');
+        expect(normalDist?.count).toBe(2);
+        const absentDist = result.statusDistribution.find(d => d.status === 'absent');
+        expect(absentDist?.count).toBe(1);
       });
     });
   });

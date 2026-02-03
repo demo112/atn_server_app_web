@@ -12,6 +12,7 @@ import AttendanceSettingsPage from '@/pages/attendance/settings/AttendanceSettin
 import LeavePage from '@/pages/attendance/leave/LeavePage';
 import DailyRecords from '@/pages/attendance/DailyRecords';
 import SummaryPage from '@/pages/statistics/SummaryPage';
+import ReportPage from '@/pages/statistics/ReportPage';
 
 // 临时占位组件，后续会移动到 components/layouts
 const MainLayout = () => (
@@ -27,6 +28,9 @@ const MainLayout = () => (
           <li><Link to="/attendance/settings">考勤制度设置</Link></li>
           <li><Link to="/departments">部门管理</Link></li>
           <li><Link to="/users">用户管理</Link></li>
+          <li><Link to="/attendance/daily-records">每日考勤</Link></li>
+          <li><Link to="/statistics/summary">个人考勤汇总</Link></li>
+          <li><Link to="/statistics/reports">统计报表</Link></li>
         </ul>
       </nav>
     </div>
@@ -73,6 +77,7 @@ export default function App() {
             </Route>
             <Route path="statistics">
                 <Route path="summary" element={<SummaryPage />} />
+                <Route path="reports" element={<ReportPage />} />
             </Route>
           </Route>
         </Routes>
