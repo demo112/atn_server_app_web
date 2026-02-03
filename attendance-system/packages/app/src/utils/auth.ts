@@ -1,13 +1,14 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { useState, useEffect } from 'react';
+import { LoginVo } from '@attendance/shared';
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
 const isWeb = Platform.OS === 'web';
 
-export const setToken = async (token: string) => {
+export const setToken = async (token: string): Promise<void> => {
   if (isWeb) {
     localStorage.setItem(TOKEN_KEY, token);
   } else {
@@ -15,7 +16,7 @@ export const setToken = async (token: string) => {
   }
 };
 
-export const getToken = async () => {
+export const getToken = async (): Promise<string | null> => {
   if (isWeb) {
     return localStorage.getItem(TOKEN_KEY);
   } else {
@@ -23,7 +24,7 @@ export const getToken = async () => {
   }
 };
 
-export const removeToken = async () => {
+export const removeToken = async (): Promise<void> => {
   if (isWeb) {
     localStorage.removeItem(TOKEN_KEY);
   } else {
@@ -31,7 +32,7 @@ export const removeToken = async () => {
   }
 };
 
-export const setUser = async (user: any) => {
+export const setUser = async (user: LoginVo['user']): Promise<void> => {
   if (isWeb) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   } else {
@@ -39,7 +40,7 @@ export const setUser = async (user: any) => {
   }
 };
 
-export const getUser = async () => {
+export const getUser = async (): Promise<LoginVo['user'] | null> => {
   if (isWeb) {
     const user = localStorage.getItem(USER_KEY);
     return user ? JSON.parse(user) : null;
@@ -49,7 +50,7 @@ export const getUser = async () => {
   }
 };
 
-export const removeUser = async () => {
+export const removeUser = async (): Promise<void> => {
   if (isWeb) {
     localStorage.removeItem(USER_KEY);
   } else {
@@ -57,12 +58,12 @@ export const removeUser = async () => {
   }
 };
 
-export const clearAuth = async () => {
+export const clearAuth = async (): Promise<void> => {
   await Promise.all([removeToken(), removeUser()]);
 };
 
-export const useAuth = () => {
-  const [user, setUserState] = useState<any>(null);
+export const useAuth = (): { user: LoginVo['user'] | null; loading: boolean } => {
+  const [user, setUserState] = useState<LoginVo['user'] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

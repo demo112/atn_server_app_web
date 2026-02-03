@@ -4,8 +4,8 @@ import { DailyRecordQuery, DailyRecordVo, CalendarDailyVo, PaginatedResponse, Ap
 /**
  * 获取考勤日历数据
  */
-export const getCalendar = (year: number, month: number, employeeId?: number) => {
-  return request.get<any, Response<CalendarDailyVo[]>>('/statistics/calendar', { 
+export const getCalendar = (year: number, month: number, employeeId?: number): Promise<Response<CalendarDailyVo[]>> => {
+  return request.get<unknown, Response<CalendarDailyVo[]>>('/statistics/calendar', { 
     params: { year, month, employeeId } 
   });
 };
@@ -13,6 +13,6 @@ export const getCalendar = (year: number, month: number, employeeId?: number) =>
 /**
  * 获取考勤明细列表
  */
-export const getDailyRecordDetails = (params: DailyRecordQuery) => {
-  return request.get<any, Response<PaginatedResponse<DailyRecordVo>>>('/statistics/details', { params });
+export const getDailyRecordDetails = (params: DailyRecordQuery): Promise<Response<PaginatedResponse<DailyRecordVo>>> => {
+  return request.get<unknown, Response<PaginatedResponse<DailyRecordVo>>>('/statistics/details', { params });
 };
