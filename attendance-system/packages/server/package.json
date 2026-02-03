@@ -7,6 +7,8 @@
     "build": "tsc",
     "test": "vitest --run src --exclude **/dist/**",
     "test:pbt": "vitest run \"**/*.pbt.test.ts\"",
+    "test:pbt:quick": "vitest run \"**/*.pbt.test.ts\" --mode quick",
+    "test:pbt:full": "vitest run \"**/*.pbt.test.ts\" --mode full",
     "test:watch": "vitest src --exclude **/dist/**",
     "lint": "eslint src",
     "dev": "ts-node-dev --transpile-only --respawn src/index.ts",
