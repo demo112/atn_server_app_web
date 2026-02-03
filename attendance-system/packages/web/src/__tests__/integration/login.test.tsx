@@ -42,10 +42,10 @@ describe('Login Integration', () => {
       </AuthProvider>
     );
 
-    expect(screen.getByPlaceholderText('用户名')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('密码')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('手机号/邮箱')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('请输入密码')).toBeInTheDocument();
     // Antd button might have spaces "登 录"
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^登录$/ })).toBeInTheDocument();
   });
 
   it('should handle successful login', async () => {
@@ -55,7 +55,7 @@ describe('Login Integration', () => {
           success: true,
           data: {
             token: 'fake-jwt-token',
-            user: { id: 1, username: 'admin', name: 'Admin' },
+            user: { id: 1, username: 'admin', name: 'Admin', role: 'admin' },
           },
         });
       })
@@ -69,9 +69,9 @@ describe('Login Integration', () => {
       </AuthProvider>
     );
 
-    await userEvent.type(screen.getByPlaceholderText('用户名'), 'admin');
-    await userEvent.type(screen.getByPlaceholderText('密码'), '123456');
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.type(screen.getByPlaceholderText('手机号/邮箱'), 'admin');
+    await userEvent.type(screen.getByPlaceholderText('请输入密码'), '123456');
+    await userEvent.click(screen.getByRole('button', { name: '登录' }));
 
     await waitFor(() => {
       expect(mockedNavigate).toHaveBeenCalledWith('/');
@@ -108,11 +108,11 @@ describe('Login Integration', () => {
     const user = userEvent.setup();
 
     // Fill form
-    await user.type(screen.getByPlaceholderText('用户名'), 'wrong');
-    await user.type(screen.getByPlaceholderText('密码'), 'wrong');
+    await user.type(screen.getByPlaceholderText('手机号/邮箱'), 'wrong');
+    await user.type(screen.getByPlaceholderText('请输入密码'), 'wrong');
 
     // Submit
-    const submitBtn = screen.getByRole('button'); // Login button
+    const submitBtn = screen.getByRole('button', { name: /^登录$/ }); // Login button
     await user.click(submitBtn);
 
     // Verify error message (Antd message)

@@ -147,11 +147,11 @@ const ClockRecordPage: React.FC = () => {
             showTime
             defaultValue={[dayjs().startOf('day'), dayjs().endOf('day')]}
             onChange={(dates) => {
-              if (dates) {
+              if (dates && dates[0] && dates[1]) {
                 setParams({
                   ...params,
-                  startTime: dates[0]!.toISOString(),
-                  endTime: dates[1]!.toISOString(),
+                  startTime: dates[0].toISOString(),
+                  endTime: dates[1].toISOString(),
                 });
               }
             }}

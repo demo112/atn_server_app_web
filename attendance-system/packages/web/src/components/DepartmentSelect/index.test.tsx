@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DepartmentSelect } from './index';
@@ -11,28 +11,37 @@ vi.mock('../../services/department', () => ({
   },
 }));
 
-describe('DepartmentSelect', () => {
-  const mockTreeData = [
-    {
-      id: '1',
-      name: '研发部',
-      children: [
-        { id: '2', name: '后端组', children: [] },
-        { id: '3', name: '前端组', children: [] },
-      ],
-    },
-    {
-      id: '4',
-      name: '市场部',
-      children: [],
-    },
-  ];
+const mockTreeData = [
+  {
+    id: 1,
+    name: '研发部',
+    children: []
+  },
+  {
+    id: 2,
+    name: '市场部',
+    children: []
+  }
+];
 
-  it('should render correctly and load data', async () => {
-    (departmentService.getTree as any).mockResolvedValue({
-      success: true,
-      data: mockTreeData,
-    });
+describe('DepartmentSelect', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders correctly', async () => {
+    (departmentService.getTree as Mock).mockResolvedValue([
+      {
+        id: 1,
+        name: '研发部',
+        children: [],
+      },
+      {
+        id: 2,
+        name: '市场部',
+        children: [],
+      }
+    ]);
 
     render(<DepartmentSelect />);
 
@@ -52,10 +61,7 @@ describe('DepartmentSelect', () => {
   });
 
   it('should handle selection', async () => {
-    (departmentService.getTree as any).mockResolvedValue({
-      success: true,
-      data: mockTreeData,
-    });
+    (departmentService.getTree as Mock).mockResolvedValue(mockTreeData);
 
     const handleChange = vi.fn();
     render(<DepartmentSelect onChange={handleChange} />);
@@ -73,12 +79,12 @@ describe('DepartmentSelect', () => {
     const option = screen.getByTitle('研发部');
     await userEvent.click(option);
 
-    expect(handleChange).toHaveBeenCalledWith('1', expect.anything(), expect.anything());
+    expect(handleChange).toHaveBeenCalledWith(1, expect.anything(), expect.anything());
   });
 
   it('should handle API error gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (departmentService.getTree as any).mockRejectedValue(new Error('Fetch error'));
+    (departmentService.getTree as Mock).mockRejectedValue(new Error('Fetch error'));
 
     render(<DepartmentSelect />);
     

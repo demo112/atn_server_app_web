@@ -8,4 +8,10 @@ export const departmentHandlers = [
       data: mockDepartments,
     });
   }),
+  http.get('/api/v1/departments/tree', () => {
+    return HttpResponse.json({
+      success: true,
+      data: mockDepartments,
+    });
+  }),
 ];

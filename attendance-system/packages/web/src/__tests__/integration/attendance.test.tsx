@@ -43,9 +43,29 @@ describe('AttendanceDetailsPage Integration', () => {
             {
               id: 1,
               name: '总经办',
+              parentId: null,
+              sortOrder: 1,
+              createdAt: '2023-01-01',
+              updatedAt: '2023-01-01',
               children: [
-                { id: 2, name: '研发部', children: [] },
-                { id: 3, name: '市场部', children: [] },
+                { 
+                  id: 2, 
+                  name: '研发部', 
+                  parentId: 1,
+                  sortOrder: 1,
+                  createdAt: '2023-01-01',
+                  updatedAt: '2023-01-01',
+                  children: [] 
+                },
+                { 
+                  id: 3, 
+                  name: '市场部', 
+                  parentId: 1,
+                  sortOrder: 2,
+                  createdAt: '2023-01-01',
+                  updatedAt: '2023-01-01',
+                  children: [] 
+                },
               ],
             },
           ],

@@ -19,7 +19,8 @@ const LeavePage: React.FC = () => {
   const [filters, setFilters] = useState({
     employeeId: undefined as number | undefined,
     type: undefined as LeaveType | undefined,
-    dateRange: null as [dayjs.Dayjs, dayjs.Dayjs] | null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dateRange: null as any
   });
 
   const fetchData = useCallback(async () => {
@@ -177,7 +178,8 @@ const LeavePage: React.FC = () => {
         />
         <DatePicker.RangePicker 
           showTime
-          onChange={dates => setFilters({...filters, dateRange: dates})}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onChange={(dates: any) => setFilters({...filters, dateRange: dates})}
         />
         <Button type="primary" onClick={() => setPage(1)}>查询</Button>
       </Space>

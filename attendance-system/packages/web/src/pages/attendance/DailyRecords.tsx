@@ -19,7 +19,7 @@ const statusMap: Record<AttendanceStatus, { text: string; color: string }> = {
 };
 
 const DailyRecords: React.FC = () => {
-  // const { user } = useAuth(); // Unused
+  const { user } = useAuth();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DailyRecordVo[]>([]);

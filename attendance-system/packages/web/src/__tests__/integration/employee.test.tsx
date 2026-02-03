@@ -53,7 +53,7 @@ describe('EmployeeList Integration', () => {
     vi.restoreAllMocks();
   });
 
-  const setupServer = () => {
+  const setupServer = (): void => {
     server.use(
       http.get('http://localhost:3000/api/v1/employees', ({ request }) => {
         const url = new URL(request.url);
@@ -161,7 +161,7 @@ describe('EmployeeList Integration', () => {
             if (config && config.onOk) {
                 config.onOk(); 
             }
-            return { destroy: vi.fn(), update: vi.fn() } as any;
+            return { destroy: vi.fn(), update: vi.fn() };
         });
 
         // Spy on message.success

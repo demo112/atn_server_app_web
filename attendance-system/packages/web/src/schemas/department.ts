@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { Department, DepartmentVO } from '@attendance/shared';
 
 // Base Department Schema
 // Note: explicit type annotation is required for recursive schemas
-export const DepartmentSchema: z.ZodType<any> = z.lazy(() =>
+export const DepartmentSchema: z.ZodType<Department> = z.lazy(() =>
   z.object({
     id: z.number(),
     name: z.string(),
@@ -13,7 +14,7 @@ export const DepartmentSchema: z.ZodType<any> = z.lazy(() =>
   })
 );
 
-export const DepartmentVoSchema: z.ZodType<any> = z.lazy(() =>
+export const DepartmentVoSchema: z.ZodType<DepartmentVO> = z.lazy(() =>
   z.object({
     id: z.number(),
     name: z.string(),

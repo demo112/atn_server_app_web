@@ -23,9 +23,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [isLoading] = useState(false);
 
-  const login = async (loginData: LoginDto) => {
+  const login = async (loginData: LoginDto): Promise<void> => {
     try {
-      const res: any = await request.post('/auth/login', loginData);
+      const res = await request.post<unknown, { success: boolean; data: unknown; }>('/auth/login', loginData);
       if (res.success) {
         // Runtime validation
         const { token, user } = validateResponse(LoginVoSchema, res);
@@ -36,14 +36,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserState(user);
         message.success('登录成功');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Login failed', error);
-      message.error(error.response?.data?.error?.message || '登录失败');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
+      message.error(err.response?.data?.error?.message || '登录失败');
       throw error;
     }
   };
 
-  const logout = () => {
+  const logout = (): void => {
     clearAuth();
     setTokenState(null);
     setUserState(null);
@@ -66,7 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

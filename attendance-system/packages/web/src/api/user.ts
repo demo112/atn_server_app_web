@@ -7,22 +7,22 @@ import type {
   User 
 } from '@attendance/shared';
 
-export const getUsers = (params?: GetUsersDto) => {
-  return request.get<any, UserListVo>('/users', { params });
+export const getUsers = (params?: GetUsersDto): Promise<UserListVo> => {
+  return request.get<unknown, UserListVo>('/users', { params });
 };
 
-export const createUser = (data: CreateUserDto) => {
-  return request.post<any, User>('/users', data);
+export const createUser = (data: CreateUserDto): Promise<User> => {
+  return request.post<unknown, User>('/users', data);
 };
 
-export const updateUser = (id: number, data: UpdateUserDto) => {
-  return request.patch<any, User>(`/users/${id}`, data);
+export const updateUser = (id: number, data: UpdateUserDto): Promise<User> => {
+  return request.patch<unknown, User>(`/users/${id}`, data);
 };
 
-export const deleteUser = (id: number) => {
-  return request.delete<any, void>(`/users/${id}`);
+export const deleteUser = (id: number): Promise<void> => {
+  return request.delete<unknown, void>(`/users/${id}`);
 };
 
-export const getUser = (id: number) => {
-  return request.get<any, User>(`/users/${id}`);
+export const getUser = (id: number): Promise<User> => {
+  return request.get<unknown, User>(`/users/${id}`);
 };

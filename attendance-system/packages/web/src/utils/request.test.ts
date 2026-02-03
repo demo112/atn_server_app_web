@@ -3,6 +3,9 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../test/mocks/server';
 import request from './request';
 import * as auth from './auth';
+import { AxiosInstance } from 'axios';
+
+const api = request as AxiosInstance;
 
 describe('utils/request', () => {
   beforeEach(() => {
@@ -23,12 +26,12 @@ describe('utils/request', () => {
       })
     );
 
-    await request.get('/test-auth');
+    await api.get('/test-auth');
 
     expect(capturedHeaders).not.toBeNull();
-    if (capturedHeaders) {
-      expect(capturedHeaders.get('Authorization')).toBe(`Bearer ${token}`);
-    }
+    // Use explicit type assertion for TypeScript
+    const headers = capturedHeaders as unknown as Map<string, string>;
+    expect(headers.get('Authorization')).toBe(`Bearer ${token}`);
   });
 
   it('should not add authorization header when token does not exist', async () => {
@@ -41,12 +44,12 @@ describe('utils/request', () => {
       })
     );
 
-    await request.get('/test-no-auth');
+    await api.get('/test-no-auth');
 
     expect(capturedHeaders).not.toBeNull();
-    if (capturedHeaders) {
-      expect(capturedHeaders.get('Authorization')).toBeNull();
-    }
+    // Use explicit type assertion for TypeScript
+    const headers = capturedHeaders as unknown as Map<string, string>;
+    expect(headers.get('Authorization')).toBeNull();
   });
 
   it('should handle response data correctly', async () => {
@@ -58,7 +61,7 @@ describe('utils/request', () => {
       })
     );
 
-    const response = await request.get('/test-data');
+    const response = await api.get('/test-data');
     expect(response).toEqual(mockData);
   });
 
@@ -78,7 +81,7 @@ describe('utils/request', () => {
     );
 
     try {
-      await request.get('/test-401');
+      await api.get('/test-401');
     } catch {
       // Expected error
     }

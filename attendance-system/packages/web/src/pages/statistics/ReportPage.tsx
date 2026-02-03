@@ -42,6 +42,12 @@ const ReportPage: React.FC = (): React.ReactElement => {
   
   const [form] = Form.useForm();
 
+  const initialValues = {
+    month: dayjs(),
+    dateRange: [dayjs().startOf('month'), dayjs()],
+    deptId: undefined
+  };
+
   const fetchData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
@@ -73,16 +79,10 @@ const ReportPage: React.FC = (): React.ReactElement => {
   }, [form]);
 
   useEffect(() => {
-    // Default to current month
-    const initialValues = {
-        month: dayjs(),
-        dateRange: [dayjs().startOf('month'), dayjs()],
-        deptId: undefined
-    };
     // Initial fetch
-    form.setFieldsValue(initialValues);
+    // form.setFieldsValue(initialValues); // initialValues is already set via Form prop
     fetchData();
-  }, [fetchData, form]);
+  }, [fetchData]);
 
   const handleExport = async (): Promise<void> => {
     try {

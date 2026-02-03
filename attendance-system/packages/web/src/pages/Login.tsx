@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
+import { LoginDto } from '@attendance/shared';
 
-const Login: React.FC = () => {
+const Login: React.FC = (): React.ReactElement => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   
@@ -13,23 +15,23 @@ const Login: React.FC = () => {
   const [code, setCode] = useState('');
   const [isDark, setIsDark] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (tab === 'password') {
       try {
-        await login({ username, password });
+        const loginData: LoginDto = { username, password };
+        await login(loginData);
         navigate('/');
-      } catch (error) {
+      } catch {
         // Error handled in context or show toast here
-        console.error('Login failed', error);
       }
     } else {
-      console.log('Code login not implemented yet', { phone, code });
-      alert('验证码登录暂未接入后端');
+      console.warn('Code login not implemented yet', { phone, code });
+      message.info('验证码登录暂未接入后端');
     }
   };
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = (): void => {
     const newIsDark = !isDark;
     setIsDark(newIsDark);
     if (newIsDark) {

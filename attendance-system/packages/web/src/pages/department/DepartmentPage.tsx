@@ -24,10 +24,8 @@ const DepartmentPage: React.FC = () => {
   const fetchTree = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await departmentService.getTree();
-      if (res.success) {
-        setTreeData(res.data || []);
-      }
+      const data = await departmentService.getTree();
+      setTreeData(data || []);
     } catch (error) {
       message.error('获取部门树失败');
       console.error(error);
@@ -38,10 +36,8 @@ const DepartmentPage: React.FC = () => {
 
   const fetchDepartment = async (key: number): Promise<void> => {
     try {
-      const res = await departmentService.getDepartment(key);
-      if (res.success) {
-        setSelectedDepartment(res.data || null);
-      }
+      const data = await departmentService.getDepartment(key);
+      setSelectedDepartment(data || null);
     } catch {
       message.error('Failed to load department details');
     }
@@ -81,13 +77,11 @@ const DepartmentPage: React.FC = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          const res = await departmentService.deleteDepartment(selectedDepartment.id);
-          if (res.success) {
-            message.success('删除成功');
-            setSelectedDepartment(null);
-            setSelectedKeys([]);
-            fetchTree();
-          }
+          await departmentService.deleteDepartment(selectedDepartment.id);
+          message.success('删除成功');
+          setSelectedDepartment(null);
+          setSelectedKeys([]);
+          fetchTree();
         } catch (error) {
           console.error(error);
           // message.error('删除失败'); // generic handled in request util?

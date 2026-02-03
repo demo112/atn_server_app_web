@@ -54,11 +54,9 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
           parentId: values.parentId || null,
           sortOrder: values.sortOrder || 0,
         };
-        const res = await departmentService.createDepartment(dto);
-        if (res.success) {
-          message.success('创建成功');
-          onSuccess();
-        }
+        await departmentService.createDepartment(dto);
+        message.success('创建成功');
+        onSuccess();
       } else {
         if (!initialValues?.id) return;
         const dto: UpdateDepartmentDto = {
@@ -66,11 +64,9 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
           parentId: values.parentId || null,
           sortOrder: values.sortOrder,
         };
-        const res = await departmentService.updateDepartment(initialValues.id, dto);
-        if (res.success) {
-          message.success('更新成功');
-          onSuccess();
-        }
+        await departmentService.updateDepartment(initialValues.id, dto);
+        message.success('更新成功');
+        onSuccess();
       }
     } catch (error) {
       logger.error('Operation failed', error);

@@ -12,7 +12,12 @@ export const ErrorSchema = z.object({
   message: z.string(),
 });
 
-export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T): z.ZodObject<{
+  success: z.ZodBoolean;
+  data: z.ZodOptional<T>;
+  pagination: z.ZodOptional<typeof PaginationSchema>;
+  error: z.ZodOptional<typeof ErrorSchema>;
+}> =>
   z.object({
     success: z.boolean(),
     data: dataSchema.optional(),
@@ -20,7 +25,13 @@ export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
     error: ErrorSchema.optional(),
   });
 
-export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T): z.ZodObject<{
+  items: z.ZodArray<T>;
+  total: z.ZodNumber;
+  page: z.ZodNumber;
+  pageSize: z.ZodNumber;
+  totalPages: z.ZodNumber;
+}> =>
   z.object({
     items: z.array(itemSchema),
     total: z.number(),

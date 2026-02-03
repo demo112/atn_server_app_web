@@ -11,8 +11,20 @@ describe('DepartmentPage Integration', () => {
     {
       id: 1,
       name: '研发部',
+      parentId: null,
+      sortOrder: 1,
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
       children: [
-        { id: 2, name: '后端组', children: [] },
+        { 
+          id: 2, 
+          name: '后端组', 
+          parentId: 1,
+          sortOrder: 1,
+          createdAt: '2023-01-01',
+          updatedAt: '2023-01-01',
+          children: [] 
+        },
       ],
     },
   ];

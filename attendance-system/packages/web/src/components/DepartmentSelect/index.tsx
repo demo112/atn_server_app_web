@@ -13,13 +13,11 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
   const [treeData, setTreeData] = useState<DepartmentVO[]>([]);
 
   useEffect(() => {
-    const fetchTree = async () => {
+    const fetchTree = async (): Promise<void> => {
       try {
         setLoading(true);
-        const res = await departmentService.getTree();
-        if (res.success) {
-          setTreeData(res.data || []);
-        }
+        const data = await departmentService.getTree();
+        setTreeData(data || []);
       } catch (error) {
         logger.error('Fetch department tree failed', error);
       } finally {
