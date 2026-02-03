@@ -2,6 +2,7 @@
 import { prisma } from '../../common/db/prisma';
 import { GetSummaryDto, AttendanceSummaryVo } from '@attendance/shared';
 import { Prisma } from '@prisma/client';
+import * as ExcelJS from 'exceljs';
 
 export class StatisticsService {
   async getDepartmentSummary(dto: GetSummaryDto): Promise<AttendanceSummaryVo[]> {
@@ -81,5 +82,30 @@ export class StatisticsService {
     });
 
     return result;
+  }
+
+  async exportDepartmentSummary(dto: GetSummaryDto): Promise<Buffer> {
+    const data = await this.getDepartmentSummary(dto);
+    
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('考勤汇总');
+    
+    sheet.columns = [
+      { header: '工号', key: 'employeeNo', width: 15 },
+      { header: '姓名', key: 'employeeName', width: 15 },
+      { header: '部门', key: 'deptName', width: 20 },
+      { header: '应出勤(天)', key: 'totalDays', width: 12 },
+      { header: '实出勤(天)', key: 'actualDays', width: 12 },
+      { header: '迟到(次)', key: 'lateCount', width: 10 },
+      { header: '迟到(分)', key: 'lateMinutes', width: 10 },
+      { header: '早退(次)', key: 'earlyLeaveCount', width: 10 },
+      { header: '早退(分)', key: 'earlyLeaveMinutes', width: 10 },
+      { header: '缺勤(次)', key: 'absentCount', width: 10 },
+      { header: '请假(分)', key: 'leaveMinutes', width: 10 },
+    ];
+    
+    sheet.addRows(data);
+    
+    return await workbook.xlsx.writeBuffer() as Buffer;
   }
 }
