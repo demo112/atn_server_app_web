@@ -14,7 +14,6 @@
 ### 阶段1：后端核心 (重构与新增)
 
 #### Task 1: 升级考勤配置 (SW62依赖)
-- **状态**: ✅ 已完成
 - **文件**: 
   - `packages/server/src/modules/attendance/attendance-settings.service.ts`
   - `packages/server/src/modules/attendance/attendance-settings.dto.ts`
@@ -25,7 +24,6 @@
 - **依赖**: 无
 
 #### Task 2: 实现定时调度器 (Scheduler)
-- **状态**: ✅ 已完成
 - **文件**: 
   - `packages/server/src/modules/attendance/attendance-scheduler.ts`
   - `packages/server/src/app.ts` (初始化调度器)
@@ -37,7 +35,6 @@
 - **依赖**: Task 1
 
 #### Task 3: 重构统计服务 (Statistics Service)
-- **状态**: ✅ 已完成
 - **文件**: 
   - `packages/server/src/modules/statistics/statistics.service.ts`
 - **内容**: 
@@ -48,7 +45,6 @@
 - **依赖**: Task 2
 
 #### Task 4: 更新统计接口
-- **状态**: ✅ 已完成
 - **文件**: 
   - `packages/server/src/modules/statistics/statistics.controller.ts`
   - `packages/server/src/modules/statistics/statistics.routes.ts`
@@ -61,7 +57,6 @@
 ### 阶段2：前端页面
 
 #### Task 5: 实现考勤汇总页面
-- **状态**: ✅ 已完成
 - **文件**: 
   - `packages/web/src/pages/statistics/SummaryPage.tsx`
   - `packages/web/src/pages/statistics/components/SummaryTable.tsx`
@@ -73,7 +68,6 @@
 - **依赖**: Task 4
 
 #### Task 6: 考勤规则配置页更新 (SW62补充)
-- **状态**: ✅ 已完成
 - **文件**: `packages/web/src/pages/attendance/settings/AttendanceSettingsPage.tsx` (若存在)
 - **内容**: 增加“自动计算时间”设置项
 - **验证**: 能保存并回显时间配置
