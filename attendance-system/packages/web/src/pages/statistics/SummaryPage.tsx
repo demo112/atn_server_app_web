@@ -1,33 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Form, DatePicker, Button, Select, message, Space } from 'antd';
+import { Table, Card, Form, DatePicker, Button, message, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
-import request from '../../utils/request';
+import { getDepartmentSummary, triggerCalculation } from '../../api/statistics';
 import { AttendanceSummaryVo, GetSummaryDto } from '@attendance/shared';
+import { DepartmentSelect } from '../../../components/DepartmentSelect';
 
 const { RangePicker } = DatePicker;
-
-// 简单部门选择 Mock，后续可替换为真实的部门树选择器
-const DepartmentSelect = ({ value, onChange }: any) => {
-    return (
-        <Select 
-            value={value} 
-            onChange={onChange} 
-            placeholder="选择部门" 
-            allowClear
-            style={{ width: 200 }}
-            options={[
-                { value: 1, label: '总经办' },
-                { value: 2, label: '人事部' },
-                { value: 3, label: '研发部' },
-                { value: 4, label: '市场部' },
-            ]}
-        />
-    );
-};
 
 const SummaryPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -49,13 +31,15 @@ const SummaryPage: React.FC = () => {
         deptId: deptId,
       };
 
-      const res = await request.get('/statistics/summary', { params });
-      if (res.data.success) {
-        setData(res.data.data);
+      const res = await getDepartmentSummary(params);
+      if (res.success) {
+        setData(res.data);
+      } else {
+        message.error(res.message || '查询失败');
       }
     } catch (error) {
       console.error(error);
-      // message.error('查询失败'); // request utils might handle this
+      message.error('查询失败');
     } finally {
       setLoading(false);
     }
@@ -71,13 +55,18 @@ const SummaryPage: React.FC = () => {
       }
 
       setLoading(true);
-      await request.post('/statistics/calculate', {
+      const res = await triggerCalculation({
         startDate: dateRange[0].format('YYYY-MM-DD'),
         endDate: dateRange[1].format('YYYY-MM-DD'),
       });
-      message.success('已触发重新计算，请稍后刷新查看结果');
-      // 延迟刷新
-      setTimeout(() => handleSearch(values), 2000);
+      
+      if (res.success) {
+        message.success('已触发重新计算，请稍后刷新查看结果');
+        // 延迟刷新
+        setTimeout(() => handleSearch(values), 2000);
+      } else {
+        message.error(res.message || '触发计算失败');
+      }
     } catch (error) {
       console.error(error);
       message.error('触发计算失败');
@@ -114,7 +103,6 @@ const SummaryPage: React.FC = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "考勤汇总");
     XLSX.writeFile(wb, `考勤汇总_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`);
-    // message.warning('导出功能暂时不可用 (Missing xlsx dependency)');
   };
 
   useEffect(() => {

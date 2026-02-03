@@ -17,6 +17,22 @@ import {
 import { Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 
+interface AggregationResult {
+  employee_id: number;
+  total_days: number | bigint;
+  actual_days: number | bigint;
+  late_count: number | bigint;
+  late_minutes: number | bigint;
+  early_leave_count: number | bigint;
+  early_leave_minutes: number | bigint;
+  absent_count: number | bigint;
+  absent_minutes: number | bigint;
+  leave_count: number | bigint;
+  leave_minutes: number | bigint;
+  actual_minutes: number | bigint;
+  effective_minutes: number | bigint;
+}
+
 export class StatisticsService {
   async getDailyRecords(query: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> {
     const { startDate, endDate, deptId, employeeId, employeeName, status, page = 1, pageSize = 20 } = query;
@@ -185,7 +201,7 @@ export class StatisticsService {
     const queryStart = new Date(startDate + 'T00:00:00');
     const queryEnd = new Date(endDate + 'T23:59:59.999');
 
-    const whereClause: any = {
+    const whereClause: Prisma.EmployeeWhereInput = {
       status: 'active',
     };
     if (deptId) whereClause.deptId = deptId;
@@ -204,8 +220,7 @@ export class StatisticsService {
     const employeeIds = employees.map(e => e.id);
 
     // 2. 使用聚合查询获取统计数据
-    // 注意: Prisma queryRaw 返回的大数类型 (BigInt) 需要转换，但在聚合函数结果中通常是 number 或 string
-    const aggregations = await prisma.$queryRaw<any[]>`
+    const aggregations = await prisma.$queryRaw<AggregationResult[]>`
       SELECT 
         employee_id,
         COUNT(*) as total_days,
@@ -217,7 +232,9 @@ export class StatisticsService {
         SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent_count,
         SUM(COALESCE(absent_minutes, 0)) as absent_minutes,
         SUM(CASE WHEN leave_minutes > 0 THEN 1 ELSE 0 END) as leave_count,
-        SUM(COALESCE(leave_minutes, 0)) as leave_minutes
+        SUM(COALESCE(leave_minutes, 0)) as leave_minutes,
+        SUM(COALESCE(actual_minutes, 0)) as actual_minutes,
+        SUM(COALESCE(effective_minutes, 0)) as effective_minutes
       FROM att_daily_records
       WHERE employee_id IN (${Prisma.join(employeeIds)})
         AND work_date >= ${queryStart}
@@ -226,13 +243,13 @@ export class StatisticsService {
     `;
 
     // 3. 组装结果
-    const summaryMap = new Map<number, any>();
+    const summaryMap = new Map<number, AggregationResult>();
     for (const agg of aggregations) {
       summaryMap.set(Number(agg.employee_id), agg);
     }
 
     const result: AttendanceSummaryVo[] = employees.map(emp => {
-      const agg = summaryMap.get(emp.id) || {};
+      const agg = summaryMap.get(emp.id);
       
       return {
         employeeId: emp.id,
@@ -240,18 +257,18 @@ export class StatisticsService {
         employeeName: emp.name,
         deptId: emp.deptId || 0,
         deptName: emp.department?.name || '未分配',
-        totalDays: Number(agg.total_days || 0),
-        actualDays: Number(agg.actual_days || 0),
-        lateCount: Number(agg.late_count || 0),
-        lateMinutes: Number(agg.late_minutes || 0),
-        earlyLeaveCount: Number(agg.early_leave_count || 0),
-        earlyLeaveMinutes: Number(agg.early_leave_minutes || 0),
-        absentCount: Number(agg.absent_count || 0),
-        absentMinutes: Number(agg.absent_minutes || 0),
-        leaveCount: Number(agg.leave_count || 0),
-        leaveMinutes: Number(agg.leave_minutes || 0),
-        actualMinutes: 0, // 暂不统计
-        effectiveMinutes: 0, // 暂不统计
+        totalDays: Number(agg?.total_days || 0),
+        actualDays: Number(agg?.actual_days || 0),
+        lateCount: Number(agg?.late_count || 0),
+        lateMinutes: Number(agg?.late_minutes || 0),
+        earlyLeaveCount: Number(agg?.early_leave_count || 0),
+        earlyLeaveMinutes: Number(agg?.early_leave_minutes || 0),
+        absentCount: Number(agg?.absent_count || 0),
+        absentMinutes: Number(agg?.absent_minutes || 0),
+        leaveCount: Number(agg?.leave_count || 0),
+        leaveMinutes: Number(agg?.leave_minutes || 0),
+        actualMinutes: Number(agg?.actual_minutes || 0),
+        effectiveMinutes: Number(agg?.effective_minutes || 0),
       };
     });
 

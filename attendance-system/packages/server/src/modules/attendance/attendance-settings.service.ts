@@ -13,6 +13,7 @@ export class AttendanceSettingsService {
     this.logger.info('System - Initializing defaults');
     const defaultSettings = [
       { key: 'day_switch_time', value: '05:00', description: '考勤日切换时间' },
+      { key: 'auto_calc_time', value: '05:00', description: '自动计算时间' },
     ];
 
     for (const setting of defaultSettings) {

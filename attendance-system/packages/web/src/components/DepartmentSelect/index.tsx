@@ -4,9 +4,7 @@ import { TreeSelect, TreeSelectProps } from 'antd';
 import { departmentService } from '../../services/department';
 import { DepartmentVO } from '@attendance/shared';
 
-export interface DepartmentSelectProps extends Omit<TreeSelectProps, 'treeData' | 'loadData'> {
-  // 可以添加自定义属性
-}
+export type DepartmentSelectProps = Omit<TreeSelectProps, 'treeData' | 'loadData'>;
 
 export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
   const [loading, setLoading] = useState(false);
