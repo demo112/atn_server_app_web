@@ -146,26 +146,25 @@ const Login: React.FC = () => {
               />
             </div>
             <div className="ml-3 text-sm">
-              <label htmlFor="terms" className="text-gray-500 dark:text-gray-400">
-                我已阅读并接受{' '}
-                <a href="#" className="text-primary hover:underline">
-                  服务协议
-                </a>{' '}
-                和{' '}
-                <a href="#" className="text-primary hover:underline">
-                  隐私协议
-                </a>
-              </label>
-            </div>
+            <label className="text-gray-500 dark:text-gray-400" htmlFor="terms">
+              我已阅读并接受{' '}
+              <a href="#" className="text-primary hover:underline">
+                服务协议
+              </a>{' '}
+              和{' '}
+              <a href="#" className="text-primary hover:underline">
+                隐私协议
+              </a>
+            </label>
           </div>
+        </div>
 
-          <button
-            onClick={handleLogin}
-            disabled={isLoading}
-            className="w-full mt-8 py-3.5 bg-primary text-white font-semibold rounded shadow-lg shadow-primary/30 hover:bg-primary/90 active:transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? '登录中...' : '登录'}
-          </button>
+        <button
+          className="w-full mt-12 py-3.5 bg-primary !text-white font-semibold rounded shadow-lg shadow-primary/30 hover:bg-primary/90 active:transform active:scale-[0.98] transition-all"
+          onClick={handleLogin}
+        >
+          登录
+        </button>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-500 dark:text-gray-400">您还没有账户？</span>
