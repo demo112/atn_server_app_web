@@ -25,7 +25,10 @@ describe('utils/request', () => {
 
     await request.get('/test-auth');
 
-    expect(capturedHeaders!.get('Authorization')).toBe(`Bearer ${token}`);
+    expect(capturedHeaders).not.toBeNull();
+    if (capturedHeaders) {
+      expect(capturedHeaders.get('Authorization')).toBe(`Bearer ${token}`);
+    }
   });
 
   it('should not add authorization header when token does not exist', async () => {
@@ -40,7 +43,10 @@ describe('utils/request', () => {
 
     await request.get('/test-no-auth');
 
-    expect(capturedHeaders!.get('Authorization')).toBeNull();
+    expect(capturedHeaders).not.toBeNull();
+    if (capturedHeaders) {
+      expect(capturedHeaders.get('Authorization')).toBeNull();
+    }
   });
 
   it('should handle response data correctly', async () => {
@@ -73,7 +79,7 @@ describe('utils/request', () => {
 
     try {
       await request.get('/test-401');
-    } catch (error) {
+    } catch {
       // Expected error
     }
 

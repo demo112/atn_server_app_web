@@ -36,13 +36,13 @@ const DepartmentPage: React.FC = () => {
     }
   }, []);
 
-  const fetchDepartment = async (key: number) => {
+  const fetchDepartment = async (key: number): Promise<void> => {
     try {
       const res = await departmentService.getDepartment(key);
       if (res.success) {
         setSelectedDepartment(res.data || null);
       }
-    } catch (error) {
+    } catch {
       message.error('Failed to load department details');
     }
   };
@@ -51,7 +51,7 @@ const DepartmentPage: React.FC = () => {
     fetchTree();
   }, [fetchTree]);
 
-  const handleSelect = (keys: React.Key[]) => {
+  const handleSelect = (keys: React.Key[]): void => {
     setSelectedKeys(keys);
     if (keys.length > 0) {
       fetchDepartment(keys[0] as number);
@@ -60,20 +60,20 @@ const DepartmentPage: React.FC = () => {
     }
   };
 
-  const handleCreate = () => {
+  const handleCreate = (): void => {
     setFormMode('create');
     setFormInitialValues({ parentId: selectedDepartment?.id || undefined }); // 默认选中当前部门为父部门
     setFormVisible(true);
   };
 
-  const handleEdit = () => {
+  const handleEdit = (): void => {
     if (!selectedDepartment) return;
     setFormMode('edit');
     setFormInitialValues(selectedDepartment);
     setFormVisible(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (): void => {
     if (!selectedDepartment) return;
     Modal.confirm({
       title: '确认删除',
@@ -96,7 +96,7 @@ const DepartmentPage: React.FC = () => {
     });
   };
 
-  const handleFormSuccess = () => {
+  const handleFormSuccess = (): void => {
     setFormVisible(false);
     fetchTree();
     // 如果是编辑当前选中节点，刷新详情
@@ -140,7 +140,7 @@ const DepartmentPage: React.FC = () => {
         {selectedDepartment ? (
           <Card 
             title={selectedDepartment.name} 
-            bordered={false}
+            variant="borderless"
             extra={
               <Space>
                 <Button icon={<EditOutlined />} onClick={handleEdit}>编辑</Button>

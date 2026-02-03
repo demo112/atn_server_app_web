@@ -4,6 +4,7 @@ import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { server } from './mocks/server';
 
 // 确保 Act 环境
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 // MSW Setup
@@ -17,9 +18,9 @@ afterAll(() => server.close());
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
 };
 
 // Mock window.matchMedia for Ant Design
@@ -58,6 +59,7 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock window.location
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (window as any).location;
 window.location = {
   ...window.location,
@@ -67,18 +69,7 @@ window.location = {
   replace: vi.fn(),
   reload: vi.fn(),
   pathname: '/',
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+

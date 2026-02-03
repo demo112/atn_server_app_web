@@ -33,7 +33,8 @@ describe('utils/auth', () => {
   });
 
   describe('User Management', () => {
-    const user = { id: 1, name: 'Test User' };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = { id: 1, name: 'Test User' } as any;
 
     it('should set and get user', () => {
       setUser(user);
@@ -56,7 +57,8 @@ describe('utils/auth', () => {
   describe('clearAuth', () => {
     it('should clear both token and user', () => {
       setToken('test-token');
-      setUser({ id: 1 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setUser({ id: 1 } as any);
       
       clearAuth();
       

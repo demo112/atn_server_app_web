@@ -63,12 +63,13 @@ describe('AttendanceDetailsPage Integration', () => {
 
         return HttpResponse.json({
           success: true,
-          data: filtered,
-          pagination: {
+          data: {
+            items: filtered,
             total: filtered.length,
             page: 1,
             pageSize: 10,
-          },
+            totalPages: 1
+          }
         });
       })
     );

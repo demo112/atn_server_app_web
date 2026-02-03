@@ -11,7 +11,7 @@ import type { Shift, TimePeriod, CreateShiftDto } from '@attendance/shared';
 
 const { Title } = Typography;
 
-const ShiftPage: React.FC = () => {
+const ShiftPage: React.FC = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [periods, setPeriods] = useState<TimePeriod[]>([]);
@@ -24,33 +24,33 @@ const ShiftPage: React.FC = () => {
   // Days configuration for the form
   const [days, setDays] = useState<{ dayOfCycle: number; periodIds: number[] }[]>([]);
 
-  useEffect(() => {
-    fetchShifts();
-    fetchPeriods();
-  }, []);
-
-  const fetchShifts = async () => {
+  const fetchShifts = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const data = await getShifts();
       setShifts(data);
-    } catch (error) {
+    } catch {
       message.error('获取班次列表失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchPeriods = async () => {
+  const fetchPeriods = useCallback(async (): Promise<void> => {
     try {
       const data = await getTimePeriods();
       setPeriods(data);
-    } catch (error) {
+    } catch {
       message.error('获取时间段失败');
     }
-  };
+  }, []);
 
-  const handleEdit = async (shift: Shift) => {
+  useEffect(() => {
+    fetchShifts();
+    fetchPeriods();
+  }, [fetchShifts, fetchPeriods]);
+
+  const handleEdit = async (shift: Shift): Promise<void> => {
     try {
       const detail = await getShift(shift.id);
       setCurrentShift(detail);
@@ -74,12 +74,12 @@ const ShiftPage: React.FC = () => {
         cycleDays: detail.cycleDays,
       });
       setIsModalOpen(true);
-    } catch (error) {
+    } catch {
       message.error('获取详情失败');
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<void> => {
     Modal.confirm({
       title: '确认删除',
       content: '确定要删除这个班次吗？',
@@ -88,14 +88,14 @@ const ShiftPage: React.FC = () => {
           await deleteShift(id);
           message.success('删除成功');
           fetchShifts();
-        } catch (error) {
+        } catch {
           message.error('删除失败');
         }
       },
     });
   };
 
-  const handleModalOk = async () => {
+  const handleModalOk = async (): Promise<void> => {
     try {
       const values = await form.validateFields();
       const periods: { periodId: number; dayOfCycle: number }[] = [];
@@ -123,12 +123,12 @@ const ShiftPage: React.FC = () => {
       }
       setIsModalOpen(false);
       fetchShifts();
-    } catch (error) {
+    } catch {
       message.error('保存失败');
     }
   };
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = (): void => {
     setCurrentShift(null);
     setDays([]);
     form.resetFields();
@@ -136,7 +136,7 @@ const ShiftPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const updateDayPeriods = (day: number, periodIds: number[]) => {
+  const updateDayPeriods = (day: number, periodIds: number[]): void => {
     const newDays = days.filter(d => d.dayOfCycle !== day);
     if (periodIds.length > 0) {
       newDays.push({ dayOfCycle: day, periodIds });

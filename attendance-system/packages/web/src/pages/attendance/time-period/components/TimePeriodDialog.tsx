@@ -14,7 +14,7 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
   onClose, 
   onSuccess,
   initialData 
-}) => {
+}): React.ReactElement | null => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -47,7 +47,7 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
     }
   }, [isOpen, initialData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     
     // Validation
@@ -80,7 +80,7 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
       
       alert(initialData ? '更新成功' : '创建成功');
       onSuccess();
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error(err);
       const msg = err.response?.data?.error?.message || err.message || '操作失败';
       alert(`操作失败: ${msg}`);

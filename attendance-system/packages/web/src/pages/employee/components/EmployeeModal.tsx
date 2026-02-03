@@ -34,7 +34,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     }
   }, [open, mode, initialValues, form]);
 
-  const handleOk = async () => {
+  const handleOk = async (): Promise<void> => {
     try {
       const values = await form.validateFields();
       
@@ -67,7 +67,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       onOk={handleOk}
       onCancel={onCancel}
       confirmLoading={confirmLoading}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical">
         {mode === 'create' && (

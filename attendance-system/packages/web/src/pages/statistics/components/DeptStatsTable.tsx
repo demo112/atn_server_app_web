@@ -61,7 +61,7 @@ const DeptStatsTable: React.FC<Props> = ({ data, loading = false }) => {
   ];
 
   return (
-    <Card title="部门考勤统计" bordered={false}>
+    <Card title="部门考勤统计" variant="borderless">
       <Table
         rowKey="deptId"
         columns={columns}

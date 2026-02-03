@@ -1,0 +1,37 @@
+import { z } from 'zod';
+
+export const PaginationSchema = z.object({
+  page: z.number(),
+  pageSize: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+});
+
+export const ErrorSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+});
+
+export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    data: dataSchema.optional(),
+    pagination: PaginationSchema.optional(),
+    error: ErrorSchema.optional(),
+  });
+
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+  z.object({
+    items: z.array(itemSchema),
+    total: z.number(),
+    page: z.number(),
+    pageSize: z.number(),
+    totalPages: z.number(),
+  });
+
+export const QueryParamsSchema = z.object({
+  page: z.number().optional(),
+  pageSize: z.number().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});

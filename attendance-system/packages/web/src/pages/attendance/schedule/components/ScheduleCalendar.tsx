@@ -6,7 +6,7 @@ interface ScheduleCalendarProps {
   deptId: number;
 }
 
-export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }) => {
+export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): React.ReactElement => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,12 +23,12 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }) =>
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const blanks = Array.from({ length: firstDayOfWeek }, (_, i) => i);
 
-  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handlePrevMonth = (): void => setCurrentDate(new Date(year, month - 1, 1));
+  const handleNextMonth = (): void => setCurrentDate(new Date(year, month + 1, 1));
 
   // 加载数据
   useEffect(() => {
-    const fetchSchedules = async () => {
+    const fetchSchedules = async (): Promise<void> => {
       setLoading(true);
       try {
         const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
@@ -54,7 +54,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }) =>
   }, [deptId, year, month, daysInMonth]);
 
   // 辅助函数：获取某天的排班
-  const getSchedulesForDay = (day: number) => {
+  const getSchedulesForDay = (day: number): Schedule[] => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     return schedules.filter(s => {

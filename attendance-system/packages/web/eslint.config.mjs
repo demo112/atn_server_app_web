@@ -23,7 +23,7 @@ export default [
         { allowConstantExport: true },
       ],
       // Web 端允许 warn 级别的 console
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       // 临时修复: 禁用导致崩溃的规则
       '@typescript-eslint/no-unused-expressions': 'off',
     },

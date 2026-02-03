@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+// UserList component
 import { Table, Button, Space, Tag, Modal, Form, Input as AntdInput, Select as AntdSelect, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/user';
@@ -32,13 +33,13 @@ const UserList: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserListItem | null>(null);
   const [form] = Form.useForm();
 
-  const fetchData = async (currentPage = 1, size = 10) => {
+  const fetchData = async (currentPage = 1, size = 10): Promise<void> => {
     setLoading(true);
     try {
       const res = await getUsers({ page: currentPage, pageSize: size });
       setData(res.items);
       setTotal(res.total);
-    } catch (error) {
+    } catch {
       message.error('获取用户列表失败');
     } finally {
       setLoading(false);
@@ -49,17 +50,17 @@ const UserList: React.FC = () => {
     fetchData(page, pageSize);
   }, [page, pageSize]);
 
-  const handleCreate = () => {
+  const handleCreate = (): void => {
     setModalMode('create');
     setCurrentUser(null);
-    (form as any).resetFields();
+    form.resetFields();
     setIsModalOpen(true);
   };
 
-  const handleEdit = (record: UserListItem) => {
+  const handleEdit = (record: UserListItem): void => {
     setModalMode('edit');
     setCurrentUser(record);
-    (form as any).setFieldsValue({
+    form.setFieldsValue({
       username: record.username,
       role: record.role,
       status: record.status,
@@ -67,7 +68,7 @@ const UserList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<void> => {
     Modal.confirm({
       title: '确认删除',
       content: '确定要删除这个用户吗？此操作不可恢复。',
@@ -76,16 +77,16 @@ const UserList: React.FC = () => {
           await deleteUser(id);
           message.success('删除成功');
           fetchData(page, pageSize);
-        } catch (error) {
+        } catch {
           message.error('删除失败');
         }
       },
     });
   };
 
-  const handleModalOk = async () => {
+  const handleModalOk = async (): Promise<void> => {
     try {
-      const values = await (form as any).validateFields();
+      const values = await form.validateFields();
       if (modalMode === 'create') {
         await createUser(values);
         message.success('创建成功');
@@ -97,8 +98,8 @@ const UserList: React.FC = () => {
       setIsModalOpen(false);
       fetchData(page, pageSize);
     } catch (error) {
-      // Form validation error or API error
       console.error(error);
+      // Form validation error or API error
     }
   };
 

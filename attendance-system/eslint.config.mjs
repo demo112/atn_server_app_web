@@ -20,11 +20,11 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['warn', { "argsIgnorePattern": "^_" }],
       
       // 代码质量
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
       
       // 存量代码豁免（逐步收紧）
-      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'error',
     },
   },
   {
@@ -52,6 +52,12 @@ export default tseslint.config(
       'no-undef': 'off',
       'no-console': 'off',
       '@typescript-eslint/no-var-requires': 'off',
+    }
+  },
+  {
+    files: ['**/packages/web/src/schemas/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
     }
   }
 );

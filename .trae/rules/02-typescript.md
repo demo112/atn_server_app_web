@@ -6,10 +6,11 @@
 - strictNullChecks: true
 - noImplicitReturns: true
 
-## 强制规则
-- 禁止 `any`，使用 `unknown` 或具体类型
-- 所有函数必须显式声明返回类型
-- 禁止 `!` 断言，使用类型守卫或可选链
+## 强制规则 (ESLint)
+- 禁止 `any`，使用 `unknown` 或具体类型 (Warn)
+- 所有函数必须显式声明返回类型 (Warn)
+- 禁止 `!` 断言，使用类型守卫或可选链 (Warn)
+- 禁止未使用的变量 (unused-vars) (Warn)
 
 ## 命名规范
 | 类型 | 规范 | 示例 |

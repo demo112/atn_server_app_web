@@ -19,7 +19,7 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
   const [value, setValue] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchUsers = async (keyword = '') => {
+  const fetchUsers = async (keyword = ''): Promise<void> => {
     setLoading(true);
     try {
       const res = await getUsers({ page: 1, pageSize: 20, keyword });
@@ -30,7 +30,7 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
           value: u.id,
         }));
       setUsers(options);
-    } catch (error) {
+    } catch {
       message.error('Failed to load users');
     } finally {
       setLoading(false);
@@ -44,7 +44,7 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
     }
   }, [open]);
 
-  const handleOk = () => {
+  const handleOk = (): void => {
     onOk(value);
   };
 
@@ -55,7 +55,7 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
       onOk={handleOk}
       onCancel={onCancel}
       confirmLoading={confirmLoading}
-      destroyOnClose
+      destroyOnHidden
     >
       <p>Select a user account to bind to this employee:</p>
       <Select

@@ -20,7 +20,7 @@ const AttendanceCharts: React.FC<Props> = ({ data, loading = false }) => {
     <div style={{ marginBottom: 24 }}>
       <Row gutter={24}>
         <Col span={16}>
-          <Card title="每日出勤率趋势" loading={loading} bordered={false}>
+          <Card title="每日出勤率趋势" loading={loading} variant="borderless">
             <div style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
@@ -39,7 +39,7 @@ const AttendanceCharts: React.FC<Props> = ({ data, loading = false }) => {
           </Card>
         </Col>
         <Col span={8}>
-          <Card title="考勤状态分布" loading={loading} bordered={false}>
+          <Card title="考勤状态分布" loading={loading} variant="borderless">
             <div style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

@@ -24,11 +24,7 @@ const CorrectionPage: React.FC = () => {
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<DailyRecordVo | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [selectedDeptId, dateRange, page]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await correctionService.getDailyRecords({
@@ -48,19 +44,23 @@ const CorrectionPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, selectedDeptId, dateRange]);
 
-  const handleCheckIn = (record: DailyRecordVo) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleCheckIn = (record: DailyRecordVo): void => {
     setSelectedRecord(record);
     setCheckInOpen(true);
   };
 
-  const handleCheckOut = (record: DailyRecordVo) => {
+  const handleCheckOut = (record: DailyRecordVo): void => {
     setSelectedRecord(record);
     setCheckOutOpen(true);
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (): void => {
     loadData();
     setCheckInOpen(false);
     setCheckOutOpen(false);
@@ -112,7 +112,7 @@ const CorrectionPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: DailyRecordVo) => (
+      render: (_: unknown, record: DailyRecordVo) => (
         <Space size="middle">
           {!record.checkInTime && (
             <Button type="link" onClick={() => handleCheckIn(record)}>补签到</Button>

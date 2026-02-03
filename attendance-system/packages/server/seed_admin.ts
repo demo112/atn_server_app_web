@@ -32,11 +32,13 @@ async function main() {
     }
   });
 
+  // eslint-disable-next-line no-console
   console.log('Admin user seeded:', admin);
 }
 
 main()
   .catch(e => {
+    // eslint-disable-next-line no-console
     console.error(e);
     process.exit(1);
   })

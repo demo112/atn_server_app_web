@@ -1,62 +1,64 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { TimePeriod } from '@attendance/shared';
 import { getTimePeriods, deleteTimePeriod } from '@/services/time-period';
 import { TimePeriodDialog } from './components/TimePeriodDialog';
+import { message } from 'antd';
+import { logger } from '@/utils/logger';
 
-const TimePeriodPage: React.FC = () => {
+const TimePeriodPage: React.FC = (): React.ReactElement => {
   const [periods, setPeriods] = useState<TimePeriod[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | undefined>(undefined);
 
-  const fetchPeriods = async () => {
+  const fetchPeriods = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       const data = await getTimePeriods();
       setPeriods(data);
     } catch (error) {
-      console.error('Failed to fetch time periods:', error);
-      alert('加载时间段列表失败');
+      logger.error('Failed to fetch time periods:', error);
+      message.error('加载时间段列表失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPeriods();
-  }, []);
+  }, [fetchPeriods]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<void> => {
     if (!window.confirm('确定要删除这个时间段吗？如果已被班次引用将无法删除。')) {
       return;
     }
 
     try {
       await deleteTimePeriod(id);
-      alert('删除成功');
+      message.success('删除成功');
       fetchPeriods();
-    } catch (error: any) {
-      console.error('Failed to delete:', error);
-      alert('删除失败: ' + (error.response?.data?.message || error.message));
+    } catch (error) {
+      logger.error('Failed to delete:', error);
+      message.error('删除失败');
     }
   };
 
-  const handleEdit = (period: TimePeriod) => {
+  const handleEdit = (period: TimePeriod): void => {
     setSelectedPeriod(period);
     setIsDialogOpen(true);
   };
 
-  const handleCreate = () => {
+  const handleCreate = (): void => {
     setSelectedPeriod(undefined);
     setIsDialogOpen(true);
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (): void => {
     setIsDialogOpen(false);
     fetchPeriods();
   };
 
-  const formatTime = (start?: string, end?: string) => {
+  const formatTime = (start?: string, end?: string): string => {
     if (!start && !end) return '-';
     return `${start || ''} - ${end || ''}`;
   };

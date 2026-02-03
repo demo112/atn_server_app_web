@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
-import { User, LoginDto } from '@attendance/shared';
-import { getToken, getUser, setToken, setUser as setStorageUser, clearAuth } from '../utils/auth';
+import { LoginDto } from '@attendance/shared';
+import { getToken, getUser, setToken, setUser as setStorageUser, clearAuth, AuthUser } from '../utils/auth';
 import request from '../utils/request';
 import { message } from 'antd';
 import { logger } from '../utils/logger';
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -17,7 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUserState] = useState<User | null>(() => getUser());
+  const [user, setUserState] = useState<AuthUser | null>(() => getUser());
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [isLoading] = useState(false);
 

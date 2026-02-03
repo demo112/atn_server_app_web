@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { attendanceService } from '@/services/attendance';
 import { Shift } from '@attendance/shared';
+import { message } from 'antd';
+import { logger } from '@/utils/logger';
 
 interface BatchScheduleDialogProps {
   isOpen: boolean;
@@ -9,7 +11,7 @@ interface BatchScheduleDialogProps {
   deptId?: number;
 }
 
-export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen, onClose, onSuccess, deptId }) => {
+export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen, onClose, onSuccess, deptId }): React.ReactElement | null => {
   const [loading, setLoading] = useState(false);
   const [shifts, setShifts] = useState<Shift[]>([]);
 
@@ -21,27 +23,27 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
     includeSubDepartments: false
   });
 
-  useEffect(() => {
-    if (isOpen) {
-        loadData();
-    }
-  }, [isOpen]);
-
-  const loadData = async () => {
+  const loadData = async (): Promise<void> => {
       try {
           const res = await attendanceService.getShifts();
           if (res.data) {
               setShifts(res.data as Shift[]);
           }
       } catch (e) {
-          console.error(e);
+          logger.error('Failed to load shifts', e);
       }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isOpen) {
+        loadData();
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!deptId) {
-        alert('请先选择部门');
+        message.error('请先选择部门');
         return;
     }
     setLoading(true);
@@ -54,13 +56,12 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
         force: formData.force,
         includeSubDepartments: formData.includeSubDepartments
       });
-      alert(`批量排班成功，影响 ${res.data?.count || 0} 条记录`);
+      message.success(`批量排班成功，影响 ${res.data?.count || 0} 条记录`);
       onSuccess();
       onClose();
-    } catch (err: any) {
-      console.error(err);
-      const msg = err.response?.data?.error?.message || '批量创建失败';
-      alert(`批量创建失败: ${msg}`);
+    } catch (err) {
+      logger.error('Batch schedule failed', err);
+      message.error('批量创建失败');
     } finally {
       setLoading(false);
     }
