@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndi
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { DepartmentVO } from '@attendance/shared';
 import { getDepartmentTree, deleteDepartment } from '../../../services/department';
+import { logger } from '../../../utils/logger';
 
 export const DepartmentListScreen = () => {
   const navigation = useNavigation<any>();
@@ -44,7 +45,7 @@ export const DepartmentListScreen = () => {
         setDepartments(currentLevelNodes);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '加载失败');
     } finally {
       setLoading(false);

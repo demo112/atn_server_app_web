@@ -198,7 +198,7 @@ const ShiftPage: React.FC = () => {
             <InputNumber min={1} max={31} />
           </Form.Item>
           
-          <Divider titlePlacement="left">每日时间段配置</Divider>
+          <Divider orientation="left">每日时间段配置</Divider>
           <div style={{ maxHeight: 400, overflowY: 'auto' }}>
             {Array.from({ length: cycleDays }).map((_, index) => {
               const day = index + 1;

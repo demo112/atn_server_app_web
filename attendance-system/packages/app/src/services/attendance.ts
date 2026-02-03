@@ -9,10 +9,13 @@ import {
   CorrectionVo,
   DailyRecordVo,
   CorrectionType,
-  ScheduleVo
+  ScheduleVo,
+  Shift,
+  QueryDailyRecordsDto,
+  PaginatedResponse
 } from '@attendance/shared';
 
-export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, CorrectionVo, DailyRecordVo, CorrectionType, ScheduleVo };
+export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, CorrectionVo, DailyRecordVo, CorrectionType, ScheduleVo, Shift, QueryDailyRecordsDto, PaginatedResponse };
 
 /**
  * 打卡
@@ -71,10 +74,10 @@ export const supplementCheckOut = (data: { dailyRecordId: string; checkOutTime: 
 };
 
 /**
- * 获取每日考勤记录 (用于补卡选择)
+ * 获取每日考勤记录 (分页)
  */
-export const getDailyRecords = (params: { startDate: string; endDate: string }) => {
-  return request.get<any, ApiResponse<DailyRecordVo[]>>('/attendance/daily', { params });
+export const getDailyRecords = (params: QueryDailyRecordsDto) => {
+  return request.get<any, ApiResponse<PaginatedResponse<DailyRecordVo>>>('/attendance/daily', { params });
 };
 
 /**

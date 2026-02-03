@@ -7,7 +7,8 @@ import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 import { getDepartmentSummary, triggerCalculation } from '../../api/statistics';
 import { AttendanceSummaryVo, GetSummaryDto } from '@attendance/shared';
-import { DepartmentSelect } from '../../../components/DepartmentSelect';
+import { DepartmentSelect } from '../../components/DepartmentSelect';
+import { logger } from '../../utils/logger';
 
 const { RangePicker } = DatePicker;
 
@@ -33,12 +34,12 @@ const SummaryPage: React.FC = () => {
 
       const res = await getDepartmentSummary(params);
       if (res.success) {
-        setData(res.data);
+        setData(res.data || []);
       } else {
-        message.error(res.message || '查询失败');
+        message.error(res.error?.message || '查询失败');
       }
     } catch (error) {
-      console.error(error);
+      logger.error('Summary query failed', error);
       message.error('查询失败');
     } finally {
       setLoading(false);
@@ -65,10 +66,10 @@ const SummaryPage: React.FC = () => {
         // 延迟刷新
         setTimeout(() => handleSearch(values), 2000);
       } else {
-        message.error(res.message || '触发计算失败');
+        message.error(res.error?.message || '触发计算失败');
       }
     } catch (error) {
-      console.error(error);
+      logger.error('Calculation trigger failed', error);
       message.error('触发计算失败');
     } finally {
       setLoading(false);

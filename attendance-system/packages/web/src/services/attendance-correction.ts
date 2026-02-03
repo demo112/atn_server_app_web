@@ -5,7 +5,7 @@ import {
   QueryDailyRecordsDto, 
   SupplementResultVo, 
   PaginatedResponse,
-  DailyRecordVo
+  CorrectionDailyRecordVo as DailyRecordVo
 } from '@attendance/shared';
 
 export const attendanceCorrectionService = {

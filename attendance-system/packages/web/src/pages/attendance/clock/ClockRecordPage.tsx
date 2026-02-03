@@ -8,7 +8,7 @@ import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getClockRecords, manualClock } from '../../../services/clock';
 import { getUsers } from '../../../api/user';
-import type { ClockRecord, ClockType, User } from '@attendance/shared';
+import type { ClockRecord, ClockType, UserListVo } from '@attendance/shared';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -28,7 +28,7 @@ const ClockRecordPage: React.FC = () => {
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserListVo['items']>([]);
 
   useEffect(() => {
     fetchData();
@@ -51,7 +51,6 @@ const ClockRecordPage: React.FC = () => {
   const loadUsers = async () => {
     try {
       const res = await getUsers({ page: 1, pageSize: 100 });
-      // @ts-ignore: Assuming res.items exists based on UserList.tsx pattern
       setUsers(res.items || []); 
     } catch (error) {
       console.error('Failed to load users', error);

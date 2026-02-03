@@ -48,13 +48,13 @@ const AttendanceCharts: React.FC<Props> = ({ data, loading = false }) => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="count"
                     nameKey="status" // Note: status is key like 'normal', might want to map to Chinese
                   >
-                    {statusDistribution.map((entry, index) => (
+                    {statusDistribution.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

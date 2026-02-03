@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **[ENG01] 前端容错与工程化 (Track C)**
+  - Web/App: 集成 ErrorBoundary 全局错误捕获
+  - Web/App: 统一 Axios 拦截器，标准化错误提示 (401/403/500)
+  - Infra: 修复 Monorepo 构建与 Lint 问题，消除 Any 类型警告
+
 - **[SW72] 统计报表**
   - Server: 实现部门考勤统计、图表数据聚合、Excel导出服务
   - Web: 新增统计报表页面，集成 Recharts 图表展示

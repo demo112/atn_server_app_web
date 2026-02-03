@@ -8,6 +8,17 @@ export * from './department';
 export * from './attendance/base';
 export * from './attendance/schedule';
 export * from './attendance/record';
-export * from './attendance/correction';
+// export * from './attendance/correction'; // Conflict with DailyRecordVo
+export {
+  QueryDailyRecordsDto,
+  SupplementCheckInDto,
+  SupplementCheckOutDto,
+  SupplementResultVo,
+  QueryCorrectionsDto,
+  CorrectionVo,
+  CorrectionListVo,
+  UpdateCorrectionDto,
+  CorrectionDailyRecordVo
+} from './attendance/correction';
 export * from './attendance/stats';
 export * from './attendance/leave';

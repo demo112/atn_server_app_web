@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { CreateDepartmentDto } from '@attendance/shared';
 import { createDepartment, updateDepartment, getDepartmentById } from '../../../services/department';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
+import { logger } from '../../../utils/logger';
 
 export const DepartmentEditScreen = () => {
   const navigation = useNavigation();
@@ -50,7 +51,7 @@ export const DepartmentEditScreen = () => {
         }
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ export const DepartmentEditScreen = () => {
               setParentName(res.data.name);
           }
       } catch (e) {
-          console.error(e);
+          logger.error(e);
       }
   }
 
@@ -89,7 +90,7 @@ export const DepartmentEditScreen = () => {
         Alert.alert('成功', '创建成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '保存失败');
     } finally {
       setLoading(false);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Form, TimePicker, Button, message } from 'antd';
 import dayjs from 'dayjs';
 import { getSettings, updateSettings } from '../../../services/attendance-settings';
+import { logger } from '../../../utils/logger';
 
 const AttendanceSettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ const AttendanceSettingsPage: React.FC = () => {
         auto_calc_time: data.auto_calc_time ? dayjs(data.auto_calc_time, 'HH:mm') : dayjs('04:00', 'HH:mm'),
       });
     } catch (error) {
-      console.error('Failed to fetch settings:', error);
+      logger.error('Failed to fetch settings:', error);
       message.error('加载考勤设置失败');
     } finally {
       setLoading(false);
@@ -28,7 +29,7 @@ const AttendanceSettingsPage: React.FC = () => {
     fetchSettings();
   }, []);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { day_switch_time: dayjs.Dayjs; auto_calc_time: dayjs.Dayjs }) => {
     try {
       setSaving(true);
       await updateSettings({
@@ -37,7 +38,7 @@ const AttendanceSettingsPage: React.FC = () => {
       });
       message.success('保存成功');
     } catch (error) {
-      console.error('Failed to update settings:', error);
+      logger.error('Failed to update settings:', error);
       message.error('保存设置失败');
     } finally {
       setSaving(false);

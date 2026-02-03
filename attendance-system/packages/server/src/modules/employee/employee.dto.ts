@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { QueryParamsSchema } from '@attendance/shared';
 
 export const createEmployeeSchema = z.object({
   employeeNo: z.string().min(1, 'Employee No is required'),
@@ -19,11 +20,9 @@ export const updateEmployeeSchema = z.object({
   position: z.string().optional(),
 });
 
-export const getEmployeesSchema = z.object({
-  page: z.string().transform(Number).default('1'),
-  pageSize: z.string().transform(Number).default('10'),
+export const getEmployeesSchema = QueryParamsSchema.extend({
   keyword: z.string().optional(),
-  deptId: z.string().transform(Number).optional(),
+  deptId: z.coerce.number().int().positive().optional(),
 });
 
 export const bindUserSchema = z.object({

@@ -1,5 +1,5 @@
 import { QueryParams } from '../common';
-import type { AttendanceStatus, CorrectionType } from './record';
+import type { AttendanceStatus, CorrectionType, DailyRecordVo } from './record';
 
 // 查询每日考勤记录参数
 export interface QueryDailyRecordsDto extends QueryParams {
@@ -9,24 +9,6 @@ export interface QueryDailyRecordsDto extends QueryParams {
   endDate?: string;   // YYYY-MM-DD
   status?: AttendanceStatus; // 筛选特定状态
   employeeName?: string;
-}
-
-// 每日考勤记录视图对象 (用于异常处理列表)
-export interface DailyRecordVo {
-  id: string; // BigInt -> String
-  employeeId: number;
-  employeeName: string;
-  deptName: string;
-  workDate: string; // YYYY-MM-DD
-  shiftName?: string;
-  startTime?: string; // 班次开始时间 HH:mm
-  endTime?: string;   // 班次结束时间 HH:mm
-  checkInTime?: string; // ISO String
-  checkOutTime?: string; // ISO String
-  status: AttendanceStatus;
-  lateMinutes?: number;
-  earlyLeaveMinutes?: number;
-  absentMinutes?: number;
 }
 
 // 补签到请求参数
@@ -84,4 +66,25 @@ export interface CorrectionListVo {
 export interface UpdateCorrectionDto {
   correctionTime: string; // ISO String
   remark?: string;
+}
+
+export interface CorrectionDailyRecordVo {
+  id: string; // BigInt -> String
+  employeeId: number;
+  employeeName: string;
+  deptName: string;
+  workDate: string; // YYYY-MM-DD
+  shiftName?: string;
+  startTime?: string; // 班次开始时间 HH:mm
+  endTime?: string;   // 班次结束时间 HH:mm
+  checkInTime?: string; // ISO String
+  checkOutTime?: string; // ISO String
+  status: AttendanceStatus;
+  lateMinutes?: number;
+  earlyLeaveMinutes?: number;
+  absentMinutes?: number;
+  workMinutes?: number;
+  leaveMinutes?: number;
+  remark?: string;
+  employeeNo?: string;
 }

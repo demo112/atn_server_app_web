@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { UserRole, UserStatus } from '@attendance/shared';
 import { getUsers, deleteUser } from '../../../services/user';
+import { logger } from '../../../utils/logger';
 
 interface UserItem {
   id: number;
@@ -56,7 +57,7 @@ export const UserListScreen = () => {
         setHasMore(items.length === 20 && users.length + items.length < total);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '加载失败');
     } finally {
       setLoading(false);

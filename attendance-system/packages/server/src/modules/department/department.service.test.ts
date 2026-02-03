@@ -52,8 +52,8 @@ describe('DepartmentService', () => {
         { id: 4, name: 'Grandchild', parentId: 2, sortOrder: 0, createdAt: now, updatedAt: now },
       ];
       
-      // @ts-ignore - Partial mock is enough
-      prismaMock.department.findMany.mockResolvedValue(depts);
+      // Partial mock is enough
+      prismaMock.department.findMany.mockResolvedValue(depts as any);
 
       const result = await service.getTree();
 
@@ -76,7 +76,7 @@ describe('DepartmentService', () => {
       
       prismaMock.department.findFirst.mockResolvedValue(null); // No name conflict
       // @ts-ignore
-      prismaMock.department.create.mockResolvedValue(created);
+      prismaMock.department.create.mockResolvedValue(created as any);
 
       const result = await service.create(dto);
 
@@ -98,9 +98,9 @@ describe('DepartmentService', () => {
       const dto = { name: 'Existing', parentId: 1 };
       const parent = { id: 1 };
       // @ts-ignore
-      prismaMock.department.findUnique.mockResolvedValue(parent);
+      prismaMock.department.findUnique.mockResolvedValue(parent as any);
       // @ts-ignore
-      prismaMock.department.findFirst.mockResolvedValue({ id: 2 });
+      prismaMock.department.findFirst.mockResolvedValue({ id: 2 } as any);
 
       await expect(service.create(dto)).rejects.toThrow('Department name already exists');
     });
@@ -111,8 +111,8 @@ describe('DepartmentService', () => {
     const existing = { id: 2, name: 'Dept', parentId: 1, sortOrder: 0, createdAt: now, updatedAt: now };
 
     it('should update department name', async () => {
-      // @ts-ignore
-      prismaMock.department.findUnique.mockResolvedValue(existing);
+      
+      prismaMock.department.findUnique.mockResolvedValue(existing as any);
       prismaMock.department.findFirst.mockResolvedValue(null); // No conflict
       // @ts-ignore
       prismaMock.department.update.mockResolvedValue({ ...existing, name: 'New Name' });
@@ -136,7 +136,7 @@ describe('DepartmentService', () => {
       
       // Mock findUnique for initial check
       // @ts-ignore
-      prismaMock.department.findUnique.mockResolvedValue(dept1);
+      prismaMock.department.findUnique.mockResolvedValue(dept1 as any);
 
       // Mock checkCircularReference traversals
       // Checking if 1 is ancestor of 3

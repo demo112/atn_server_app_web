@@ -66,7 +66,6 @@ export class StatisticsService {
       if (employees.length > 0) {
         whereClause.employeeId = { in: employees.map(e => e.id) };
       } else {
-        // 没找到员工，直接返回空
         return {
           items: [],
           total: 0,
@@ -126,6 +125,7 @@ export class StatisticsService {
         skip,
         take,
         orderBy: { workDate: 'desc' },
+        include: { shift: true },
       }),
     ]);
 
@@ -149,7 +149,7 @@ export class StatisticsService {
         employeeNo: emp?.employeeNo || '',
         deptName: emp?.department?.name || '未分配',
         workDate: record.workDate.toISOString().split('T')[0],
-        shiftName: record.shiftName || undefined,
+        shiftName: record.shift?.name,
         checkInTime: record.checkInTime ? record.checkInTime.toISOString() : undefined,
         checkOutTime: record.checkOutTime ? record.checkOutTime.toISOString() : undefined,
         status: record.status as AttendanceStatus,
@@ -296,8 +296,8 @@ export class StatisticsService {
     ];
     
     sheet.addRows(data);
-    
-    return await workbook.xlsx.writeBuffer() as Buffer;
+   // 设置响应头
+    return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
 
   async getDeptStats(dto: GetDeptStatsDto): Promise<DeptStatsVo[]> {
@@ -387,17 +387,27 @@ export class StatisticsService {
   }
 
   async getChartStats(dto: GetChartStatsDto): Promise<ChartStatsVo> {
-    const { startDate, endDate } = dto;
+    const { startDate, endDate, deptId } = dto;
     const start = new Date(startDate + 'T00:00:00');
     const end = new Date(endDate + 'T23:59:59.999');
 
-    const records = await prisma.attDailyRecord.findMany({
-      where: {
-        workDate: {
-          gte: start,
-          lte: end,
-        },
+    const whereClause: any = {
+      workDate: {
+        gte: start,
+        lte: end,
       },
+    };
+
+    if (deptId) {
+      const employees = await prisma.employee.findMany({
+        where: { deptId: Number(deptId) },
+        select: { id: true },
+      });
+      whereClause.employeeId = { in: employees.map(e => e.id) };
+    }
+
+    const records = await prisma.attDailyRecord.findMany({
+      where: whereClause,
       select: {
         workDate: true,
         status: true,
@@ -460,6 +470,6 @@ export class StatisticsService {
 
     sheet.addRows(stats);
 
-    return await workbook.xlsx.writeBuffer() as Buffer;
+    return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
 }

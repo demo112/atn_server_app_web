@@ -5,6 +5,7 @@ import { LeaveVo, LeaveType, LeaveStatus } from '@attendance/shared';
 import * as leaveService from '@/services/leave';
 import { LeaveDialog } from './components/LeaveDialog';
 import dayjs from 'dayjs';
+import { logger } from '../../../utils/logger';
 
 const LeavePage: React.FC = () => {
   const [data, setData] = useState<LeaveVo[]>([]);
@@ -32,10 +33,10 @@ const LeavePage: React.FC = () => {
         startTime: filters.dateRange ? filters.dateRange[0].toISOString() : undefined,
         endTime: filters.dateRange ? filters.dateRange[1].toISOString() : undefined,
       });
-      setData(res.data || []);
-      setTotal(res.pagination.total);
+      setData(res.items || []);
+      setTotal(res.total);
     } catch (error) {
-      console.error('Failed to fetch leaves:', error);
+      logger.error('Failed to fetch leaves', error);
       message.error('加载请假列表失败');
     } finally {
       setLoading(false);
@@ -69,8 +70,8 @@ const LeavePage: React.FC = () => {
           await leaveService.cancelLeave(id);
           message.success('撤销成功');
           fetchData();
-        } catch (err: any) {
-          console.error(err);
+        } catch (err) {
+          logger.error('Leave cancellation failed', err);
           message.error('撤销失败');
         }
       }

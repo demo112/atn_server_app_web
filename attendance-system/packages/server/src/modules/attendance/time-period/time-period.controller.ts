@@ -15,173 +15,64 @@ export class TimePeriodController {
   }
 
   async create(req: Request, res: Response) {
-    try {
-      const dto = plainToInstance(CreateTimePeriodReqDto, req.body);
-      const errors = await validate(dto);
+    const dto = plainToInstance(CreateTimePeriodReqDto, req.body);
+    const errors = await validate(dto);
 
-      if (errors.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'ERR_VALIDATION_FAILED',
-            message: 'Validation failed',
-            details: errors.map(e => Object.values(e.constraints || {})).flat(),
-          }
-        });
-      }
-
-      const result = await this.timePeriodService.create(dto);
-      res.status(201).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ error, body: req.body }, '[TimePeriod] Create failed');
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message },
-        });
-        return;
-      }
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'ERR_TIME_PERIOD_CREATE_FAILED',
-          message: error.message,
-        },
-      });
+    if (errors.length > 0) {
+      const details = errors.map(e => Object.values(e.constraints || {})).flat().join(', ');
+      throw new AppError('ERR_VALIDATION_FAILED', `Validation failed: ${details}`, 400);
     }
+
+    const result = await this.timePeriodService.create(dto);
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
   }
 
   async findAll(req: Request, res: Response) {
-    try {
-      const result = await this.timePeriodService.findAll();
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ error }, '[TimePeriod] Find all failed');
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message },
-        });
-        return;
-      }
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'ERR_TIME_PERIOD_FIND_FAILED',
-          message: error.message,
-        },
-      });
-    }
+    const result = await this.timePeriodService.findAll();
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   }
 
   async findOne(req: Request, res: Response) {
-    try {
-      const id = Number(req.params.id);
-      const result = await this.timePeriodService.findOne(id);
-      if (!result) {
-        res.status(404).json({
-          success: false,
-          error: {
-            code: 'ERR_TIME_PERIOD_NOT_FOUND',
-            message: 'Time period not found',
-          },
-        });
-        return;
-      }
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ error, id: req.params.id }, '[TimePeriod] Find one failed');
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message },
-        });
-        return;
-      }
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'ERR_TIME_PERIOD_FIND_FAILED',
-          message: error.message,
-        },
-      });
+    const id = Number(req.params.id);
+    const result = await this.timePeriodService.findOne(id);
+    if (!result) {
+      throw new AppError('ERR_TIME_PERIOD_NOT_FOUND', 'Time period not found', 404);
     }
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   }
 
   async update(req: Request, res: Response) {
-    try {
-      const id = Number(req.params.id);
-      const dto = plainToInstance(UpdateTimePeriodReqDto, req.body);
-      const errors = await validate(dto);
+    const id = Number(req.params.id);
+    const dto = plainToInstance(UpdateTimePeriodReqDto, req.body);
+    const errors = await validate(dto);
 
-      if (errors.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'ERR_VALIDATION_FAILED',
-            message: 'Validation failed',
-            details: errors.map(e => Object.values(e.constraints || {})).flat(),
-          }
-        });
-      }
-
-      const result = await this.timePeriodService.update(id, dto);
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ error, id: req.params.id, body: req.body }, '[TimePeriod] Update failed');
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message },
-        });
-        return;
-      }
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'ERR_TIME_PERIOD_UPDATE_FAILED',
-          message: error.message,
-        },
-      });
+    if (errors.length > 0) {
+      const details = errors.map(e => Object.values(e.constraints || {})).flat().join(', ');
+      throw new AppError('ERR_VALIDATION_FAILED', `Validation failed: ${details}`, 400);
     }
+
+    const result = await this.timePeriodService.update(id, dto);
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   }
 
   async remove(req: Request, res: Response) {
-    try {
-      const id = Number(req.params.id);
-      await this.timePeriodService.remove(id);
-      res.status(200).json({
-        success: true,
-        data: null,
-      });
-    } catch (error: any) {
-      logger.error({ error, id: req.params.id }, '[TimePeriod] Remove failed');
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message },
-        });
-        return;
-      }
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'ERR_TIME_PERIOD_DELETE_FAILED',
-          message: error.message,
-        },
-      });
-    }
+    const id = Number(req.params.id);
+    await this.timePeriodService.remove(id);
+    res.status(200).json({
+      success: true,
+      data: null,
+    });
   }
 }

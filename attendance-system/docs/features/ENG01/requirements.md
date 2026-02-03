@@ -73,7 +73,6 @@ GitHub Actions 配置：
 前端 Service 层引入 Zod 校验：
 
 ```typescript
-// 示例
 const PaginatedResponseSchema = z.object({
   items: z.array(EmployeeSchema),
   total: z.number(),
@@ -81,7 +80,6 @@ const PaginatedResponseSchema = z.object({
   pageSize: z.number(),
 });
 
-// 在 service 中
 const data = PaginatedResponseSchema.parse(response.data);
 ```
 

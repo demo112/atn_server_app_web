@@ -1,8 +1,10 @@
 
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, TreeSelect, message } from 'antd';
+import type { DefaultOptionType } from 'antd/es/select';
 import { DepartmentVO, CreateDepartmentDto, UpdateDepartmentDto } from '@attendance/shared';
 import { departmentService } from '../../../services/department';
+import { logger } from '../../../utils/logger';
 
 interface DepartmentFormProps {
   visible: boolean;
@@ -71,7 +73,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
         }
       }
     } catch (error) {
-      console.error(error);
+      logger.error('Operation failed', error);
       // message.error('操作失败'); // Service layer or request util might handle generic errors
     } finally {
       setSubmitting(false);
@@ -79,9 +81,9 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
   };
 
   // 转换 TreeData 供 TreeSelect 使用
-  const renderTreeSelectData = (nodes: DepartmentVO[]): any[] => {
+  const renderTreeSelectData = (nodes: DepartmentVO[]): DefaultOptionType[] => {
     return nodes.map(node => ({
-      title: node.name,
+      label: node.name,
       value: node.id,
       children: node.children ? renderTreeSelectData(node.children) : [],
       disabled: mode === 'edit' && node.id === initialValues?.id, // 编辑时不能选自己（后端还会校验子孙）
@@ -116,7 +118,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
           extra="不选则作为根部门"
         >
           <TreeSelect
-            treeData={renderTreeSelectData(treeData)}
+            treeData={renderTreeSelectData(treeData) as any}
             placeholder="请选择上级部门"
             allowClear
             treeDefaultExpandAll

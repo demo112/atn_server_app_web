@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { attendanceService } from '@/services/attendance';
 import { employeeService } from '@/services/employee';
 import { EmployeeVo, Shift } from '@attendance/shared';
+import { logger } from '../../../../utils/logger';
 
 interface ScheduleDialogProps {
   isOpen: boolean;
@@ -36,9 +37,9 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
             attendanceService.getShifts()
         ]);
         
-        if (empRes.data) {
+        if (empRes.items) {
             // PaginatedResponse
-            setEmployees(empRes.data || []);
+            setEmployees(empRes.items || []);
         }
         if (shiftRes.data) {
              // ApiResponse<Shift[]> or any[]
@@ -46,7 +47,7 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
              setShifts(shiftRes.data as Shift[]);
         }
     } catch (e) {
-        console.error('Failed to load data', e);
+        logger.error('Failed to load data', e);
     }
   };
 
@@ -65,7 +66,7 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error(err);
+      logger.error('Schedule creation failed', err);
       const msg = err.response?.data?.error?.message || '创建失败';
       alert(`创建失败: ${msg}`);
     } finally {

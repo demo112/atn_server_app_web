@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { getDailyRecords, DailyRecordVo } from '../../services/attendance';
 import { useNavigation } from '@react-navigation/native';
+import { logger } from '../../utils/logger';
 
 const HistoryScreen = () => {
   const [records, setRecords] = useState<DailyRecordVo[]>([]);
@@ -22,9 +23,16 @@ const HistoryScreen = () => {
       const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
       const res = await getDailyRecords({ startDate, endDate });
-      setRecords(res.data || []);
+      if (res.data && 'items' in res.data) {
+        setRecords(res.data.items || []);
+      } else if (Array.isArray(res.data)) {
+        // Fallback if backend returns array directly
+        setRecords(res.data);
+      } else {
+        setRecords([]);
+      }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }

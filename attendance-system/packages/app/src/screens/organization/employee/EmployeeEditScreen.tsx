@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { CreateEmployeeDto } from '@attendance/shared';
 import { createEmployee, updateEmployee, getEmployeeById } from '../../../services/employee';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
+import { logger } from '../../../utils/logger';
 
 export const EmployeeEditScreen = () => {
   const navigation = useNavigation();
@@ -52,7 +53,7 @@ export const EmployeeEditScreen = () => {
         setHireDate(emp.hireDate || new Date().toISOString().split('T')[0]);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '加载详情失败');
     } finally {
       setLoading(false);
@@ -89,7 +90,7 @@ export const EmployeeEditScreen = () => {
         Alert.alert('成功', '创建成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '保存失败');
     } finally {
       setLoading(false);

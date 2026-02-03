@@ -5,6 +5,8 @@ import {
 } from 'react-native';
 import { getLeaves, createLeave, cancelLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
 import { LeaveType } from '@attendance/shared';
+import { logger } from '../../utils/logger';
+import { getErrorMessage } from '../../utils/error';
 
 const LeaveScreen = () => {
   const [leaves, setLeaves] = useState<LeaveVo[]>([]);
@@ -29,7 +31,7 @@ const LeaveScreen = () => {
       const res = await getLeaves({ page: 1, pageSize: 20 });
       setLeaves(res.data || []);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }
@@ -52,8 +54,8 @@ const LeaveScreen = () => {
       Alert.alert('成功', '申请提交成功');
       setModalVisible(false);
       fetchLeaves();
-    } catch (error: any) {
-      Alert.alert('失败', error.response?.data?.error?.message || '提交失败');
+    } catch (error) {
+      Alert.alert('失败', getErrorMessage(error));
     }
   };
 
@@ -71,8 +73,8 @@ const LeaveScreen = () => {
               await cancelLeave(id);
               Alert.alert('成功', '撤销成功');
               fetchLeaves();
-            } catch (error: any) {
-              Alert.alert('失败', error.response?.data?.error?.message || '撤销失败');
+            } catch (error) {
+              Alert.alert('失败', getErrorMessage(error));
             }
           }
         }

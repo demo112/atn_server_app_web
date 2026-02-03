@@ -1,8 +1,10 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { TreeSelect, TreeSelectProps } from 'antd';
+import type { DataNode } from 'antd/es/tree';
 import { departmentService } from '../../services/department';
 import { DepartmentVO } from '@attendance/shared';
+import { logger } from '../../utils/logger';
 
 export type DepartmentSelectProps = Omit<TreeSelectProps, 'treeData' | 'loadData'>;
 
@@ -19,7 +21,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
           setTreeData(res.data || []);
         }
       } catch (error) {
-        console.error('Fetch department tree failed', error);
+        logger.error('Fetch department tree failed', error);
       } finally {
         setLoading(false);
       }
@@ -29,7 +31,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
 
   // 转换 TreeData 供 TreeSelect 使用
   const renderTreeSelectData = useMemo(() => {
-    const transform = (nodes: DepartmentVO[]): any[] => {
+    const transform = (nodes: DepartmentVO[]): DataNode[] => {
       return nodes.map(node => ({
         title: node.name,
         value: node.id,
