@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest --run src --exclude **/dist/**",
+    "test:pbt": "vitest run \"**/*.pbt.test.ts\"",
     "test:watch": "vitest src --exclude **/dist/**",
     "lint": "eslint src",
     "dev": "ts-node-dev --transpile-only --respawn src/index.ts",

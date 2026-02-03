@@ -9,6 +9,7 @@
     "dev:app": "pnpm --filter @attendance/app start",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
+    "test:pbt": "pnpm -r exec vitest run \"**/*.pbt.test.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:docs": "node scripts/docs-lint.js",

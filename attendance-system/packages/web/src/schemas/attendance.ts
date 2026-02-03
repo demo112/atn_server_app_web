@@ -164,7 +164,7 @@ export const PaginatedDailyRecordVoSchema = z.object({
 });
 
 // Correction Schemas
-export const CorrectionTypeSchema = z.enum(['check_in', 'check_out']);
+export const CorrectionTypeSchema = z.nativeEnum(CorrectionType);
 
 export const CorrectionVoSchema = z.object({
   id: z.number(),
