@@ -1,11 +1,8 @@
-import { logger } from './common/logger';
-
-logger.info('Starting server initialization...');
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import { app } from './app';
 import { logger } from './common/logger';
 
-dotenv.config();
+logger.info('Starting server initialization...');
 
 const PORT = process.env.PORT || 3000;
 

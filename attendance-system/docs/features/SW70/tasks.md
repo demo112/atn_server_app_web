@@ -21,6 +21,7 @@
   - 增加 `auto_calc_time` 配置项支持
   - 更新默认初始化逻辑
 - **验证**: `npm run test`
+- **状态**: ✅ 已完成
 - **依赖**: 无
 
 #### Task 2: 实现定时调度器 (Scheduler)
@@ -32,6 +33,7 @@
   - 实现 `daily-calculation` 任务定义
   - 在应用启动时根据配置注册 Cron Job
 - **验证**: 启动服务，手动触发 Job 验证日志
+- **状态**: ✅ 已完成
 - **依赖**: Task 1
 
 #### Task 3: 重构统计服务 (Statistics Service)
@@ -42,6 +44,7 @@
   - 改为直接聚合 `AttDailyRecord` 表（不再实时合并 Leave 表，假设 DailyRecord 已包含）
   - 使用 Prisma `groupBy` 或 Raw Query 优化性能
 - **验证**: `npm run test -- statistics.service`
+- **状态**: ✅ 已完成
 - **依赖**: Task 2
 
 #### Task 4: 更新统计接口
@@ -52,6 +55,7 @@
   - 适配 Service 变更
   - 新增 `POST /calculate` 手动触发接口 (Admin only)
 - **验证**: Postman 测试接口
+- **状态**: ✅ 已完成
 - **依赖**: Task 3
 
 ### 阶段2：前端页面
@@ -65,12 +69,14 @@
   - 实现数据表格展示
   - 实现导出 Excel 功能
 - **验证**: 启动 Web 端，访问页面查看展示和导出功能
+- **状态**: ✅ 已完成
 - **依赖**: Task 4
 
 #### Task 6: 考勤规则配置页更新 (SW62补充)
 - **文件**: `packages/web/src/pages/attendance/settings/AttendanceSettingsPage.tsx` (若存在)
 - **内容**: 增加“自动计算时间”设置项
 - **验证**: 能保存并回显时间配置
+- **状态**: ✅ 已完成
 - **依赖**: Task 1
 
 ## 检查点策略

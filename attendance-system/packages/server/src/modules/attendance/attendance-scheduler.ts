@@ -7,47 +7,57 @@ import { AttendanceCalculator } from './domain/attendance-calculator';
 
 const logger = createLogger('AttendanceScheduler');
 
-// Parse REDIS_URL or use defaults
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-// Simple parsing for ioredis connection object if needed, but BullMQ accepts URL string or connection object.
-// Using URL string for simplicity if supported, or parsing it.
-// BullMQ connection option: { host, port, password... } or ioredis instance.
-// Let's use ioredis instance to be safe or just pass the connection config.
+// Parse Redis config
+const redisConfig = process.env.REDIS_URL || {
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+  db: parseInt(process.env.REDIS_DB || '0'),
+};
+
 import IORedis from 'ioredis';
-const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
+// const connection = new IORedis(redisConfig as any, { maxRetriesPerRequest: null });
 
 export class AttendanceScheduler {
-  private queue: Queue;
-  private worker: Worker;
+  private queue: Queue | undefined;
+  private worker: Worker | undefined;
   private calculator: AttendanceCalculator;
+  private connection: IORedis | undefined;
 
   constructor() {
     this.calculator = new AttendanceCalculator();
-    this.queue = new Queue('attendance-calculation', { connection });
-    
-    this.worker = new Worker('attendance-calculation', async (job) => {
-      logger.info({ jobId: job.id, name: job.name }, 'Processing job');
-      if (job.name === 'daily-calculation') {
-        await this.processDailyCalculation(job.data);
-      }
-    }, { connection });
-
-    this.worker.on('completed', (job) => {
-      logger.info({ jobId: job.id }, 'Job completed');
-    });
-
-    this.worker.on('failed', (job, err) => {
-      logger.error({ jobId: job?.id, err }, 'Job failed');
-    });
   }
 
   async init() {
+    // Lazy init Redis connection
+    if (!this.connection) {
+       this.connection = new IORedis(redisConfig as any, { maxRetriesPerRequest: null });
+       
+       this.queue = new Queue('attendance-calculation', { connection: this.connection });
+       
+       this.worker = new Worker('attendance-calculation', async (job) => {
+        logger.info({ jobId: job.id, name: job.name }, 'Processing job');
+        if (job.name === 'daily-calculation') {
+          await this.processDailyCalculation(job.data);
+        }
+      }, { connection: this.connection });
+
+      this.worker.on('completed', (job) => {
+        logger.info({ jobId: job.id }, 'Job completed');
+      });
+
+      this.worker.on('failed', (job, err) => {
+        logger.error({ jobId: job?.id, err }, 'Job failed');
+      });
+    }
+
     // Schedule daily job based on settings
     await this.scheduleDailyJob();
     logger.info('Attendance Scheduler initialized');
   }
 
   async scheduleDailyJob() {
+    if (!this.queue) return;
     const settings = await attendanceSettingsService.getSettings();
     const time = settings.auto_calc_time || '05:00';
     const [hour, minute] = time.split(':').map(Number);
@@ -72,6 +82,10 @@ export class AttendanceScheduler {
    * 手动触发计算任务
    */
   async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[] }) {
+    if (!this.queue) {
+      logger.warn('Attendance scheduler not initialized, skipping calculation trigger');
+      return;
+    }
     // 拆分为每一天的任务，或者在一个任务中处理多天
     // 这里简单起见，直接在后台执行，不进队列（或者进队列异步执行）
     // 为了利用 Worker，最好进队列。
