@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **[SW72] 统计报表**
+  - Server: 实现部门考勤统计、图表数据聚合、Excel导出服务
+  - Web: 新增统计报表页面，集成 Recharts 图表展示
+  - API: 新增 `/statistics/departments`, `/statistics/charts`, `/statistics/export` 接口
+
 - **[SW71] 考勤明细与日历**
   - Server: 新增 `GET /statistics/details` (明细查询) 和 `GET /statistics/calendar` (日历视图)
   - Web: 实现考勤明细页面，支持多维筛选与手动重算
