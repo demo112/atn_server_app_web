@@ -1,234 +1,273 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { message } from 'antd';
 import { 
-  Table, Button, Space, Modal, Form, Input, 
-  Select, InputNumber, message, Card, Row, Col, Typography, Divider 
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { getShifts, createShift, updateShift, deleteShift, getShift } from '../../../services/shift';
-import { getTimePeriods } from '../../../services/time-period';
-import type { Shift, TimePeriod, CreateShiftDto } from '@attendance/shared';
-
-const { Title } = Typography;
+  PlusOutlined, 
+  ReloadOutlined, 
+  SearchOutlined
+} from '@ant-design/icons';
+import { getShifts, deleteShift, createShift, updateShift } from '../../../services/shift';
+import { createTimePeriod, updateTimePeriod } from '../../../services/time-period';
+import type { 
+  Shift as BackendShift, 
+  CreateShiftDto, 
+  UpdateShiftDto,
+  CreateTimePeriodDto,
+  UpdateTimePeriodDto
+} from '@attendance/shared';
+import ShiftModal from './components/ShiftModal';
+import ShiftTable from './components/ShiftTable';
+import { Shift as UIShift, ShiftTimeConfig } from './types';
 
 const ShiftPage: React.FC = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
-  const [shifts, setShifts] = useState<Shift[]>([]);
-  const [periods, setPeriods] = useState<TimePeriod[]>([]);
+  const [shifts, setShifts] = useState<UIShift[]>([]);
+  const [searchText, setSearchText] = useState('');
   
-  // Modal
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
-  const [form] = Form.useForm();
+  const [currentShift, setCurrentShift] = useState<UIShift | null>(null);
 
-  // Days configuration for the form
-  const [days, setDays] = useState<{ dayOfCycle: number; periodIds: number[] }[]>([]);
+  const mapBackendToUI = useCallback((backendShift: BackendShift): UIShift => {
+    // Sort periods by sortOrder
+    const sortedPeriods = [...(backendShift.periods || [])].sort((a, b) => a.sortOrder - b.sortOrder);
+    
+    // Map periods to times
+    const times: ShiftTimeConfig[] = sortedPeriods.map(p => {
+      const tp = p.period;
+      if (!tp) {
+        // Fallback if period data is missing
+        return {
+          id: p.periodId,
+          clockIn: '09:00',
+          clockOut: '18:00',
+          isClockInMandatory: true,
+          isClockOutMandatory: true,
+          validFromStart: '08:00',
+          validFromEnd: '10:00',
+          validUntilStart: '17:00',
+          validUntilEnd: '19:00'
+        };
+      }
+      
+      return {
+        id: tp.id,
+        clockIn: tp.startTime || '09:00',
+        clockOut: tp.endTime || '18:00',
+        // Assuming rules map to these booleans, but backend might not have them explicitly
+        // We'll assume true for now or derive from rules if possible
+        isClockInMandatory: true, 
+        isClockOutMandatory: true,
+        // Mapping valid windows from rules (offsets)
+        validFromStart: tp.rules?.checkInStartOffset ? calculateTime(tp.startTime, -tp.rules.checkInStartOffset) : '08:00',
+        validFromEnd: tp.rules?.checkInEndOffset ? calculateTime(tp.startTime, tp.rules.checkInEndOffset) : '10:00',
+        validUntilStart: tp.rules?.checkOutStartOffset ? calculateTime(tp.endTime, -tp.rules.checkOutStartOffset) : '17:00',
+        validUntilEnd: tp.rules?.checkOutEndOffset ? calculateTime(tp.endTime, tp.rules.checkOutEndOffset) : '19:00',
+      };
+    });
 
-  const fetchShifts = useCallback(async (): Promise<void> => {
+    // Determine grace periods from the first period (assuming uniform for now)
+    const firstPeriod = sortedPeriods[0]?.period;
+    const lateGrace = firstPeriod?.rules?.lateGraceMinutes || 0;
+    const earlyLeaveGrace = firstPeriod?.rules?.earlyLeaveGraceMinutes || 0;
+
+    return {
+      id: backendShift.id.toString(),
+      name: backendShift.name,
+      dailyCheckins: Math.min(Math.max(times.length, 1), 3) as 1 | 2 | 3,
+      times: times.length > 0 ? times : [],
+      lateGracePeriod: lateGrace,
+      earlyLeaveGracePeriod: earlyLeaveGrace,
+      markAbsentIfNoCheckIn: 'Absent', // Backend doesn't seem to have this field yet, defaulting
+      markAbsentIfNoCheckOut: 'Absent',
+    };
+  }, []);
+
+  const fetchShifts = useCallback(async (name?: string): Promise<void> => {
     setLoading(true);
     try {
-      const data = await getShifts();
-      setShifts(data);
-    } catch {
-      message.error('获取班次列表失败');
+      const data = await getShifts({ name });
+      const uiShifts = data.map(mapBackendToUI);
+      setShifts(uiShifts);
+    } catch (err) {
+      console.error(err);
+      message.error('Failed to fetch shifts');
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const fetchPeriods = useCallback(async (): Promise<void> => {
-    try {
-      const data = await getTimePeriods();
-      setPeriods(data);
-    } catch {
-      message.error('获取时间段失败');
-    }
-  }, []);
+  }, [mapBackendToUI]);
 
   useEffect(() => {
     fetchShifts();
-    fetchPeriods();
-  }, [fetchShifts, fetchPeriods]);
+  }, [fetchShifts]);
 
-  const handleEdit = async (shift: Shift): Promise<void> => {
-    try {
-      const detail = await getShift(shift.id);
-      setCurrentShift(detail);
-      
-      // Transform periods to days format for form
-      const daysMap = new Map<number, number[]>();
-      detail.periods?.forEach(p => {
-        const list = daysMap.get(p.dayOfCycle) || [];
-        list.push(p.periodId);
-        daysMap.set(p.dayOfCycle, list);
-      });
-      
-      const daysData = Array.from(daysMap.entries()).map(([day, pIds]) => ({
-        dayOfCycle: day,
-        periodIds: pIds
-      }));
-      setDays(daysData);
-
-      form.setFieldsValue({
-        name: detail.name,
-        cycleDays: detail.cycleDays,
-      });
-      setIsModalOpen(true);
-    } catch {
-      message.error('获取详情失败');
-    }
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchText(value);
+    fetchShifts(value);
   };
 
-  const handleDelete = async (id: number): Promise<void> => {
-    Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个班次吗？',
-      onOk: async () => {
-        try {
-          await deleteShift(id);
-          message.success('删除成功');
-          fetchShifts();
-        } catch {
-          message.error('删除失败');
-        }
-      },
-    });
-  };
-
-  const handleModalOk = async (): Promise<void> => {
-    try {
-      const values = await form.validateFields();
-      const periods: { periodId: number; dayOfCycle: number }[] = [];
-      days.forEach(d => {
-        d.periodIds.forEach(pid => {
-          periods.push({
-            periodId: pid,
-            dayOfCycle: d.dayOfCycle
-          });
-        });
-      });
-
-      const dto: CreateShiftDto = {
-        name: values.name,
-        cycleDays: values.cycleDays,
-        periods: periods,
-      };
-
-      if (currentShift) {
-        await updateShift(currentShift.id, dto);
-        message.success('更新成功');
-      } else {
-        await createShift(dto);
-        message.success('创建成功');
+  const handleDelete = async (id: string): Promise<void> => {
+    if (window.confirm('Are you sure you want to delete this shift?')) {
+      try {
+        await deleteShift(parseInt(id));
+        message.success('Deleted successfully');
+        fetchShifts();
+      } catch {
+        message.error('Delete failed');
       }
-      setIsModalOpen(false);
-      fetchShifts();
-    } catch {
-      message.error('保存失败');
     }
   };
 
-  const handleOpenCreate = (): void => {
-    setCurrentShift(null);
-    setDays([]);
-    form.resetFields();
-    form.setFieldsValue({ cycleDays: 7 });
+  const handleEdit = (shift: UIShift) => {
+    setCurrentShift(shift);
     setIsModalOpen(true);
   };
 
-  const updateDayPeriods = (day: number, periodIds: number[]): void => {
-    const newDays = days.filter(d => d.dayOfCycle !== day);
-    if (periodIds.length > 0) {
-      newDays.push({ dayOfCycle: day, periodIds });
-    }
-    setDays(newDays);
+  const handleAdd = () => {
+    setCurrentShift(null);
+    setIsModalOpen(true);
   };
 
-  const columns: ColumnsType<Shift> = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-    { title: '班次名称', dataIndex: 'name', key: 'name' },
-    { title: '周期(天)', dataIndex: 'cycleDays', key: 'cycleDays', width: 100 },
-    {
-      title: '操作',
-      key: 'action',
-      width: 200,
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)}>删除</Button>
-        </Space>
-      ),
-    },
-  ];
+  const handleModalConfirm = async (uiData: UIShift) => {
+    try {
+      setLoading(true);
+      // 1. Process TimePeriods
+      const periodIds: number[] = [];
 
-  const cycleDays = Form.useWatch('cycleDays', form) || 7;
+      for (const time of uiData.times) {
+        const rules = {
+          lateGraceMinutes: uiData.lateGracePeriod,
+          earlyLeaveGraceMinutes: uiData.earlyLeaveGracePeriod,
+          // Calculate offsets based on valid windows
+          checkInStartOffset: calculateDiff(time.clockIn, time.validFromStart),
+          checkInEndOffset: calculateDiff(time.validFromEnd, time.clockIn),
+          checkOutStartOffset: calculateDiff(time.clockOut, time.validUntilStart),
+          checkOutEndOffset: calculateDiff(time.validUntilEnd, time.clockOut),
+        };
+
+        const periodData: CreateTimePeriodDto = {
+          name: `${uiData.name} Period`,
+          type: 0, // Fixed
+          startTime: time.clockIn,
+          endTime: time.clockOut,
+          rules,
+        };
+
+        let periodId: number;
+        if (time.id) {
+          // Update existing
+          const updateData: UpdateTimePeriodDto = periodData;
+          await updateTimePeriod(time.id, updateData);
+          periodId = time.id;
+        } else {
+          // Create new
+          const newPeriod = await createTimePeriod(periodData);
+          periodId = newPeriod.id;
+        }
+        periodIds.push(periodId);
+      }
+
+      // 2. Create/Update Shift
+      const shiftPeriods = periodIds.map((pid, index) => ({
+        periodId: pid,
+        dayOfCycle: 1, // Daily shift
+        sortOrder: index + 1
+      }));
+
+      if (currentShift && currentShift.id) {
+        const updateDto: UpdateShiftDto = {
+          name: uiData.name,
+          cycleDays: 1,
+          periods: shiftPeriods
+        };
+        await updateShift(parseInt(currentShift.id), updateDto);
+        message.success('Updated successfully');
+      } else {
+        const createDto: CreateShiftDto = {
+          name: uiData.name,
+          cycleDays: 1,
+          periods: shiftPeriods
+        };
+        await createShift(createDto);
+        message.success('Created successfully');
+      }
+      
+      setIsModalOpen(false);
+      fetchShifts();
+    } catch (error) {
+      console.error(error);
+      message.error('Operation failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Card>
-      <div style={{ marginBottom: 16 }}>
-        <Row justify="space-between" align="middle">
-          <Col><Title level={4}>班次管理</Title></Col>
-          <Col>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreate}>
-              新建班次
-            </Button>
-          </Col>
-        </Row>
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-[#141414] p-6">
+      <div className="bg-white dark:bg-[#1f1f1f] rounded-sm shadow-sm flex flex-col min-h-full">
+        {/* Toolbar */}
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={handleAdd}
+              className="flex items-center px-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded text-sm hover:border-blue-500 hover:text-blue-500 transition-colors bg-white dark:bg-transparent text-slate-600 dark:text-slate-300"
+            >
+              <PlusOutlined className="text-lg mr-1" />
+              Add
+            </button>
+            <button 
+              onClick={() => fetchShifts()}
+              className="flex items-center px-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded text-sm hover:border-blue-500 hover:text-blue-500 transition-colors bg-white dark:bg-transparent text-slate-600 dark:text-slate-300"
+            >
+              <ReloadOutlined className="text-lg mr-1" />
+              Refresh
+            </button>
+          </div>
+          
+          <div className="relative w-64">
+            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+            <input 
+              type="text" 
+              placeholder="Search shift name" 
+              value={searchText}
+              onChange={handleSearch}
+              className="w-full pl-10 pr-4 py-1.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Table Area */}
+        <div className="flex-1 relative overflow-auto p-4">
+          <ShiftTable 
+            shifts={shifts} 
+            onDelete={handleDelete} 
+            onEdit={handleEdit} 
+          />
+        </div>
       </div>
 
-      <Table 
-        columns={columns} 
-        dataSource={shifts} 
-        rowKey="id"
-        loading={loading}
+      <ShiftModal 
+        isOpen={isModalOpen} 
+        initialData={currentShift}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleModalConfirm}
       />
-
-      <Modal
-        title={currentShift ? '编辑班次' : '新建班次'}
-        open={isModalOpen}
-        onOk={handleModalOk}
-        onCancel={() => setIsModalOpen(false)}
-        width={800}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="班次名称" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="cycleDays" label="周期天数" rules={[{ required: true }]}>
-            <InputNumber min={1} max={31} />
-          </Form.Item>
-          
-          <Divider orientation="left">每日时间段配置</Divider>
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-            {Array.from({ length: cycleDays }).map((_, index) => {
-              const day = index + 1;
-              const currentDayConfig = days.find(d => d.dayOfCycle === day);
-              const currentPeriodIds = currentDayConfig?.periodIds || [];
-
-              return (
-                <Row key={day} gutter={16} style={{ marginBottom: 8, alignItems: 'center' }}>
-                  <Col span={4}>第 {day} 天</Col>
-                  <Col span={20}>
-                    <Select
-                      mode="multiple"
-                      style={{ width: '100%' }}
-                      placeholder="选择时间段"
-                      value={currentPeriodIds}
-                      onChange={(ids) => updateDayPeriods(day, ids)}
-                      options={periods.map(p => ({
-                        label: `${p.name} (${p.startTime}-${p.endTime})`,
-                        value: p.id
-                      }))}
-                    />
-                  </Col>
-                </Row>
-              );
-            })}
-          </div>
-        </Form>
-      </Modal>
-    </Card>
+    </div>
   );
 };
+
+// Helper functions for time calculation
+function calculateTime(base: string = '00:00', diffMinutes: number): string {
+  const [h, m] = base.split(':').map(Number);
+  const date = new Date();
+  date.setHours(h, m + diffMinutes, 0, 0);
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function calculateDiff(t1: string, t2: string): number {
+  const [h1, m1] = t1.split(':').map(Number);
+  const [h2, m2] = t2.split(':').map(Number);
+  return (h1 * 60 + m1) - (h2 * 60 + m2);
+}
 
 export default ShiftPage;
