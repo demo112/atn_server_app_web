@@ -6,7 +6,8 @@ export function formatDate(date: Date): string {
 }
 
 export function parseDate(str: string): Date {
-  return new Date(str);
+  const [year, month, day] = str.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 export function calculateWorkHours(
