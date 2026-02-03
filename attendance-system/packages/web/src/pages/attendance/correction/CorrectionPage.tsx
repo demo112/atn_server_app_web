@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Card, Tag, DatePicker } from 'antd';
 import { DepartmentTree } from '@/components/common/DepartmentTree';
 import * as correctionService from '@/services/correction';
-import { DailyRecordVo } from '@attendance/shared';
+import { CorrectionDailyRecordVo as DailyRecordVo } from '@attendance/shared';
 import { CheckInDialog } from './components/CheckInDialog';
 import { CheckOutDialog } from './components/CheckOutDialog';
 import dayjs from 'dayjs';
+import { logger } from '@/utils/logger';
 
 const CorrectionPage: React.FC = () => {
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
@@ -37,12 +38,12 @@ const CorrectionPage: React.FC = () => {
         startDate: dateRange[0].format('YYYY-MM-DD'),
         endDate: dateRange[1].format('YYYY-MM-DD')
       });
-      if (res.data) {
-        setRecords(res.data);
-        setTotal(res.pagination?.total || 0);
+      if (res.success && res.data) {
+        setRecords(res.data.items);
+        setTotal(res.data.total);
       }
     } catch (err) {
-      console.error('Failed to load records', err);
+      logger.error('Failed to load records', err);
       // message.error('加载记录失败'); // Optional: suppress if daily records API not ready
     } finally {
       setLoading(false);

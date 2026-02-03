@@ -11,7 +11,9 @@ import {
   CorrectionVo,
   CorrectionListVo,
   UpdateCorrectionDto,
-  AttendanceStatus
+  AttendanceStatus,
+  DailyRecord,
+  CorrectionDailyRecordVo
 } from '@attendance/shared';
 import { CorrectionType, LeaveStatus, Prisma, AttCorrection } from '@prisma/client';
 import { AttendanceCalculator } from './domain/attendance-calculator';
@@ -152,7 +154,7 @@ export class AttendanceCorrectionService {
   /**
    * 查询每日考勤记录
    */
-  async getDailyRecords(dto: QueryDailyRecordsDto): Promise<{ total: number; items: DailyRecordVo[] }> {
+  async getDailyRecords(dto: QueryDailyRecordsDto): Promise<{ total: number; items: CorrectionDailyRecordVo[] }> {
     const { page = 1, pageSize = 20, deptId, startDate, endDate, status, employeeName } = dto;
     const skip = (Number(page) - 1) * Number(pageSize);
 
@@ -377,6 +379,7 @@ export class AttendanceCorrectionService {
       id: record.id.toString(),
       employeeId: record.employeeId,
       employeeName: record.employee.name,
+      employeeNo: record.employee.employeeNo,
       deptName: record.employee.department?.name || '',
       workDate: dayjs(record.workDate).format('YYYY-MM-DD'),
       shiftName: record.shift?.name,
@@ -385,9 +388,10 @@ export class AttendanceCorrectionService {
       checkInTime: record.checkInTime?.toISOString(),
       checkOutTime: record.checkOutTime?.toISOString(),
       status: record.status as AttendanceStatus,
-      lateMinutes: record.lateMinutes,
-      earlyLeaveMinutes: record.earlyLeaveMinutes,
-      absentMinutes: record.absentMinutes
+      lateMinutes: record.lateMinutes || 0,
+      earlyLeaveMinutes: record.earlyLeaveMinutes || 0,
+      absentMinutes: record.absentMinutes || 0,
+      leaveMinutes: record.leaveMinutes || 0
     };
   }
 }

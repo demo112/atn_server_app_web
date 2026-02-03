@@ -7,14 +7,29 @@ import { QueryParams } from '../common';
 export type ClockType = 'sign_in' | 'sign_out';
 export type ClockSource = 'app' | 'web' | 'device';
 
+export interface DeviceInfo {
+  deviceId?: string;
+  model?: string;
+  os?: string;
+  version?: string;
+  [key: string]: unknown;
+}
+
+export interface LocationInfo {
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  [key: string]: unknown;
+}
+
 export interface ClockRecord {
   id: string;
   employeeId: number;
   clockTime: string;  // ISO datetime
   type: ClockType;
   source: ClockSource;
-  deviceInfo?: any;
-  location?: any;
+  deviceInfo?: DeviceInfo;
+  location?: LocationInfo;
   operatorId?: number;
   remark?: string;
   createdAt: string;
@@ -90,8 +105,8 @@ export interface CreateClockDto {
   clockTime: string;
   type: ClockType;
   source: ClockSource;
-  deviceInfo?: any;
-  location?: any;
+  deviceInfo?: DeviceInfo;
+  location?: LocationInfo;
   remark?: string;
 }
 
@@ -112,6 +127,8 @@ export interface DailyRecordVo {
   deptName: string;
   workDate: string;
   shiftName?: string;
+  startTime?: string; // 班次开始时间 HH:mm
+  endTime?: string;   // 班次结束时间 HH:mm
   checkInTime?: string;
   checkOutTime?: string;
   status: AttendanceStatus;

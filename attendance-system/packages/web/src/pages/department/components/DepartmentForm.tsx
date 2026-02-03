@@ -71,7 +71,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
         }
       }
     } catch (error) {
-      console.error(error);
+      logger.error('Operation failed', error);
       // message.error('操作失败'); // Service layer or request util might handle generic errors
     } finally {
       setSubmitting(false);

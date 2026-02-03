@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, DatePicker } from 'antd';
 import { CreateEmployeeDto, UpdateEmployeeDto, EmployeeVo } from '@attendance/shared';
 import dayjs from 'dayjs';
+import { logger } from '../../../utils/logger';
 
 interface EmployeeModalProps {
   open: boolean;
@@ -36,8 +37,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      // console.log('EmployeeModal validateFields result:', values);
-
+      
       // Format date
       const formattedValues = {
         ...values,
@@ -46,7 +46,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
       // Double check for employeeNo in create mode
       if (mode === 'create' && !formattedValues.employeeNo) {
-        console.error('Critical Error: employeeNo is missing in create mode!', formattedValues);
+        logger.error('Critical Error: employeeNo is missing in create mode!', formattedValues);
         // Fallback: try to get from getFieldValue directly (though validateFields should have covered it)
         const rawEmployeeNo = form.getFieldValue('employeeNo');
         if (rawEmployeeNo) {
@@ -54,10 +54,9 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         }
       }
 
-      // console.log('EmployeeModal submitting:', formattedValues);
       await onOk(formattedValues);
     } catch (error) {
-      console.error('Validate Failed:', error);
+      logger.error('Validate Failed', error);
     }
   };
 

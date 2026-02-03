@@ -22,7 +22,12 @@ const HistoryScreen = () => {
       const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
       const res = await getDailyRecords({ startDate, endDate });
-      setRecords(res.data || []);
+      if (res.data && 'items' in res.data) {
+        setRecords(res.data.items || []);
+      } else {
+        // Fallback if backend returns array directly (though unlikely with updated service)
+        setRecords((res.data as any) || []);
+      }
     } catch (error) {
       console.error(error);
     } finally {

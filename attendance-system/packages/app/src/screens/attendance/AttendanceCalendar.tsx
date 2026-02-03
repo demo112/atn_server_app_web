@@ -34,14 +34,14 @@ export default function AttendanceCalendar() {
       const date = dayjs(monthStr);
       const res = await getCalendar(date.year(), date.month() + 1, user?.id);
       
-      if (res.success) {
+      if (res.success && res.data) {
         const marks: any = {};
         let normalCount = 0;
         let abnormalCount = 0;
         let leaveCount = 0;
 
         res.data.forEach((item: CalendarDailyVo) => {
-          let dotColor = statusColors[item.status] || '#d9d9d9';
+          const dotColor = statusColors[item.status] || '#d9d9d9';
           
           if (item.status === 'normal') normalCount++;
           else if (['late', 'early_leave', 'absent'].includes(item.status)) abnormalCount++;

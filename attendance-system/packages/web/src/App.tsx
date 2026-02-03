@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Link, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
 import EmployeeList from './pages/employee/EmployeeList';
@@ -35,7 +36,9 @@ const MainLayout = () => (
       </nav>
     </div>
     <div style={{ flex: 1, padding: '20px' }}>
-      <Outlet />
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
     </div>
   </div>
 );
@@ -50,38 +53,40 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
-const Home = () => <div><h2>Welcome to Attendance System</h2></div>;
+const Home = (): React.ReactElement => <div><h2>Welcome to Attendance System</h2></div>;
 
-export default function App() {
+export default function App(): React.ReactElement {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={
-            <PrivateRoute>
-              <MainLayout />
-            </PrivateRoute>
-          }>
-            <Route index element={<Home />} />
-            <Route path="users" element={<UserList />} />
-            <Route path="employees" element={<EmployeeList />} />
-            <Route path="departments" element={<DepartmentPage />} />
-            <Route path="attendance">
-               <Route path="time-periods" element={<TimePeriodPage />} />
-               <Route path="schedule" element={<SchedulePage />} />
-               <Route path="leave" element={<LeavePage />} />
-               <Route path="correction" element={<CorrectionPage />} />
-               <Route path="settings" element={<AttendanceSettingsPage />} />
-               <Route path="daily-records" element={<DailyRecords />} />
+      <ErrorBoundary>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={
+              <PrivateRoute>
+                <MainLayout />
+              </PrivateRoute>
+            }>
+              <Route index element={<Home />} />
+              <Route path="users" element={<UserList />} />
+              <Route path="employees" element={<EmployeeList />} />
+              <Route path="departments" element={<DepartmentPage />} />
+              <Route path="attendance">
+                 <Route path="time-periods" element={<TimePeriodPage />} />
+                 <Route path="schedule" element={<SchedulePage />} />
+                 <Route path="leave" element={<LeavePage />} />
+                 <Route path="correction" element={<CorrectionPage />} />
+                 <Route path="settings" element={<AttendanceSettingsPage />} />
+                 <Route path="daily-records" element={<DailyRecords />} />
+              </Route>
+              <Route path="statistics">
+                  <Route path="summary" element={<SummaryPage />} />
+                  <Route path="reports" element={<ReportPage />} />
+              </Route>
             </Route>
-            <Route path="statistics">
-                <Route path="summary" element={<SummaryPage />} />
-                <Route path="reports" element={<ReportPage />} />
-            </Route>
-          </Route>
-        </Routes>
-      </AuthProvider>
+          </Routes>
+        </AuthProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

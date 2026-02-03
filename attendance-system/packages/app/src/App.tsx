@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, ActivityIndicator } from 'react-native';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ClockInScreen from './screens/attendance/ClockInScreen';
 import LeaveScreen from './screens/attendance/LeaveScreen';
 import CorrectionScreen from './screens/attendance/CorrectionScreen';
+import HistoryScreen from './screens/attendance/HistoryScreen';
 import AttendanceCalendar from './screens/attendance/AttendanceCalendar';
 import AttendanceRecords from './screens/attendance/AttendanceRecords';
 import ScheduleScreen from './screens/attendance/ScheduleScreen';
@@ -20,7 +22,7 @@ import { getToken } from './utils/auth';
 
 const Stack = createStackNavigator();
 
-export default function App() {
+export default function App(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -48,13 +50,14 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={isAuthenticated ? 'Home' : 'Login'}>
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ headerShown: false }}
-        />
+    <ErrorBoundary>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={isAuthenticated ? 'Home' : 'Login'}>
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }}
+          />
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
@@ -117,5 +120,6 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    </ErrorBoundary>
   );
 }

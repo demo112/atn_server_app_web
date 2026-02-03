@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { TreeSelect, TreeSelectProps } from 'antd';
 import { departmentService } from '../../services/department';
 import { DepartmentVO } from '@attendance/shared';
+import { logger } from '../../utils/logger';
 
 export type DepartmentSelectProps = Omit<TreeSelectProps, 'treeData' | 'loadData'>;
 
@@ -19,7 +20,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
           setTreeData(res.data || []);
         }
       } catch (error) {
-        console.error('Fetch department tree failed', error);
+        logger.error('Fetch department tree failed', error);
       } finally {
         setLoading(false);
       }

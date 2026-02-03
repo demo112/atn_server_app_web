@@ -9,8 +9,8 @@ export const departmentRouter = Router();
 departmentRouter.use(authMiddleware);
 
 // Routes
-departmentRouter.get('/tree', (req, res, next) => departmentController.getTree(req, res, next));
-departmentRouter.get('/:id', (req, res, next) => departmentController.getById(req, res, next));
-departmentRouter.post('/', (req, res, next) => departmentController.create(req, res, next));
-departmentRouter.put('/:id', (req, res, next) => departmentController.update(req, res, next));
-departmentRouter.delete('/:id', (req, res, next) => departmentController.delete(req, res, next));
+departmentRouter.get('/tree', (req, res) => departmentController.getTree(req, res));
+departmentRouter.get('/:id', (req, res) => departmentController.getById(req, res));
+departmentRouter.post('/', (req, res) => departmentController.create(req, res));
+departmentRouter.put('/:id', (req, res) => departmentController.update(req, res));
+departmentRouter.delete('/:id', (req, res) => departmentController.delete(req, res));

@@ -60,6 +60,7 @@ export interface ChartStatsVo {
 export interface GetChartStatsDto {
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
+  deptId?: number;
 }
 
 export interface ExportStatsDto {

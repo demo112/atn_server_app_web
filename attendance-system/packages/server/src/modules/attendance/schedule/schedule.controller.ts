@@ -14,155 +14,84 @@ export class ScheduleController {
    * 创建排班 (单人)
    */
   async create(req: Request, res: Response) {
-    try {
-      const dto = plainToInstance(CreateScheduleReqDto, req.body);
-      const errors = await validate(dto);
-      
-      if (errors.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'ERR_VALIDATION_FAILED',
-            message: 'Validation failed',
-            details: errors.map(e => Object.values(e.constraints || {})).flat(),
-          }
-        });
-      }
-
-      const result = await service.create(dto);
-      
-      res.status(201).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ error, body: req.body }, '[Schedule] Create failed');
-      
-      if (error instanceof AppError) {
-        return res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message }
-        });
-      }
-
-      res.status(500).json({
-        success: false,
-        error: { code: 'ERR_INTERNAL_ERROR', message: error.message }
-      });
+    const dto = plainToInstance(CreateScheduleReqDto, req.body);
+    const errors = await validate(dto);
+    
+    if (errors.length > 0) {
+      const details = errors.map(e => Object.values(e.constraints || {})).flat().join(', ');
+      throw new AppError('ERR_VALIDATION_FAILED', `Validation failed: ${details}`, 400);
     }
+
+    const result = await service.create(dto);
+    
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
   }
 
   /**
    * 批量排班 (部门)
    */
   async batchCreate(req: Request, res: Response) {
-    try {
-      const dto = plainToInstance(BatchCreateScheduleReqDto, req.body);
-      const errors = await validate(dto);
-      
-      if (errors.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'ERR_VALIDATION_FAILED',
-            message: 'Validation failed',
-            details: errors.map(e => Object.values(e.constraints || {})).flat(),
-          }
-        });
-      }
-
-      const result = await service.batchCreate(dto);
-      
-      res.status(201).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ err: error, body: req.body }, '[Schedule] Batch create failed');
-      
-      if (error.message.startsWith('ERR_SCHEDULE_CONFLICT')) {
-        return res.status(409).json({
-          success: false,
-          error: { code: 'ERR_SCHEDULE_CONFLICT', message: error.message }
-        });
-      }
-
-      res.status(500).json({
-        success: false,
-        error: { code: 'ERR_INTERNAL_ERROR', message: error.message }
-      });
+    const dto = plainToInstance(BatchCreateScheduleReqDto, req.body);
+    const errors = await validate(dto);
+    
+    if (errors.length > 0) {
+      const details = errors.map(e => Object.values(e.constraints || {})).flat().join(', ');
+      throw new AppError('ERR_VALIDATION_FAILED', `Validation failed: ${details}`, 400);
     }
+
+    const result = await service.batchCreate(dto);
+    
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
   }
 
   /**
    * 查询排班
    */
   async getOverview(req: Request, res: Response) {
-    try {
-      const user = (req as any).user;
-      const query = {
-        employeeId: req.query.employeeId ? Number(req.query.employeeId) : undefined,
-        deptId: req.query.deptId ? Number(req.query.deptId) : undefined,
-        startDate: req.query.startDate as string,
-        endDate: req.query.endDate as string,
-      };
+    const user = (req as any).user;
+    const query = {
+      employeeId: req.query.employeeId ? Number(req.query.employeeId) : undefined,
+      deptId: req.query.deptId ? Number(req.query.deptId) : undefined,
+      startDate: req.query.startDate as string,
+      endDate: req.query.endDate as string,
+    };
 
-      // 权限控制
-      if (user.role !== 'admin') {
-        if (!user.employeeId) {
-          throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked', 403);
-        }
-        query.deptId = undefined;
-        query.employeeId = user.employeeId;
+    // 权限控制
+    if (user.role !== 'admin') {
+      if (!user.employeeId) {
+        throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked', 403);
       }
-
-      const result = await service.getOverview(query);
-      
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error: any) {
-      logger.error({ err: error, query: req.query }, '[Schedule] Get overview failed');
-      res.status(500).json({
-        success: false,
-        error: { code: 'ERR_INTERNAL_ERROR', message: error.message }
-      });
+      query.deptId = undefined;
+      query.employeeId = user.employeeId;
     }
+
+    const result = await service.getOverview(query);
+    
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   }
 
   /**
    * 删除排班
    */
   async delete(req: Request, res: Response) {
-    try {
-      const id = Number(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'ERR_INVALID_ID', message: 'Invalid ID' }
-        });
-      }
-
-      await service.delete(id);
-      
-      res.status(200).json({
-        success: true,
-      });
-    } catch (error: any) {
-      logger.error({ err: error, params: req.params }, '[Schedule] Delete failed');
-      
-      if (error instanceof AppError) {
-        return res.status(error.statusCode).json({
-          success: false,
-          error: { code: error.code, message: error.message }
-        });
-      }
-
-      res.status(500).json({
-        success: false,
-        error: { code: 'ERR_INTERNAL_ERROR', message: error.message }
-      });
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      throw new AppError('ERR_INVALID_ID', 'Invalid ID', 400);
     }
+
+    await service.delete(id);
+    
+    res.status(200).json({
+      success: true,
+    });
   }
 }

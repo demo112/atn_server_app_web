@@ -1,5 +1,5 @@
 import request from '../utils/request';
-import { DailyRecordQuery, DailyRecordVo, CalendarDailyVo, PaginatedResponse, Response } from '@attendance/shared';
+import { DailyRecordQuery, DailyRecordVo, CalendarDailyVo, PaginatedResponse, ApiResponse as Response } from '@attendance/shared';
 
 /**
  * 获取考勤日历数据

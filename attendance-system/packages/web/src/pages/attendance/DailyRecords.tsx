@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Form, Input, DatePicker, Select, Button, Tag, Space, Modal, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
+import { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { getDailyRecords, triggerCalculation } from '../../api/statistics';
 import { useAuth } from '../../context/AuthContext';
 import dayjs from 'dayjs';
@@ -47,11 +47,13 @@ const DailyRecords: React.FC = () => {
       }
 
       const res = await getDailyRecords(params);
-      if (res.success) {
+      if (res.success && res.data) {
         setData(res.data.items);
         setTotal(res.data.total);
         setCurrentPage(page);
         setPageSize(size);
+      } else {
+        message.error('获取数据失败');
       }
     } catch (error) {
       console.error('Failed to fetch records:', error);
@@ -83,7 +85,7 @@ const DailyRecords: React.FC = () => {
         fetchRecords(currentPage, pageSize);
       }
     } catch (error) {
-      console.error('Recalculation failed:', error);
+      logger.error('Recalculation failed', error);
       message.error('触发重算失败');
     } finally {
       setRecalcLoading(false);
@@ -151,10 +153,15 @@ const DailyRecords: React.FC = () => {
       width: 200,
       render: (_, record) => {
         const items = [];
-        if (record.lateMinutes > 0) items.push(`迟到${record.lateMinutes}`);
-        if (record.earlyLeaveMinutes > 0) items.push(`早退${record.earlyLeaveMinutes}`);
-        if (record.absentMinutes > 0) items.push(`缺勤${record.absentMinutes}`);
-        if (record.leaveMinutes > 0) items.push(`请假${record.leaveMinutes}`);
+        const late = record.lateMinutes || 0;
+        const early = record.earlyLeaveMinutes || 0;
+        const absent = record.absentMinutes || 0;
+        const leave = record.leaveMinutes || 0;
+
+        if (late > 0) items.push(`迟到${late}`);
+        if (early > 0) items.push(`早退${early}`);
+        if (absent > 0) items.push(`缺勤${absent}`);
+        if (leave > 0) items.push(`请假${leave}`);
         return items.length > 0 ? items.join(', ') : '-';
       },
     },

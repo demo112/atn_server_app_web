@@ -9,9 +9,14 @@
     "dev": "tsc --watch",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:coverage": "vitest --run --coverage"
+    "test:coverage": "vitest --run --coverage",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "eslint": "^9.39.2",
     "fast-check": "^4.5.3",
     "typescript": "^5.0.0",
     "vitest": "^4.0.18"

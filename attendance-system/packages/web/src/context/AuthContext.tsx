@@ -1,36 +1,27 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@attendance/shared';
+import React, { createContext, useContext, useState } from 'react';
+import { User, LoginDto } from '@attendance/shared';
 import { getToken, getUser, setToken, setUser as setStorageUser, clearAuth } from '../utils/auth';
 import request from '../utils/request';
 import { message } from 'antd';
+import { logger } from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: any) => Promise<void>;
+  login: (data: LoginDto) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUserState] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUserState] = useState<User | null>(() => getUser());
+  const [token, setTokenState] = useState<string | null>(() => getToken());
+  const [isLoading] = useState(false);
 
-  useEffect(() => {
-    const storedToken = getToken();
-    const storedUser = getUser();
-    if (storedToken && storedUser) {
-      setTokenState(storedToken);
-      setUserState(storedUser);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (loginData: any) => {
+  const login = async (loginData: LoginDto) => {
     try {
       const res: any = await request.post('/auth/login', loginData);
       if (res.success) {
@@ -42,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message.success('登录成功');
       }
     } catch (error: any) {
-      console.error(error);
+      logger.error('Login failed', error);
       message.error(error.response?.data?.error?.message || '登录失败');
       throw error;
     }

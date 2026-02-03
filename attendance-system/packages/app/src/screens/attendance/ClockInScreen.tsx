@@ -54,8 +54,8 @@ const ClockInScreen = () => {
         clockTime: new Date().toISOString(),
         type,
         source: 'app',
-        location: 'Mock Location: Office', // In real app, use Expo Location
-        deviceInfo: 'App',
+        location: { address: 'Mock Location: Office', latitude: 0, longitude: 0 }, // In real app, use Expo Location
+        deviceInfo: { deviceId: 'mock-device', model: 'App' },
       };
       await clockIn(dto);
       Alert.alert('成功', `打卡成功 (${type === 'sign_in' ? '上班' : '下班'})`);
@@ -76,7 +76,7 @@ const ClockInScreen = () => {
       <Text style={[styles.recordType, item.type === 'sign_in' ? styles.typeIn : styles.typeOut]}>
         {item.type === 'sign_in' ? '上班' : '下班'}
       </Text>
-      <Text style={styles.recordLocation}>{item.location || '未知位置'}</Text>
+      <Text style={styles.recordLocation}>{item.location?.address || '未知位置'}</Text>
     </View>
   );
 

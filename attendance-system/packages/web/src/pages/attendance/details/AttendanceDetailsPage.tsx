@@ -8,7 +8,7 @@ import { SearchOutlined, ReloadOutlined, ExportOutlined } from '@ant-design/icon
 import dayjs from 'dayjs';
 import { attendanceCorrectionService } from '../../../services/attendance-correction';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
-import type { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
+import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -47,8 +47,8 @@ const AttendanceDetailsPage: React.FC = () => {
     setLoading(true);
     try {
       const res = await attendanceCorrectionService.getDailyRecords(params);
-      setData(res.data || []);
-      setTotal(res.pagination.total);
+      setData(res.items || []);
+      setTotal(res.total);
     } catch (error) {
       message.error('获取考勤明细失败');
     } finally {

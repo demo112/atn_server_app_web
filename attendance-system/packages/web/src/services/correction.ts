@@ -5,7 +5,7 @@ import {
   SupplementCheckInDto,
   SupplementCheckOutDto,
   SupplementResultVo,
-  DailyRecordVo,
+  CorrectionDailyRecordVo as DailyRecordVo,
   QueryDailyRecordsDto,
   PaginatedResponse,
   ApiResponse
@@ -34,5 +34,5 @@ export const supplementCheckOut = async (data: SupplementCheckOutDto) => {
 export const getDailyRecords = async (params: QueryDailyRecordsDto) => {
     // This endpoint might need to be verified. 
     // If not found, I might skip this function or guess /attendance/daily
-    return request.get<any, PaginatedResponse<DailyRecordVo>>('/attendance/daily', { params });
+    return request.get<any, ApiResponse<PaginatedResponse<DailyRecordVo>>>('/attendance/daily', { params });
 };

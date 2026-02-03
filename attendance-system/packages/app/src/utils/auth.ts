@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { useState, useEffect } from 'react';
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';

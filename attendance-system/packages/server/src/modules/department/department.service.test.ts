@@ -53,7 +53,7 @@ describe('DepartmentService', () => {
       ];
       
       // @ts-ignore - Partial mock is enough
-      prismaMock.department.findMany.mockResolvedValue(depts);
+      prismaMock.department.findMany.mockResolvedValue(depts as any);
 
       const result = await service.getTree();
 
@@ -76,7 +76,7 @@ describe('DepartmentService', () => {
       
       prismaMock.department.findFirst.mockResolvedValue(null); // No name conflict
       // @ts-ignore
-      prismaMock.department.create.mockResolvedValue(created);
+      prismaMock.department.create.mockResolvedValue(created as any);
 
       const result = await service.create(dto);
 
@@ -98,9 +98,9 @@ describe('DepartmentService', () => {
       const dto = { name: 'Existing', parentId: 1 };
       const parent = { id: 1 };
       // @ts-ignore
-      prismaMock.department.findUnique.mockResolvedValue(parent);
+      prismaMock.department.findUnique.mockResolvedValue(parent as any);
       // @ts-ignore
-      prismaMock.department.findFirst.mockResolvedValue({ id: 2 });
+      prismaMock.department.findFirst.mockResolvedValue({ id: 2 } as any);
 
       await expect(service.create(dto)).rejects.toThrow('Department name already exists');
     });
@@ -136,7 +136,7 @@ describe('DepartmentService', () => {
       
       // Mock findUnique for initial check
       // @ts-ignore
-      prismaMock.department.findUnique.mockResolvedValue(dept1);
+      prismaMock.department.findUnique.mockResolvedValue(dept1 as any);
 
       // Mock checkCircularReference traversals
       // Checking if 1 is ancestor of 3

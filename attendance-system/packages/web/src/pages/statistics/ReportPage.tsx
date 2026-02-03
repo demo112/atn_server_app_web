@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Form, DatePicker, Button, Select, message, Space, Card, Tabs } from 'antd';
-import { SearchOutlined, DownloadOutlined, BarChartOutlined, TableOutlined } from '@ant-design/icons';
+import { Form, DatePicker, Button, Select, message, Space, Card } from 'antd';
+import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getDeptStats, getChartStats, exportStats } from '../../api/statistics';
+import { getDeptStats, getChartStats, exportStats } from '@/api/statistics';
 import { DeptStatsVo, ChartStatsVo } from '@attendance/shared';
 import DeptStatsTable from './components/DeptStatsTable';
 import AttendanceCharts from './components/AttendanceCharts';
+import { logger } from '@/utils/logger';
 
 const { RangePicker } = DatePicker;
 
 // Mock Department Select (Reuse from SummaryPage or create shared component later)
-const DepartmentSelect = ({ value, onChange }: any) => {
+interface DepartmentSelectProps {
+    value?: number;
+    onChange?: (value: number) => void;
+}
+
+const DepartmentSelect: React.FC<DepartmentSelectProps> = ({ value, onChange }) => {
     return (
         <Select 
             value={value} 
@@ -32,7 +38,7 @@ const ReportPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [deptStats, setDeptStats] = useState<DeptStatsVo[]>([]);
   const [chartStats, setChartStats] = useState<ChartStatsVo>({ dailyTrend: [], statusDistribution: [] });
-  const [activeTab, setActiveTab] = useState('1'); // 1: Charts, 2: Table
+  // Removed unused activeTab
   
   const [form] = Form.useForm();
 
@@ -55,18 +61,18 @@ const ReportPage: React.FC = () => {
 
       // Fetch Dept Stats (Monthly)
       const deptRes = await getDeptStats({ month: monthStr, deptId });
-      if (deptRes.data.success) {
-        setDeptStats(deptRes.data.data);
+      if (deptRes.success && deptRes.data) {
+        setDeptStats(deptRes.data);
       }
 
       // Fetch Chart Stats (Date Range)
       const chartRes = await getChartStats({ startDate, endDate, deptId });
-      if (chartRes.data.success) {
-        setChartStats(chartRes.data.data);
+      if (chartRes.success && chartRes.data) {
+        setChartStats(chartRes.data);
       }
 
     } catch (error) {
-      console.error(error);
+      logger.error('Failed to fetch statistics', error);
       message.error('获取统计数据失败');
     } finally {
       setLoading(false);
@@ -88,7 +94,7 @@ const ReportPage: React.FC = () => {
       const response = await exportStats({ month: monthStr, deptId });
       
       // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response.data as any]));
+      const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `attendance_stats_${monthStr}.xlsx`);
@@ -96,7 +102,7 @@ const ReportPage: React.FC = () => {
       link.click();
       link.remove();
     } catch (error) {
-      console.error(error);
+      logger.error('Failed to export statistics', error);
       message.error('导出失败');
     }
   };

@@ -7,18 +7,18 @@ export function success<T>(data: T): ApiResponse<T> {
 
 // 分页响应
 export function paginated<T>(
-  data: T[],
+  items: T[],
   page: number,
   pageSize: number,
   total: number
-): PaginatedResponse<T> {
+): ApiResponse<PaginatedResponse<T>> {
   return {
     success: true,
-    data,
-    pagination: {
+    data: {
+      items,
+      total,
       page,
       pageSize,
-      total,
       totalPages: Math.ceil(total / pageSize),
     },
   };

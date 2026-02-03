@@ -43,19 +43,14 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     rules: {
-      // 类型安全
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-function-return-type': ['warn', {
         allowExpressions: true,
         allowTypedFunctionExpressions: true,
       }],
       '@typescript-eslint/no-non-null-assertion': 'warn',
-      
-      // 代码质量
       'no-console': ['error', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
-      
-      // 存量代码豁免（逐步收紧）
       '@typescript-eslint/ban-ts-comment': 'warn',
     },
   }
@@ -70,9 +65,7 @@ import rootConfig from '../../eslint.config.mjs';
 
 export default [
   ...rootConfig,
-  {
-    // server 特定规则
-  }
+  { /* server 特定规则 */ }
 ];
 ```
 
@@ -84,35 +77,19 @@ export default [
 npm install -D husky lint-staged
 ```
 
-#### 2.2 husky 初始化
-
-```bash
-npx husky init
-```
-
-#### 2.3 lint-staged 配置
+#### 2.2 lint-staged 配置
 
 ```json
-// package.json
 {
   "lint-staged": {
-    "packages/server/**/*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "packages/web/**/*.{ts,tsx}": [
-      "eslint --fix", 
-      "prettier --write"
-    ],
-    "packages/app/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "packages/server/**/*.ts": ["eslint --fix", "prettier --write"],
+    "packages/web/**/*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "packages/app/**/*.{ts,tsx}": ["eslint --fix", "prettier --write"]
   }
 }
 ```
 
-#### 2.4 pre-commit hook
+#### 2.3 pre-commit hook
 
 ```bash
 # .husky/pre-commit
@@ -215,15 +192,11 @@ export const ApiErrorSchema = z.object({
 
 ```typescript
 // packages/web/src/services/employee.ts
-import { z } from 'zod';
-import { EmployeeSchema, PaginatedResponseSchema } from '@attendance/shared';
-
 const EmployeeListSchema = PaginatedResponseSchema(EmployeeSchema);
 
 export async function getEmployees(params: EmployeeQuery): Promise<EmployeeListVo> {
   const response = await request.get('/employees', { params });
   
-  // 运行时校验
   const result = EmployeeListSchema.safeParse(response.data);
   if (!result.success) {
     console.error('API Response validation failed:', result.error);
@@ -240,9 +213,6 @@ export async function getEmployees(params: EmployeeQuery): Promise<EmployeeListV
 
 ```typescript
 // packages/server/src/common/error-handler.ts
-import { ErrorRequestHandler } from 'express';
-import { AppError } from './app-error';
-
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   const response = {
     success: false as const,
@@ -261,19 +231,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 ```typescript
 // packages/web/src/components/ErrorBoundary.tsx
-import { Component, ReactNode } from 'react';
-import { Result, Button } from 'antd';
-
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error?: Error;
-}
-
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
 
@@ -321,6 +278,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
 | 风险 | 应对 |
 |------|------|
-| 存量问题太多，无法一次性修复 | 使用 `eslint-disable` 临时豁免，记录 TODO |
-| 开发效率下降 | 配置 IDE 自动修复，减少手动工作 |
-| 规则过严导致抵触 | 先 warn 后 error，给适应期 |
+| 存量问题太多 | 使用 `eslint-disable` 临时豁免 |
+| 开发效率下降 | 配置 IDE 自动修复 |
+| 规则过严导致抵触 | 先 warn 后 error |
