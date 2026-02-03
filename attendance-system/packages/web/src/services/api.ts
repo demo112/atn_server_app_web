@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import request from '../utils/request';
-import { ApiResponseSchema } from '../schemas/common';
+import { ApiResponse } from '@attendance/shared';
 
 export const api = request;
 
@@ -10,18 +10,19 @@ export const api = request;
  * @param response Full API response object
  * @returns Validated data
  */
-export const validateResponse = <T>(schema: z.ZodType<T>, response: any): T => {
+export const validateResponse = <T>(schema: z.ZodType<T>, response: unknown): T => {
   // 1. Validate the outer structure (ApiResponse)
   // We use safeParse for outer structure to avoid double error handling if we only care about data
   // But strictly we should validate everything.
   
   // For now, we assume response matches ApiResponse structure if success is true.
-  if (!response.success) {
-    throw new Error(response.error?.message || 'Request failed');
+  const apiRes = response as ApiResponse<unknown>;
+  if (!apiRes.success) {
+    throw new Error(apiRes.error?.message || 'Request failed');
   }
 
   // 2. Validate the inner data
-  return schema.parse(response.data);
+  return schema.parse(apiRes.data);
 };
 
 // 请求拦截器

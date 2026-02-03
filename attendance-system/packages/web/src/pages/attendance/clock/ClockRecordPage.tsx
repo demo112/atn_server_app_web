@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Table, Button, Space, Modal, Form, 
   Select, DatePicker, message, Card, Row, Col, Typography 
@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { getClockRecords, manualClock } from '../../../services/clock';
 import { getUsers } from '../../../api/user';
 import type { ClockRecord, ClockType, UserListVo } from '@attendance/shared';
+import { logger } from '../../../utils/logger';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -30,34 +31,35 @@ const ClockRecordPage: React.FC = () => {
   const [form] = Form.useForm();
   const [users, setUsers] = useState<UserListVo['items']>([]);
 
-  useEffect(() => {
-    fetchData();
-    loadUsers();
-  }, [params]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await getClockRecords(params);
       setData(res.items);
       setTotal(res.total);
     } catch (error) {
+      logger.error('Failed to fetch clock records', error);
       message.error('获取考勤记录失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async (): Promise<void> => {
     try {
       const res = await getUsers({ page: 1, pageSize: 100 });
       setUsers(res.items || []); 
     } catch (error) {
-      console.error('Failed to load users', error);
+      logger.error('Failed to load users', error);
     }
-  };
+  }, []);
 
-  const handleManualClock = async () => {
+  useEffect(() => {
+    fetchData();
+    loadUsers();
+  }, [fetchData, loadUsers]);
+
+  const handleManualClock = async (): Promise<void> => {
     try {
       const values = await form.validateFields();
       await manualClock({
@@ -71,6 +73,7 @@ const ClockRecordPage: React.FC = () => {
       form.resetFields();
       fetchData();
     } catch (error) {
+      logger.error('Manual clock failed', error);
       message.error('补录失败');
     }
   };
@@ -80,7 +83,7 @@ const ClockRecordPage: React.FC = () => {
       title: '员工',
       dataIndex: 'employeeName',
       key: 'employeeName',
-      render: (_: any, record: ClockRecord) => record.employeeName || record.employeeId,
+      render: (_value: unknown, record: ClockRecord) => record.employeeName || record.employeeId,
     },
     {
       title: '时间',
