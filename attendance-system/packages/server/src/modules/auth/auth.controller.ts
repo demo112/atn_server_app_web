@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
 import { loginSchema } from './auth.dto';
 import { createLogger } from '../../common/logger';
@@ -12,11 +12,16 @@ export class AuthController {
     res.json({ success: true, data: result });
   }
 
-  async me(req: Request, res: Response) {
-    // req.user is set by authMiddleware
-    const userId = (req as any).user!.id;
-    const result = await authService.getMe(userId);
-    res.json({ success: true, data: result });
+  async me(req: Request, res: Response, next: NextFunction) {
+    try {
+      // req.user is set by authMiddleware
+      const userId = (req as any).user!.id;
+      const result = await authService.getMe(userId);
+      res.json({ success: true, data: result });
+    } catch (e) {
+      logger.error({ err: e }, 'AuthController.me error');
+      next(e);
+    }
   }
 }
 

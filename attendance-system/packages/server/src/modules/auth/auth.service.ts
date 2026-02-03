@@ -17,23 +17,17 @@ export class AuthService {
       include: { employee: true }
     });
 
-    if (user) {
-        logger.info({ userId: user.id, employeeId: user.employeeId }, 'AuthService.login found user');
-    }
-
     if (!user) {
-      logger.info({ userId: 'anonymous', username: dto.username }, 'Login failed: User not found');
       throw AppError.badRequest('Invalid credentials');
     }
 
     if (user.status !== 'active') {
-       logger.info({ userId: user.id }, 'Login failed: User inactive');
-       throw AppError.badRequest('Account is inactive');
+      throw AppError.badRequest('Account is inactive');
     }
 
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);
+    
     if (!isValid) {
-      logger.info({ userId: user.id }, 'Login failed: Invalid password');
       throw AppError.badRequest('Invalid credentials');
     }
 
@@ -47,8 +41,6 @@ export class AuthService {
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN as any }
     );
-
-    logger.info({ userId: user.id }, 'User logged in');
 
     return {
       token,

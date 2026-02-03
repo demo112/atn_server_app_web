@@ -70,15 +70,16 @@ describe('AuthService', () => {
         .rejects.toThrow('Invalid credentials');
     });
 
-    it('should throw error when user inactive', async () => {
+    it('should throw generic error when user inactive', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 1,
         username: 'testuser',
         status: 'inactive'
       } as any);
 
+      // Security: Should not reveal user existence status
       await expect(service.login({ username: 'testuser', password: 'password' }))
-        .rejects.toThrow('Account is inactive');
+        .rejects.toThrow('Invalid credentials');
     });
   });
 
