@@ -31,8 +31,18 @@ export class AttendanceScheduler {
   async init() {
     // Lazy init Redis connection
     if (!this.connection) {
-       this.connection = new IORedis(redisConfig as any, { maxRetriesPerRequest: null });
+       this.connection = new IORedis(redisConfig as any, { 
+         maxRetriesPerRequest: null,
+         retryStrategy: (times) => {
+           const delay = Math.min(times * 50, 2000);
+           return delay;
+         }
+       });
        
+       this.connection.on('error', (err) => {
+         logger.error({ err }, 'Redis connection error');
+       });
+
        this.queue = new Queue('attendance-calculation', { connection: this.connection });
        
        this.worker = new Worker('attendance-calculation', async (job) => {
