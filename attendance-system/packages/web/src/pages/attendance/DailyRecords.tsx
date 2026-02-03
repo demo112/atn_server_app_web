@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Form, Input, DatePicker, Select, Button, Tag, Space, Modal, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus, QueryDailyRecordsDto } from '@attendance/shared';
-import { getDailyRecords, triggerCalculation } from '../../api/statistics';
+import { getDailyRecords, triggerCalculation } from '../../services/statistics';
 import { useAuth } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
 import dayjs from 'dayjs';
@@ -48,14 +48,10 @@ const DailyRecords: React.FC = () => {
       }
 
       const res = await getDailyRecords(params);
-      if (res.success && res.data) {
-        setData(res.data.items);
-        setTotal(res.data.total);
-        setCurrentPage(page);
-        setPageSize(size);
-      } else {
-        message.error('获取数据失败');
-      }
+      setData(res.items);
+      setTotal(res.total);
+      setCurrentPage(page);
+      setPageSize(size);
     } catch (error) {
       logger.error('Failed to fetch records:', error);
       message.error('获取考勤记录失败');
@@ -79,12 +75,10 @@ const DailyRecords: React.FC = () => {
         employeeIds: values.employeeIds ? values.employeeIds.split(',').map((id: string) => Number(id.trim())) : undefined,
       };
 
-      const res = await triggerCalculation(params);
-      if (res.success) {
-        message.success('重算任务已触发');
-        setRecalcModalVisible(false);
-        fetchRecords(currentPage, pageSize);
-      }
+      await triggerCalculation(params);
+      message.success('重算任务已触发');
+      setRecalcModalVisible(false);
+      fetchRecords(currentPage, pageSize);
     } catch (error) {
       logger.error('Recalculation failed', error);
       message.error('触发重算失败');

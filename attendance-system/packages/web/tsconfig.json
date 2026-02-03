@@ -22,7 +22,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@attendance/shared": ["../../packages/shared/src"],
+      "@attendance/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src"],

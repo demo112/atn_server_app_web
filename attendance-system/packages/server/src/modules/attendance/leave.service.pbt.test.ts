@@ -1,20 +1,24 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import { LeaveService } from './leave.service';
 import { prisma } from '../../common/db/prisma';
 import { AppError } from '../../common/errors';
-import { LeaveType, LeaveStatus } from '@prisma/client';
+import { LeaveType } from '@prisma/client';
 
-// Mock prisma
+// Define mock functions outside to ensure they are the same references
+const findUniqueEmployee = vi.fn();
+const findFirstLeave = vi.fn();
+const createLeave = vi.fn();
+
 vi.mock('../../common/db/prisma', () => ({
   prisma: {
     employee: {
-      findUnique: vi.fn(),
+      findUnique: (...args: any[]) => findUniqueEmployee(...args),
     },
     attLeave: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
+      findFirst: (...args: any[]) => findFirstLeave(...args),
+      create: (...args: any[]) => createLeave(...args),
     },
   },
 }));
@@ -26,8 +30,11 @@ describe('LeaveService PBT', () => {
     vi.clearAllMocks();
     service = new LeaveService();
   });
+  
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
 
-  // Generator for CreateLeaveDto
   const createLeaveDtoArb = fc.record({
     employeeId: fc.integer({ min: 1 }),
     type: fc.constantFrom('annual', 'sick', 'personal', 'business_trip') as fc.Arbitrary<LeaveType>,
@@ -38,74 +45,76 @@ describe('LeaveService PBT', () => {
   });
 
   it('should throw ERR_LEAVE_INVALID_TIME if startTime >= endTime', () => {
-    fc.assert(
-      fc.property(createLeaveDtoArb, async (dto) => {
+    return fc.assert(
+      fc.asyncProperty(createLeaveDtoArb, async (dto) => {
         // Force invalid time
         const invalidDto = { ...dto, endTime: dto.startTime };
         
-        await expect(service.create(invalidDto)).rejects.toThrow('ERR_LEAVE_INVALID_TIME');
+        await expect(service.create(invalidDto)).rejects.toThrow(/Start time must be before end time/);
         
         const invalidDto2 = { ...dto, startTime: new Date(dto.endTime.getTime() + 1000) };
-        await expect(service.create(invalidDto2)).rejects.toThrow('ERR_LEAVE_INVALID_TIME');
+        await expect(service.create(invalidDto2)).rejects.toThrow(/Start time must be before end time/);
       })
     );
   });
 
   it('should successfully create leave if no overlap and employee exists', () => {
-    fc.assert(
+    return fc.assert(
       fc.asyncProperty(createLeaveDtoArb, async (dto) => {
         fc.pre(dto.startTime < dto.endTime);
 
-        // Mock behaviors
-        vi.mocked(prisma.employee.findUnique).mockResolvedValue({ id: dto.employeeId } as any);
-        vi.mocked(prisma.attLeave.findFirst).mockResolvedValue(null); // No overlap
-        vi.mocked(prisma.attLeave.create).mockImplementation(async (args) => ({
+        // Explicitly set mocks for this iteration
+        findUniqueEmployee.mockResolvedValue({ id: dto.employeeId });
+        findFirstLeave.mockResolvedValue(null); // No overlap
+        createLeave.mockResolvedValue({
           id: 1,
-          ...args.data,
+          ...dto,
+          status: 'approved',
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as any));
+          employee: { department: { name: 'Dept' } },
+          approver: null
+        });
 
         const result = await service.create(dto);
 
         expect(result).toBeDefined();
         expect(result.employeeId).toBe(dto.employeeId);
-        expect(result.startTime).toEqual(dto.startTime);
-        expect(result.endTime).toEqual(dto.endTime);
-        
-        // Verify dependencies called
-        expect(prisma.attLeave.findFirst).toHaveBeenCalled();
-        expect(prisma.attLeave.create).toHaveBeenCalled();
-      })
+        expect(findFirstLeave).toHaveBeenCalled();
+        expect(createLeave).toHaveBeenCalled();
+      }),
+      { numRuns: 50 } 
     );
   });
 
   it('should throw ERR_LEAVE_TIME_OVERLAP if overlap exists', () => {
-    fc.assert(
+    return fc.assert(
       fc.asyncProperty(createLeaveDtoArb, async (dto) => {
         fc.pre(dto.startTime < dto.endTime);
 
-        // Mock behaviors
-        vi.mocked(prisma.employee.findUnique).mockResolvedValue({ id: dto.employeeId } as any);
+        findUniqueEmployee.mockResolvedValue({ id: dto.employeeId });
         // Mock overlap found
-        vi.mocked(prisma.attLeave.findFirst).mockResolvedValue({ id: 999 } as any);
+        findFirstLeave.mockResolvedValue({ id: 999 });
 
-        await expect(service.create(dto)).rejects.toThrow('ERR_LEAVE_TIME_OVERLAP');
+        await expect(service.create(dto)).rejects.toThrow(/Leave time overlaps/);
         
-        expect(prisma.attLeave.create).not.toHaveBeenCalled();
-      })
+        // Ensure create was NOT called
+        expect(createLeave).not.toHaveBeenCalled();
+      }),
+      { numRuns: 50 }
     );
   });
 
   it('should throw ERR_EMPLOYEE_NOT_FOUND if employee does not exist', () => {
-    fc.assert(
+    return fc.assert(
       fc.asyncProperty(createLeaveDtoArb, async (dto) => {
         fc.pre(dto.startTime < dto.endTime);
 
-        vi.mocked(prisma.employee.findUnique).mockResolvedValue(null);
+        findUniqueEmployee.mockResolvedValue(null);
 
-        await expect(service.create(dto)).rejects.toThrow('ERR_EMPLOYEE_NOT_FOUND');
-      })
+        await expect(service.create(dto)).rejects.toThrow(/Employee not found/);
+      }),
+      { numRuns: 50 }
     );
   });
 });

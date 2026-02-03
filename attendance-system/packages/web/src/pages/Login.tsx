@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
 import { LoginDto } from '@attendance/shared';
 
 const Login: React.FC = (): React.ReactElement => {
@@ -10,6 +9,7 @@ const Login: React.FC = (): React.ReactElement => {
   
   const [username, setUsername] = useState('18660845170');
   const [password, setPassword] = useState('password123');
+
   const [isDark, setIsDark] = useState(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
@@ -103,10 +103,11 @@ const Login: React.FC = (): React.ReactElement => {
         </div>
 
         <button
-          className="w-full mt-12 py-3.5 bg-primary !text-white font-semibold rounded shadow-lg shadow-primary/30 hover:bg-primary/90 active:transform active:scale-[0.98] transition-all"
+          className="w-full mt-12 py-3.5 bg-primary !text-white font-semibold rounded shadow-lg shadow-primary/30 hover:bg-primary/90 active:transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleLogin}
+          disabled={isLoading}
         >
-          登录
+          {isLoading ? '登录中...' : '登录'}
         </button>
 
           <div className="mt-6 text-center text-sm">

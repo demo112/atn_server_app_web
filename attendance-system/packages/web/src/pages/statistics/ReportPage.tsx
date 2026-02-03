@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Form, DatePicker, Button, Select, message, Space, Card } from 'antd';
 import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getDeptStats, getChartStats, exportStats } from '@/api/statistics';
+import { getDeptStats, getChartStats, exportStats } from '@/services/statistics';
 import { DeptStatsVo, ChartStatsVo } from '@attendance/shared';
 import DeptStatsTable from './components/DeptStatsTable';
 import AttendanceCharts from './components/AttendanceCharts';
@@ -60,15 +60,11 @@ const ReportPage: React.FC = (): React.ReactElement => {
 
       // Fetch Dept Stats (Monthly)
       const deptRes = await getDeptStats({ month: monthStr, deptId });
-      if (deptRes.success && deptRes.data) {
-        setDeptStats(deptRes.data);
-      }
+      setDeptStats(deptRes);
 
       // Fetch Chart Stats (Date Range)
       const chartRes = await getChartStats({ startDate, endDate, deptId });
-      if (chartRes.success && chartRes.data) {
-        setChartStats(chartRes.data);
-      }
+      setChartStats(chartRes);
 
     } catch (error) {
       logger.error('Failed to fetch statistics', error);

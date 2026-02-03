@@ -7,7 +7,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getClockRecords, manualClock } from '../../../services/clock';
-import { getUsers } from '../../../api/user';
+import { userService } from '../../../services/user';
 import type { ClockRecord, ClockType, UserListVo } from '@attendance/shared';
 import { logger } from '../../../utils/logger';
 
@@ -47,7 +47,7 @@ const ClockRecordPage: React.FC = () => {
 
   const loadUsers = useCallback(async (): Promise<void> => {
     try {
-      const res = await getUsers({ page: 1, pageSize: 100 });
+      const res = await userService.getUsers({ page: 1, pageSize: 100 });
       setUsers(res.items || []); 
     } catch (error) {
       logger.error('Failed to load users', error);

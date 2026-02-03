@@ -5,7 +5,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
-import { getDepartmentSummary, triggerCalculation } from '../../api/statistics';
+import { getDepartmentSummary, triggerCalculation } from '../../services/statistics';
 import { AttendanceSummaryVo, GetSummaryDto } from '@attendance/shared';
 import { DepartmentSelect } from '../../components/DepartmentSelect';
 import { logger } from '../../utils/logger';
@@ -33,11 +33,7 @@ const SummaryPage: React.FC = (): React.ReactElement => {
       };
 
       const res = await getDepartmentSummary(params);
-      if (res.success) {
-        setData(res.data || []);
-      } else {
-        message.error(res.error?.message || '查询失败');
-      }
+      setData(res || []);
     } catch (error) {
       logger.error('Summary query failed', error);
       message.error('查询失败');
@@ -56,18 +52,14 @@ const SummaryPage: React.FC = (): React.ReactElement => {
       }
 
       setLoading(true);
-      const res = await triggerCalculation({
+      await triggerCalculation({
         startDate: dateRange[0].format('YYYY-MM-DD'),
         endDate: dateRange[1].format('YYYY-MM-DD'),
       });
       
-      if (res.success) {
-        message.success('已触发重新计算，请稍后刷新查看结果');
-        // 延迟刷新
-        setTimeout(() => handleSearch(values), 2000);
-      } else {
-        message.error(res.error?.message || '触发计算失败');
-      }
+      message.success('已触发重新计算，请稍后刷新查看结果');
+      // 延迟刷新
+      setTimeout(() => handleSearch(values), 2000);
     } catch (error) {
       logger.error('Calculation trigger failed', error);
       message.error('触发计算失败');

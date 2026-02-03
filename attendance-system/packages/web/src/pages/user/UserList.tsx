@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 // UserList component
 import { Table, Button, Space, Tag, Modal, Form, Input as AntdInput, Select as AntdSelect, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { getUsers, createUser, updateUser, deleteUser } from '../../api/user';
+import { userService } from '../../services/user';
 import type { UserRole, UserStatus } from '@attendance/shared';
 import { fixAntd } from '../../utils/type-helpers';
 
@@ -36,7 +36,7 @@ const UserList: React.FC = () => {
   const fetchData = async (currentPage = 1, size = 10): Promise<void> => {
     setLoading(true);
     try {
-      const res = await getUsers({ page: currentPage, pageSize: size });
+      const res = await userService.getUsers({ page: currentPage, pageSize: size });
       setData(res.items);
       setTotal(res.total);
     } catch {
@@ -74,7 +74,7 @@ const UserList: React.FC = () => {
       content: '确定要删除这个用户吗？此操作不可恢复。',
       onOk: async () => {
         try {
-          await deleteUser(id);
+          await userService.deleteUser(id);
           message.success('删除成功');
           fetchData(page, pageSize);
         } catch {
@@ -88,11 +88,11 @@ const UserList: React.FC = () => {
     try {
       const values = await form.validateFields();
       if (modalMode === 'create') {
-        await createUser(values);
+        await userService.createUser(values);
         message.success('创建成功');
       } else {
         if (!currentUser) return;
-        await updateUser(currentUser.id, values);
+        await userService.updateUser(currentUser.id, values);
         message.success('更新成功');
       }
       setIsModalOpen(false);
