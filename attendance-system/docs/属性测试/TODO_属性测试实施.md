@@ -3,11 +3,11 @@
 ## 1. 待办事项 (Backlog)
 
 ### 🔴 高优先级
-- [ ] **User模块覆盖**：参照 `EmployeeService` 的模式，为 `UserService` 添加属性测试。
-- [ ] **Report模块覆盖**：考勤报表计算逻辑复杂，是 PBT 的绝佳应用场景。
+- [x] **User模块覆盖**：参照 `EmployeeService` 的模式，为 `UserService` 添加属性测试。
+- [x] **Report模块覆盖**：考勤报表计算逻辑复杂，是 PBT 的绝佳应用场景。
 
 ### 🟡 中优先级
-- [ ] **性能优化**：目前 PBT 运行次数默认为 100，在 CI 中可能会变慢。考虑引入 `test:pbt:quick` (run 10) 和 `test:pbt:full` (run 1000)。
+- [x] **性能优化**：目前 PBT 运行次数默认为 100，在 CI 中可能会变慢。考虑引入 `test:pbt:quick` (run 10) 和 `test:pbt:full` (run 1000)。
 - [ ] **生成器完善**：目前的 `prisma-types.arb.ts` 覆盖了核心字段，建议根据 Schema 变化自动生成或完善更多字段。
 
 ### 🟢 低优先级
