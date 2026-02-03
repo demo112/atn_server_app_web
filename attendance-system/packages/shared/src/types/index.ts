@@ -9,7 +9,7 @@ export * from './attendance/base';
 export * from './attendance/schedule';
 export * from './attendance/record';
 // export * from './attendance/correction'; // Conflict with DailyRecordVo
-export {
+export type {
   QueryDailyRecordsDto,
   SupplementCheckInDto,
   SupplementCheckOutDto,
