@@ -4,10 +4,10 @@
 
 | 指标 | 值 |
 |------|-----|
-| 总任务数 | 4 |
-| 涉及模块 | root, web |
+| 总任务数 | 7 |
+| 涉及模块 | root, web, app |
 | 涉及端 | Server, Web, App |
-| 预计总时间 | 60 分钟 |
+| 预计总时间 | 90 分钟 |
 
 ## 任务清单
 
@@ -20,6 +20,7 @@
   - 将 `no-console` 升级为 `error` (允许 warn/error)
 - **验证**: `npm run lint` (检查规则是否生效)
 - **依赖**: 无
+- **状态**: ✅ 已完成
 
 #### Task 2: 构建 Web 端防腐层 (Zod Schema) - 基础
 - **文件**: 
@@ -29,6 +30,7 @@
 - **内容**: 创建基础 Zod Schemas，定义 API 数据契约
 - **验证**: `pnpm --filter @attendance/web exec tsc --noEmit`
 - **依赖**: 无
+- **状态**: ✅ 已完成
 
 #### Task 3: 构建 Web 端防腐层 (Zod Schema) - 业务
 - **文件**: 
@@ -36,6 +38,7 @@
 - **内容**: 创建部门相关 Zod Schemas
 - **验证**: `pnpm --filter @attendance/web exec tsc --noEmit`
 - **依赖**: Task 2
+- **状态**: ✅ 已完成
 
 ### 阶段2：L3 运营层 (Operations) - Web S1
 
@@ -46,6 +49,32 @@
 - **内容**: 在 API 请求层引入 Schema 校验，拦截不符合契约的数据
 - **验证**: `npm run test:web` (确保现有测试通过)
 - **依赖**: Task 2
+- **状态**: ✅ 已完成
+
+### 阶段3：L3 运营层 (Operations) - Track C (前端容错)
+
+#### Task 17: Web/App 组件容错 (ErrorBoundary)
+- **文件**: 
+  - `packages/web/src/components/ErrorBoundary.tsx`
+  - `packages/app/src/components/ErrorBoundary.tsx`
+- **内容**: 实现 React ErrorBoundary，捕获组件渲染错误，防止白屏
+- **验证**: 集成测试验证
+- **状态**: ✅ 已完成
+
+#### Task 18: Axios 统一错误处理
+- **文件**: 
+  - `packages/web/src/utils/request.ts`
+  - `packages/app/src/utils/request.ts`
+- **内容**: 配置 Axios 拦截器，统一处理 401/403/500 等错误
+- **验证**: 单元测试/集成测试
+- **状态**: ✅ 已完成
+
+#### Task 19: 集成测试 (前端容错)
+- **文件**: 
+  - `packages/web/src/__tests__/integration/attendance.test.tsx`
+- **内容**: 验证错误边界和请求拦截器在业务场景中的表现
+- **验证**: `npm run test`
+- **状态**: ✅ 已完成
 
 ## 完成标准 (DoD)
 
