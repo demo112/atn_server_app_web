@@ -40,9 +40,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
           endDate
         });
         
-        if (res.success && res.data) {
-          setSchedules(res.data);
-        }
+        setSchedules(res);
       } catch (error) {
         console.error('Failed to fetch schedules', error);
       } finally {

@@ -1,29 +1,29 @@
-import request from '../utils/request';
+import { api, validateResponse } from './api';
+import { z } from 'zod';
 import { Shift, ApiResponse, CreateShiftDto, UpdateShiftDto } from '@attendance/shared';
+import { ShiftSchema } from '../schemas/attendance';
 
 export const getShifts = async (params?: { name?: string }): Promise<Shift[]> => {
-  const res = await request.get<unknown, ApiResponse<Shift[]>>('/attendance/shifts', { params });
-  return res.data || [];
+  const res = await api.get<unknown, ApiResponse<Shift[]>>('/attendance/shifts', { params });
+  return validateResponse(z.array(ShiftSchema), res);
 };
 
 export const getShift = async (id: number): Promise<Shift> => {
-  const res = await request.get<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`);
-  if (!res.data) throw new Error('Shift not found');
-  return res.data;
+  const res = await api.get<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`);
+  return validateResponse(ShiftSchema, res);
 };
 
 export const createShift = async (data: CreateShiftDto): Promise<Shift> => {
-  const res = await request.post<unknown, ApiResponse<Shift>>('/attendance/shifts', data);
-  if (!res.data) throw new Error('Failed to create shift');
-  return res.data;
+  const res = await api.post<unknown, ApiResponse<Shift>>('/attendance/shifts', data);
+  return validateResponse(ShiftSchema, res);
 };
 
 export const updateShift = async (id: number, data: UpdateShiftDto): Promise<Shift> => {
-  const res = await request.put<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`, data);
-  if (!res.data) throw new Error('Failed to update shift');
-  return res.data;
+  const res = await api.put<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`, data);
+  return validateResponse(ShiftSchema, res);
 };
 
 export const deleteShift = async (id: number): Promise<void> => {
-  await request.delete<unknown, ApiResponse<void>>(`/attendance/shifts/${id}`);
+  const res = await api.delete<unknown, ApiResponse<void>>(`/attendance/shifts/${id}`);
+  return validateResponse(z.void(), res);
 };

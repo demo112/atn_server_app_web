@@ -26,9 +26,7 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
   const loadData = async (): Promise<void> => {
       try {
           const res = await attendanceService.getShifts();
-          if (res.data) {
-              setShifts(res.data as Shift[]);
-          }
+          setShifts(res);
       } catch (e) {
           logger.error('Failed to load shifts', e);
       }
@@ -56,7 +54,7 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
         force: formData.force,
         includeSubDepartments: formData.includeSubDepartments
       });
-      message.success(`批量排班成功，影响 ${res.data?.count || 0} 条记录`);
+      message.success(`批量排班成功，影响 ${res.count} 条记录`);
       onSuccess();
       onClose();
     } catch (err) {

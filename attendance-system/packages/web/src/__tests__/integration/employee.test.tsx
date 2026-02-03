@@ -26,6 +26,8 @@ describe('EmployeeList Integration', () => {
       email: 'zhangsan@example.com',
       hireDate: '2023-01-01',
       deptId: 1,
+      createdAt: '2023-01-01T00:00:00Z',
+      updatedAt: '2023-01-01T00:00:00Z',
     },
     {
       id: 2,
@@ -33,11 +35,13 @@ describe('EmployeeList Integration', () => {
       name: '李四',
       phone: '13900139000',
       deptName: '测试部',
-      status: 'probation',
+      status: 'active',
       username: null,
       email: 'lisi@example.com',
       hireDate: '2023-02-01',
       deptId: 2,
+      createdAt: '2023-02-01T00:00:00Z',
+      updatedAt: '2023-02-01T00:00:00Z',
     },
   ];
 
@@ -69,6 +73,7 @@ describe('EmployeeList Integration', () => {
             total: data.length,
             page: 1,
             pageSize: 10,
+            totalPages: Math.ceil(data.length / 10),
           }
         });
       }),

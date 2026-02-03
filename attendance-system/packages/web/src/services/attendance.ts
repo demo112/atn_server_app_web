@@ -1,6 +1,6 @@
 import { api, validateResponse } from './api';
 import { z } from 'zod';
-import { Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
+import { Shift, Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
 import { ScheduleSchema, ShiftSchema } from '../schemas/attendance';
 
 export const attendanceService = {
@@ -23,11 +23,8 @@ export const attendanceService = {
   },
 
   // 获取班次列表
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getShifts: async (): Promise<any[]> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res = await api.get<unknown, ApiResponse<any[]>>('/attendance/shifts');
-    // Using ShiftSchema to validate and return strictly typed array, removing 'any'
+  getShifts: async (): Promise<Shift[]> => {
+    const res = await api.get<unknown, ApiResponse<Shift[]>>('/attendance/shifts');
     return validateResponse(z.array(ShiftSchema), res);
   },
 

@@ -32,15 +32,11 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
             attendanceService.getShifts()
         ]);
         
-        if (empRes.success && empRes.data) {
-            // PaginatedResponse
-            setEmployees(empRes.data.items || []);
-        }
-        if (shiftRes.data) {
-             // ApiResponse<Shift[]> or any[]
-             // attendanceService.getShifts returns ApiResponse<any[]> in my definition, need to cast or fix definition
-             setShifts(shiftRes.data as Shift[]);
-        }
+        // PaginatedResponse
+        setEmployees(empRes.items || []);
+        
+        // Shift[]
+        setShifts(shiftRes as Shift[]);
     } catch (e) {
         logger.error('Failed to load data', e);
     }

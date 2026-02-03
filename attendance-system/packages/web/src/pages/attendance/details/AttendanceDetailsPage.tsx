@@ -6,7 +6,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, ReloadOutlined, ExportOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { attendanceCorrectionService } from '../../../services/attendance-correction';
+import * as correctionService from '../../../services/correction';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
 import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 
@@ -47,7 +47,7 @@ const AttendanceDetailsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await attendanceCorrectionService.getDailyRecords(params);
+      const res = await correctionService.getDailyRecords(params);
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {

@@ -1,4 +1,5 @@
-import request from '../utils/request';
+import { api, validateResponse } from './api';
+import { z } from 'zod';
 import { 
   LeaveVo, 
   CreateLeaveDto, 
@@ -6,15 +7,19 @@ import {
   ApiResponse, 
   PaginatedResponse 
 } from '@attendance/shared';
+import { PaginatedLeaveVoSchema, LeaveVoSchema } from '../schemas/attendance';
 
 export const getLeaves = async (params: LeaveQueryDto): Promise<PaginatedResponse<LeaveVo>> => {
-  return request.get<unknown, PaginatedResponse<LeaveVo>>('/attendance/leaves', { params });
+  const res = await api.get<unknown, ApiResponse<PaginatedResponse<LeaveVo>>>('/attendance/leaves', { params });
+  return validateResponse(PaginatedLeaveVoSchema, res);
 };
 
-export const createLeave = async (data: CreateLeaveDto): Promise<ApiResponse<LeaveVo>> => {
-  return request.post<unknown, ApiResponse<LeaveVo>>('/attendance/leaves', data);
+export const createLeave = async (data: CreateLeaveDto): Promise<LeaveVo> => {
+  const res = await api.post<unknown, ApiResponse<LeaveVo>>('/attendance/leaves', data);
+  return validateResponse(LeaveVoSchema, res);
 };
 
-export const cancelLeave = async (id: number): Promise<ApiResponse<void>> => {
-  return request.post<unknown, ApiResponse<void>>(`/attendance/leaves/${id}/cancel`);
+export const cancelLeave = async (id: number): Promise<void> => {
+  const res = await api.post<unknown, ApiResponse<void>>(`/attendance/leaves/${id}/cancel`);
+  return validateResponse(z.void(), res);
 };

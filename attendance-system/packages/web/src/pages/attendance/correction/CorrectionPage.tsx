@@ -34,10 +34,8 @@ const CorrectionPage: React.FC = () => {
         startDate: dateRange[0].format('YYYY-MM-DD'),
         endDate: dateRange[1].format('YYYY-MM-DD')
       });
-      if (res.success && res.data) {
-        setRecords(res.data.items);
-        setTotal(res.data.total);
-      }
+      setRecords(res.items);
+      setTotal(res.total);
     } catch (err) {
       logger.error('Failed to load records', err);
       // message.error('加载记录失败'); // Optional: suppress if daily records API not ready

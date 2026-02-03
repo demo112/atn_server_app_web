@@ -24,12 +24,11 @@ const EmployeeList: React.FC = () => {
     setLoading(true);
     try {
       const res = await employeeService.getEmployees(params);
-      if (res.success && res.data) {
-        setData(res.data.items || []);
-        setTotal(res.data.total);
-      }
-    } catch {
-      message.error('Failed to load employees');
+      setData(res.items || []);
+      setTotal(res.total);
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        console.error('Fetch employees failed:', error);
+        message.error('Failed to load employees');
     } finally {
       setLoading(false);
     }
