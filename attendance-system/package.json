@@ -10,7 +10,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "test:ci": "cross-env FC_NUM_RUNS=1000 pnpm -r test",
-    "test:pbt": "pnpm -r exec vitest run -- **/*.pbt.test.ts **/*.property.test.ts **/*.prop.test.ts",
+    "test:pbt": "pnpm -r exec vitest run -- \"**/*.{pbt,property,prop}.test.ts\" --exclude \"**/*.tsx\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:docs": "node scripts/docs-lint.js",
