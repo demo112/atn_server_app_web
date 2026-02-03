@@ -171,7 +171,9 @@ export class AttendanceCalculator {
         }
       }
       
+      // 扣除请假覆盖的时长（确保不为负数）
       const finalLate = Math.max(0, rawLate - coveredLate);
+      
       if (finalLate > lateGrace) {
         lateMinutes = finalLate;
         status = 'late';

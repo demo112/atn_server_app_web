@@ -34,9 +34,37 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+  test:
+    name: Test
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Generate Prisma Client
+        run: pnpm --filter @attendance/server db:generate
+
+      - name: Run Unit Tests
+        run: pnpm run test
+
+      - name: Run Property-Based Tests
+        run: pnpm --filter @attendance/server run test:pbt
+
   build:
     name: Build
-    needs: check
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

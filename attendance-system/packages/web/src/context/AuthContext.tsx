@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { LoginDto } from '@attendance/shared';
 import { getToken, getUser, setToken, setUser as setStorageUser, clearAuth, AuthUser } from '../utils/auth';
-import request from '../utils/request';
-import { validateResponse } from '../services/api';
-import { LoginVoSchema } from '../schemas/auth';
+import { login as loginService } from '../services/auth';
 import { message } from 'antd';
 import { logger } from '../utils/logger';
 
@@ -25,17 +23,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (loginData: LoginDto): Promise<void> => {
     try {
-      const res = await request.post<unknown, { success: boolean; data: unknown; }>('/auth/login', loginData);
-      if (res.success) {
-        // Runtime validation
-        const { token, user } = validateResponse(LoginVoSchema, res);
-        
-        setToken(token);
-        setStorageUser(user);
-        setTokenState(token);
-        setUserState(user);
-        message.success('登录成功');
-      }
+      const { token, user } = await loginService(loginData);
+      
+      setToken(token);
+      setStorageUser(user);
+      setTokenState(token);
+      setUserState(user);
+      message.success('登录成功');
     } catch (error: unknown) {
       logger.error('Login failed', error);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

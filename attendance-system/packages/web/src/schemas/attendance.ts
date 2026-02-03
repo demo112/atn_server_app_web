@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { 
   LeaveType, 
-  LeaveStatus 
+  LeaveStatus
 } from '@attendance/shared';
 
 // TimePeriod Rules Schema
@@ -19,7 +19,7 @@ export const TimePeriodRulesSchema = z.object({
 
 // TimePeriod Schema
 export const TimePeriodSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   name: z.string(),
   type: z.number(),
   startTime: z.string().optional(),
@@ -33,9 +33,9 @@ export const TimePeriodSchema = z.object({
 
 // Shift Period Schema
 export const ShiftPeriodSchema = z.object({
-  id: z.number(),
-  shiftId: z.number(),
-  periodId: z.number(),
+  id: z.coerce.number(),
+  shiftId: z.coerce.number(),
+  periodId: z.coerce.number(),
   dayOfCycle: z.number(),
   sortOrder: z.number(),
   period: TimePeriodSchema.optional(),
@@ -43,7 +43,7 @@ export const ShiftPeriodSchema = z.object({
 
 // Shift Schema
 export const ShiftSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   name: z.string(),
   cycleDays: z.number(),
   periods: z.array(ShiftPeriodSchema).optional(),
@@ -51,7 +51,7 @@ export const ShiftSchema = z.object({
 
 // Schedule Schema
 export const ScheduleSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   employeeId: z.number(),
   shiftId: z.number(),
   startDate: z.string(),
@@ -100,7 +100,7 @@ export const ClockTypeSchema = z.enum(['sign_in', 'sign_out']);
 export const ClockSourceSchema = z.enum(['app', 'web', 'device']);
 
 export const ClockRecordSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   employeeId: z.number(),
   clockTime: z.string(),
   type: ClockTypeSchema,
@@ -135,7 +135,7 @@ export const AttendanceStatusSchema = z.enum([
 ]);
 
 export const DailyRecordVoSchema = z.object({
-  id: z.string().or(z.number()).transform(val => String(val)), // Handle BigInt serialization
+  id: z.coerce.string(), // Handle BigInt serialization
   employeeId: z.number(),
   employeeName: z.string(),
   deptName: z.string(),
@@ -167,7 +167,7 @@ export const PaginatedDailyRecordVoSchema = z.object({
 export const CorrectionTypeSchema = z.enum(['check_in', 'check_out']);
 
 export const CorrectionVoSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   employeeId: z.number(),
   employeeName: z.string(),
   deptName: z.string(),

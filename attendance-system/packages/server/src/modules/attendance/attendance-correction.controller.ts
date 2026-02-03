@@ -131,15 +131,11 @@ export class AttendanceCorrectionController {
     
     const result = await service.getDailyRecords(query);
     
-    res.json({
-      success: true,
-      data: result.items,
-      pagination: {
-        total: result.total,
-        page: Number(query.page) || 1,
-        pageSize: Number(query.pageSize) || 20,
-        totalPages: Math.ceil(result.total / (Number(query.pageSize) || 20))
-      }
-    });
+    res.json(paginated(
+      result.items,
+      Number(query.page) || 1,
+      Number(query.pageSize) || 20,
+      result.total
+    ));
   }
 }

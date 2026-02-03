@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, message } from 'antd';
-import { getUsers } from '../../../api/user';
+import { userService } from '../../../services/user';
 
 interface BindUserModalProps {
   open: boolean;
@@ -22,10 +22,10 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
   const fetchUsers = async (keyword = ''): Promise<void> => {
     setLoading(true);
     try {
-      const res = await getUsers({ page: 1, pageSize: 20, keyword });
+      const res = await userService.getUsers({ page: 1, pageSize: 20, keyword });
       const options = res.items
-        .filter(u => !u.employeeName) // Only show unbound users
-        .map(u => ({
+        .filter((u: any) => !u.employeeName) // Only show unbound users
+        .map((u: any) => ({
           label: u.username,
           value: u.id,
         }));
