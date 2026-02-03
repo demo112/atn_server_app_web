@@ -19,3 +19,17 @@ export const CreateUserDtoSchema = z.object({
   role: UserRoleSchema,
   employeeId: z.number().optional(),
 });
+
+export const UserListItemSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  role: UserRoleSchema,
+  status: UserStatusSchema,
+  employeeName: z.string().optional(),
+  createdAt: z.string(),
+});
+
+export const UserListVoSchema = z.object({
+  items: z.array(UserListItemSchema),
+  total: z.number(),
+});

@@ -33,6 +33,7 @@ const MainLayout = (): React.ReactElement => (
           <li><Link to="/attendance/correction">异常考勤处理</Link></li>
           <li><Link to="/attendance/settings">考勤制度设置</Link></li>
           <li><Link to="/departments">部门管理</Link></li>
+          <li><Link to="/employees">人员管理</Link></li>
           <li><Link to="/users">用户管理</Link></li>
           <li><Link to="/attendance/daily-records">每日考勤</Link></li>
           <li><Link to="/statistics/details">考勤明细</Link></li>

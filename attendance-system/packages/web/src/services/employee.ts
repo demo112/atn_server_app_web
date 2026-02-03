@@ -1,4 +1,5 @@
-import { api } from './api';
+import { api, validateResponse } from './api';
+import { z } from 'zod';
 import { 
   EmployeeVo, 
   CreateEmployeeDto, 
@@ -8,35 +9,42 @@ import {
   PaginatedResponse,
   ApiResponse 
 } from '@attendance/shared';
+import { EmployeeVoSchema, PaginatedEmployeeVoSchema } from '../schemas/employee';
 
 export const employeeService = {
   // 获取员工列表
-  getEmployees: (params: GetEmployeesDto): Promise<ApiResponse<PaginatedResponse<EmployeeVo>>> => {
-    return api.get<unknown, ApiResponse<PaginatedResponse<EmployeeVo>>>('/employees', { params });
+  getEmployees: async (params: GetEmployeesDto): Promise<PaginatedResponse<EmployeeVo>> => {
+    const res = await api.get<unknown, ApiResponse<PaginatedResponse<EmployeeVo>>>('/employees', { params });
+    return validateResponse(PaginatedEmployeeVoSchema, res);
   },
 
   // 获取单个员工
-  getEmployee: (id: number): Promise<ApiResponse<EmployeeVo>> => {
-    return api.get<unknown, ApiResponse<EmployeeVo>>(`/employees/${id}`);
+  getEmployee: async (id: number): Promise<EmployeeVo> => {
+    const res = await api.get<unknown, ApiResponse<EmployeeVo>>(`/employees/${id}`);
+    return validateResponse(EmployeeVoSchema, res);
   },
 
   // 创建员工
-  createEmployee: (data: CreateEmployeeDto): Promise<ApiResponse<EmployeeVo>> => {
-    return api.post<unknown, ApiResponse<EmployeeVo>>('/employees', data);
+  createEmployee: async (data: CreateEmployeeDto): Promise<EmployeeVo> => {
+    const res = await api.post<unknown, ApiResponse<EmployeeVo>>('/employees', data);
+    return validateResponse(EmployeeVoSchema, res);
   },
 
   // 更新员工
-  updateEmployee: (id: number, data: UpdateEmployeeDto): Promise<ApiResponse<EmployeeVo>> => {
-    return api.put<unknown, ApiResponse<EmployeeVo>>(`/employees/${id}`, data);
+  updateEmployee: async (id: number, data: UpdateEmployeeDto): Promise<EmployeeVo> => {
+    const res = await api.put<unknown, ApiResponse<EmployeeVo>>(`/employees/${id}`, data);
+    return validateResponse(EmployeeVoSchema, res);
   },
 
   // 删除员工
-  deleteEmployee: (id: number): Promise<ApiResponse<void>> => {
-    return api.delete<unknown, ApiResponse<void>>(`/employees/${id}`);
+  deleteEmployee: async (id: number): Promise<void> => {
+    const res = await api.delete<unknown, ApiResponse<void>>(`/employees/${id}`);
+    return validateResponse(z.void(), res);
   },
 
   // 绑定用户
-  bindUser: (id: number, data: BindUserDto): Promise<ApiResponse<void>> => {
-    return api.post<unknown, ApiResponse<void>>(`/employees/${id}/bind-user`, data);
+  bindUser: async (id: number, data: BindUserDto): Promise<void> => {
+    const res = await api.post<unknown, ApiResponse<void>>(`/employees/${id}/bind-user`, data);
+    return validateResponse(z.void(), res);
   }
 };
