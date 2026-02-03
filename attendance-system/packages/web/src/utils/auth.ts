@@ -1,3 +1,5 @@
+import { LoginVo } from '@attendance/shared';
+
 export const TOKEN_KEY = 'atn_token';
 export const USER_KEY = 'atn_user';
 
@@ -13,12 +15,14 @@ export const removeToken = (): void => {
   localStorage.removeItem(TOKEN_KEY);
 };
 
-export const getUser = (): any | null => {
+export type AuthUser = LoginVo['user'];
+
+export const getUser = (): AuthUser | null => {
   const userStr = localStorage.getItem(USER_KEY);
   return userStr ? JSON.parse(userStr) : null;
 };
 
-export const setUser = (user: any): void => {
+export const setUser = (user: AuthUser): void => {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 

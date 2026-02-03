@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, DatePicker, Button, Select, message, Space, Card } from 'antd';
 import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -16,7 +16,7 @@ interface DepartmentSelectProps {
     onChange?: (value: number) => void;
 }
 
-const DepartmentSelect: React.FC<DepartmentSelectProps> = ({ value, onChange }) => {
+const DepartmentSelect: React.FC<DepartmentSelectProps> = ({ value, onChange }): React.ReactElement => {
     return (
         <Select 
             value={value} 
@@ -34,7 +34,7 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({ value, onChange }) 
     );
 };
 
-const ReportPage: React.FC = () => {
+const ReportPage: React.FC = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const [deptStats, setDeptStats] = useState<DeptStatsVo[]>([]);
   const [chartStats, setChartStats] = useState<ChartStatsVo>({ dailyTrend: [], statusDistribution: [] });
@@ -42,14 +42,7 @@ const ReportPage: React.FC = () => {
   
   const [form] = Form.useForm();
 
-  // Default to current month
-  const initialValues = {
-    month: dayjs(),
-    dateRange: [dayjs().startOf('month'), dayjs()],
-    deptId: undefined
-  };
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       const values = form.getFieldsValue();
@@ -77,15 +70,21 @@ const ReportPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
 
   useEffect(() => {
+    // Default to current month
+    const initialValues = {
+        month: dayjs(),
+        dateRange: [dayjs().startOf('month'), dayjs()],
+        deptId: undefined
+    };
     // Initial fetch
     form.setFieldsValue(initialValues);
     fetchData();
-  }, []);
+  }, [fetchData, form]);
 
-  const handleExport = async () => {
+  const handleExport = async (): Promise<void> => {
     try {
       const values = form.getFieldsValue();
       const { month, deptId } = values;
@@ -109,7 +108,7 @@ const ReportPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Card bordered={false} style={{ marginBottom: 24 }}>
+      <Card variant="borderless" style={{ marginBottom: 24 }}>
         <Form form={form} layout="inline" onFinish={fetchData} initialValues={initialValues}>
           <Form.Item name="month" label="统计月份" rules={[{ required: true }]}>
             <DatePicker picker="month" />

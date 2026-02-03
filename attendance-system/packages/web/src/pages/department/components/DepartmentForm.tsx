@@ -43,7 +43,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
     }
   }, [visible, mode, initialValues, form]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     try {
       const values = await form.validateFields();
       setSubmitting(true);
@@ -97,7 +97,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
       onOk={handleSubmit}
       onCancel={onCancel}
       confirmLoading={submitting}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}
@@ -118,6 +118,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
           extra="不选则作为根部门"
         >
           <TreeSelect
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             treeData={renderTreeSelectData(treeData) as any}
             placeholder="请选择上级部门"
             allowClear

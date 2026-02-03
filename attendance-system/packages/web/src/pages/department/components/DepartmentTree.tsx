@@ -1,13 +1,14 @@
 
 import React, { useMemo } from 'react';
 import { Tree, Spin, Empty } from 'antd';
+import type { DataNode, TreeProps } from 'antd/es/tree';
 import { DownOutlined } from '@ant-design/icons';
 import { DepartmentVO } from '@attendance/shared';
 
 interface DepartmentTreeProps {
   loading: boolean;
   treeData: DepartmentVO[];
-  onSelect: (selectedKeys: React.Key[], info: any) => void;
+  onSelect: TreeProps['onSelect'];
   selectedKeys: React.Key[];
 }
 
@@ -16,10 +17,10 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   treeData, 
   onSelect,
   selectedKeys
-}) => {
+}): React.ReactElement => {
   // 转换数据格式适配 AntD Tree
   const antdTreeData = useMemo(() => {
-    const transform = (nodes: DepartmentVO[]): any[] => {
+    const transform = (nodes: DepartmentVO[]): DataNode[] => {
       return nodes.map(node => ({
         title: node.name,
         key: node.id,

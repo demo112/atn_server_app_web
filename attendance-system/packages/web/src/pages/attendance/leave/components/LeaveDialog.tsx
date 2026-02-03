@@ -4,6 +4,8 @@ import { LeaveType, LeaveVo } from '@attendance/shared';
 import * as leaveService from '@/services/leave';
 import dayjs from 'dayjs';
 
+import { logger } from '@/utils/logger';
+
 interface LeaveDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,7 +18,7 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
   onClose, 
   onSuccess,
   initialData 
-}) => {
+}): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
@@ -34,9 +36,9 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
         form.setFieldValue('type', LeaveType.annual);
       }
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, form]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     try {
       const values = await form.validateFields();
       setLoading(true);
@@ -71,9 +73,9 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
       
       onSuccess();
       onClose();
-    } catch (err: any) {
-      // console.error(err); // Prohibited by rules
-      message.error(err.message || '操作失败');
+    } catch (err: unknown) {
+      logger.error('Leave submit failed', err);
+      message.error('操作失败');
     } finally {
       setLoading(false);
     }

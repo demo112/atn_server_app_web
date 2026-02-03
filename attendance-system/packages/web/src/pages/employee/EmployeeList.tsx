@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Button, Space, Input, Modal, message, Form, Tag } from 'antd';
 import { EmployeeVo, CreateEmployeeDto, UpdateEmployeeDto } from '@attendance/shared';
 import { employeeService } from '../../services/employee';
@@ -20,37 +20,39 @@ const EmployeeList: React.FC = () => {
   const [isBindModalOpen, setIsBindModalOpen] = useState(false);
   const [bindEmployeeId, setBindEmployeeId] = useState<number | null>(null);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await employeeService.getEmployees(params);
-      setData(res.items || []);
-      setTotal(res.total);
-    } catch (error) {
+      if (res.success && res.data) {
+        setData(res.data.items || []);
+        setTotal(res.data.total);
+      }
+    } catch {
       message.error('Failed to load employees');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
 
   useEffect(() => {
     fetchEmployees();
-  }, [params]);
+  }, [fetchEmployees]);
 
   // Handlers
-  const handleAdd = () => {
+  const handleAdd = (): void => {
     setEmployeeModalMode('create');
     setCurrentEmployee(null);
     setIsEmployeeModalOpen(true);
   };
 
-  const handleEdit = (record: EmployeeVo) => {
+  const handleEdit = (record: EmployeeVo): void => {
     setEmployeeModalMode('edit');
     setCurrentEmployee(record);
     setIsEmployeeModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: number): void => {
     Modal.confirm({
       title: 'Are you sure to delete this employee?',
       content: 'This action will soft delete the employee.',
@@ -59,14 +61,14 @@ const EmployeeList: React.FC = () => {
           await employeeService.deleteEmployee(id);
           message.success('Deleted successfully');
           fetchEmployees();
-        } catch (error) {
+        } catch {
           message.error('Failed to delete');
         }
       },
     });
   };
 
-  const handleEmployeeModalOk = async (values: CreateEmployeeDto | UpdateEmployeeDto) => {
+  const handleEmployeeModalOk = async (values: CreateEmployeeDto | UpdateEmployeeDto): Promise<void> => {
     try {
       if (employeeModalMode === 'create') {
         await employeeService.createEmployee(values as CreateEmployeeDto);
@@ -78,7 +80,7 @@ const EmployeeList: React.FC = () => {
       }
       setIsEmployeeModalOpen(false);
       fetchEmployees();
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         // Error handling (e.g. duplication)
         // Note: api interceptor returns error.response.data directly
         const errorMsg = error.error?.message || error.message || 'Operation failed';
@@ -86,12 +88,12 @@ const EmployeeList: React.FC = () => {
     }
   };
 
-  const handleBindClick = (record: EmployeeVo) => {
+  const handleBindClick = (record: EmployeeVo): void => {
     setBindEmployeeId(record.id);
     setIsBindModalOpen(true);
   };
 
-  const handleUnbindClick = (record: EmployeeVo) => {
+  const handleUnbindClick = (record: EmployeeVo): void => {
     Modal.confirm({
       title: 'Unbind User',
       content: `Unbind user ${record.username}?`,
@@ -100,21 +102,21 @@ const EmployeeList: React.FC = () => {
           await employeeService.bindUser(record.id, { userId: null });
           message.success('Unbound successfully');
           fetchEmployees();
-        } catch (error) {
+        } catch {
           message.error('Failed to unbind');
         }
       },
     });
   };
 
-  const handleBindModalOk = async (userId: number | null) => {
+  const handleBindModalOk = async (userId: number | null): Promise<void> => {
     if (!bindEmployeeId) return;
     try {
       await employeeService.bindUser(bindEmployeeId, { userId });
       message.success('Bound successfully');
       setIsBindModalOpen(false);
       fetchEmployees();
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       message.error(error.response?.data?.error?.message || 'Failed to bind');
     }
   };
@@ -135,7 +137,7 @@ const EmployeeList: React.FC = () => {
     {
       title: 'Linked User',
       key: 'user',
-      render: (_: any, record: EmployeeVo) => (
+      render: (_: unknown, record: EmployeeVo) => (
         record.username ? (
           <Space>
             <Tag color="blue">{record.username}</Tag>
@@ -149,7 +151,7 @@ const EmployeeList: React.FC = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (_: any, record: EmployeeVo) => (
+      render: (_: unknown, record: EmployeeVo) => (
         <Space size="middle">
           <Button type="link" onClick={() => handleEdit(record)}>Edit</Button>
           <Button type="link" danger onClick={() => handleDelete(record.id)}>Delete</Button>
@@ -158,7 +160,7 @@ const EmployeeList: React.FC = () => {
     },
   ];
 
-  const handleSearch = (values: any) => {
+  const handleSearch = (values: { keyword?: string }): void => {
     setParams({ ...params, page: 1, keyword: values.keyword || '' });
   };
 

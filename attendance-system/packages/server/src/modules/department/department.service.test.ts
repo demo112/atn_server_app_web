@@ -52,7 +52,7 @@ describe('DepartmentService', () => {
         { id: 4, name: 'Grandchild', parentId: 2, sortOrder: 0, createdAt: now, updatedAt: now },
       ];
       
-      // Partial mock is enough
+      // @ts-expect-error: mock value
       prismaMock.department.findMany.mockResolvedValue(depts as any);
 
       const result = await service.getTree();
@@ -75,7 +75,7 @@ describe('DepartmentService', () => {
       const created = { id: 1, name: 'New Dept', parentId: null, sortOrder: 0, createdAt: now, updatedAt: now };
       
       prismaMock.department.findFirst.mockResolvedValue(null); // No name conflict
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.create.mockResolvedValue(created as any);
 
       const result = await service.create(dto);
@@ -97,9 +97,9 @@ describe('DepartmentService', () => {
     it('should throw if name exists in same level', async () => {
       const dto = { name: 'Existing', parentId: 1 };
       const parent = { id: 1 };
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(parent as any);
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findFirst.mockResolvedValue({ id: 2 } as any);
 
       await expect(service.create(dto)).rejects.toThrow('Department name already exists');
@@ -114,7 +114,7 @@ describe('DepartmentService', () => {
       
       prismaMock.department.findUnique.mockResolvedValue(existing as any);
       prismaMock.department.findFirst.mockResolvedValue(null); // No conflict
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.update.mockResolvedValue({ ...existing, name: 'New Name' });
 
       const result = await service.update(2, { name: 'New Name' });
@@ -123,7 +123,7 @@ describe('DepartmentService', () => {
     });
 
     it('should throw if setting parent to self', async () => {
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
 
       await expect(service.update(2, { parentId: 2 })).rejects.toThrow('Cannot set department as its own parent');
@@ -135,7 +135,7 @@ describe('DepartmentService', () => {
       const dept1 = { id: 1, parentId: null };
       
       // Mock findUnique for initial check
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(dept1 as any);
 
       // Mock checkCircularReference traversals
@@ -158,7 +158,7 @@ describe('DepartmentService', () => {
 
       // Reset mock to be sure
       mockReset(prismaMock);
-      // @ts-ignore
+      // @ts-expect-error: mock implementation
       prismaMock.department.findUnique.mockImplementation((args) => {
         if (args.where.id === 1) return Promise.resolve(dept1);
         if (args.where.id === 3) return Promise.resolve({ parentId: 2 });
@@ -175,7 +175,7 @@ describe('DepartmentService', () => {
     const existing = { id: 1, name: 'Dept', parentId: null, sortOrder: 0, createdAt: now, updatedAt: now };
 
     it('should delete department', async () => {
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
       prismaMock.department.count.mockResolvedValue(0); // No children, no employees
       prismaMock.employee.count.mockResolvedValue(0);
@@ -186,7 +186,7 @@ describe('DepartmentService', () => {
     });
 
     it('should throw if has children', async () => {
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
       prismaMock.department.count.mockResolvedValue(1); // Has children
 
@@ -194,7 +194,7 @@ describe('DepartmentService', () => {
     });
 
     it('should throw if has employees', async () => {
-      // @ts-ignore
+      // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
       prismaMock.department.count.mockResolvedValue(0);
       prismaMock.employee.count.mockResolvedValue(1); // Has employees

@@ -3,27 +3,29 @@ import { Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, Sched
 
 export const attendanceService = {
   // 获取排班列表
-  getSchedules: (params: ScheduleQueryDto) => {
-    return api.get<any, ApiResponse<Schedule[]>>('/attendance/schedules', { params });
+  getSchedules: (params: ScheduleQueryDto): Promise<ApiResponse<Schedule[]>> => {
+    return api.get<unknown, ApiResponse<Schedule[]>>('/attendance/schedules', { params });
   },
 
   // 创建单人排班
-  createSchedule: (data: CreateScheduleDto) => {
-    return api.post<any, ApiResponse<Schedule>>('/attendance/schedules', data);
+  createSchedule: (data: CreateScheduleDto): Promise<ApiResponse<Schedule>> => {
+    return api.post<unknown, ApiResponse<Schedule>>('/attendance/schedules', data);
   },
 
   // 批量创建排班
-  batchCreateSchedule: (data: BatchCreateScheduleDto) => {
-    return api.post<any, ApiResponse<{ count: number }>>('/attendance/schedules/batch', data);
+  batchCreateSchedule: (data: BatchCreateScheduleDto): Promise<ApiResponse<{ count: number }>> => {
+    return api.post<unknown, ApiResponse<{ count: number }>>('/attendance/schedules/batch', data);
   },
 
   // 获取班次列表
-  getShifts: () => {
-    return api.get<any, ApiResponse<any[]>>('/attendance/shifts');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getShifts: (): Promise<ApiResponse<any[]>> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return api.get<unknown, ApiResponse<any[]>>('/attendance/shifts');
   },
 
   // 删除排班
-  deleteSchedule: (id: number) => {
-    return api.delete<any, ApiResponse<void>>(`/attendance/schedules/${id}`);
+  deleteSchedule: (id: number): Promise<ApiResponse<void>> => {
+    return api.delete<unknown, ApiResponse<void>>(`/attendance/schedules/${id}`);
   }
 };

@@ -1,283 +1,126 @@
-# ENG01 - 设计文档
+# Design: 工程质量治理体系 (ENG01)
 
-## 技术方案
+## 1. 架构概览
 
-### 整体架构
+ENG01 采用 **G-I-O 三层架构**，从规范立法到基建修路，最后到运营落地，形成完整的质量闭环。
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        质量门禁体系                                   │
-├──────────┬──────────┬──────────┬──────────┬──────────┬──────────────┤
-│  写代码前  │  写代码时  │  保存时   │  提交前   │  推送后   │   合并前     │
-├──────────┼──────────┼──────────┼──────────┼──────────┼──────────────┤
-│  Rules   │  ESLint  │  Format  │ Pre-commit│   CI     │  Code Review │
-│  Steering│  TS编译   │  Hooks   │  Hooks   │  Pipeline│  DoD 检查    │
-└──────────┴──────────┴──────────┴──────────┴──────────┴──────────────┘
-     ↓           ↓          ↓          ↓          ↓           ↓
-   [软约束]    [即时反馈]   [自动修复]  [本地门禁]  [远程门禁]   [人工门禁]
-```
+### 核心映射
 
-### 各层职责
+| 层级 | 职责 | 实现方式 | 关键技术 |
+|------|------|----------|----------|
+| **L1: Governance** | 立法 | 静态分析 + 门禁 | ESLint, Husky, Zod |
+| **L2: Infrastructure** | 修路 | 测试运行器 + Mock | Vitest, Jest, MSW |
+| **L3: Operations** | 行车 | 业务测试用例 | RTL, Integration Tests |
 
-| 层级 | 工具 | 作用 | 强制性 |
-|------|------|------|--------|
-| 软约束 | Rules/Steering | 指导 AI 生成代码 | ❌ 可忽略 |
-| 即时反馈 | ESLint + IDE | 写代码时实时提示 | ❌ 可忽略 |
-| 本地门禁 | husky + lint-staged | commit 时检查 | ⚠️ 可绕过 |
-| 远程门禁 | GitHub Actions | push 后检查 | ✅ 无法绕过 |
+---
 
-## 详细设计
+## 2. L1: 治理层 (Governance) 设计
 
-### 1. ESLint 配置
+### 2.1 ESLint 强类型策略
+- **规则升级**:
+  - `@typescript-eslint/no-explicit-any`: `warn` -> `error` (强类型)
+  - `@typescript-eslint/explicit-function-return-type`: `warn` (接口契约显性化)
+  - `no-console`: `error` (防止调试代码残留)
 
-#### 1.1 Monorepo 根配置
+### 2.2 Zod 运行时校验
+在前端数据入口层 (Service/API) 引入 Zod Schema，构建 "防腐层"。
 
-```javascript
-// attendance-system/eslint.config.mjs
-import tseslint from 'typescript-eslint';
+```typescript
+// packages/web/src/schemas/user.ts
+import { z } from 'zod';
 
-export default tseslint.config(
-  {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**'],
-  },
-  ...tseslint.configs.recommended,
-  {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/explicit-function-return-type': ['warn', {
-        allowExpressions: true,
-        allowTypedFunctionExpressions: true,
-      }],
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      'no-debugger': 'error',
-      '@typescript-eslint/ban-ts-comment': 'warn',
-    },
-  }
-);
+export const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  role: z.enum(['admin', 'user']),
+});
+
+export type User = z.infer<typeof UserSchema>;
+
+// Service 层使用
+const response = await api.get('/user');
+const user = UserSchema.parse(response.data); // 运行时校验，失败则抛错
 ```
 
-#### 1.2 各端继承配置
+---
 
-```javascript
-// packages/server/eslint.config.mjs
-import rootConfig from '../../eslint.config.mjs';
+## 3. L2: 基建层 (Infrastructure) 设计
 
-export default [
-  ...rootConfig,
-  { /* server 特定规则 */ }
-];
-```
-
-### 2. Pre-commit 配置
-
-#### 2.1 安装依赖
-
-```bash
-npm install -D husky lint-staged
-```
-
-#### 2.2 lint-staged 配置
+### 3.1 统一测试入口
+根目录 `package.json` 脚本映射：
 
 ```json
 {
-  "lint-staged": {
-    "packages/server/**/*.ts": ["eslint --fix", "prettier --write"],
-    "packages/web/**/*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-    "packages/app/**/*.{ts,tsx}": ["eslint --fix", "prettier --write"]
+  "scripts": {
+    "test": "pnpm -r test",
+    "test:web": "pnpm --filter @attendance/web test",
+    "test:server": "pnpm --filter @attendance/server test",
+    "test:app": "pnpm --filter @attendance/app test"
   }
 }
 ```
 
-#### 2.3 pre-commit hook
-
-```bash
-# .husky/pre-commit
-npx lint-staged
-npm run typecheck --workspaces --if-present
-```
-
-### 3. CI Pipeline 配置
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint --workspaces
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run typecheck --workspaces --if-present
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint, typecheck]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build --workspaces
-
-  test:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm test --workspaces --if-present
-```
-
-### 4. Zod 运行时校验
-
-#### 4.1 Schema 定义
+### 3.2 MSW Mock 架构 (Web)
+采用 "Handlers + Data Factory" 模式，确保 Mock 数据可维护。
 
 ```typescript
-// packages/shared/src/schemas/common.ts
-import { z } from 'zod';
+// packages/web/src/test/mocks/handlers/user.ts
+import { http, HttpResponse } from 'msw';
+import { mockUsers } from '../data/user';
 
-export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
-  z.object({
-    items: z.array(itemSchema),
-    total: z.number(),
-    page: z.number(),
-    pageSize: z.number(),
-  });
-
-export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
-  z.object({
-    success: z.literal(true),
-    data: dataSchema,
-  });
-
-export const ApiErrorSchema = z.object({
-  success: z.literal(false),
-  error: z.object({
-    code: z.string(),
-    message: z.string(),
+export const userHandlers = [
+  http.get('/api/v1/users', () => {
+    return HttpResponse.json({
+      success: true,
+      data: mockUsers
+    });
   }),
-});
+];
 ```
 
-#### 4.2 Service 层使用
+---
 
-```typescript
-// packages/web/src/services/employee.ts
-const EmployeeListSchema = PaginatedResponseSchema(EmployeeSchema);
+## 4. L3: 运营层 (Operations) 设计
 
-export async function getEmployees(params: EmployeeQuery): Promise<EmployeeListVo> {
-  const response = await request.get('/employees', { params });
-  
-  const result = EmployeeListSchema.safeParse(response.data);
-  if (!result.success) {
-    console.error('API Response validation failed:', result.error);
-    throw new Error('数据格式异常，请联系管理员');
-  }
-  
-  return result.data;
-}
+### 4.1 Web 端覆盖策略 (S1)
+- **Unit Tests**: 针对 `utils` 和纯组件，关注输入输出。
+- **Integration Tests**: 针对 Page 级别，关注用户旅程 (User Journey)。
+
+### 4.2 目录规范
+```
+packages/web/src/
+├── utils/
+│   └── auth.test.ts               # Unit
+├── components/
+│   └── DepartmentSelect/
+│       └── index.test.tsx         # Unit
+└── __tests__/
+    └── integration/
+        ├── Login.test.tsx         # Integration
+        └── Department.test.tsx
 ```
 
-### 5. 统一错误处理
+---
 
-#### 5.1 后端全局错误中间件
+## 5. 文件变更清单
 
-```typescript
-// packages/server/src/common/error-handler.ts
-export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  const response = {
-    success: false as const,
-    error: {
-      code: err instanceof AppError ? err.code : 'ERR_INTERNAL',
-      message: err.message || 'Internal Server Error',
-    },
-  };
+| 文件 | 操作 | 内容 |
+|------|------|------|
+| `docs/features/ENG01/design.md` | 新增 | 本文档 (Unified Design) |
+| `packages/web/src/schemas/*.ts` | 新增 | Zod Schemas (按需) |
+| `packages/web/src/__tests__/integration/*.tsx` | 新增 | 集成测试用例 |
 
-  const statusCode = err instanceof AppError ? err.statusCode : 500;
-  res.status(statusCode).json(response);
-};
-```
+## 6. 技术决策
 
-#### 5.2 前端错误边界
+| 决策点 | 选择 | 理由 |
+|--------|------|------|
+| **Mock 工具** | **MSW** | 拦截网络请求层，比 Jest Mock 更贴近真实环境，且无侵入性。 |
+| **测试框架 (Web)** | **Vitest** | 与 Vite 构建工具链原生集成，速度远快于 Jest。 |
+| **校验库** | **Zod** | TS 生态首选，支持类型推导，API 简洁。 |
 
-```typescript
-// packages/web/src/components/ErrorBoundary.tsx
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false };
+## 7. 风险与应对
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  render(): ReactNode {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <Result
-          status="error"
-          title="页面出错了"
-          subTitle={this.state.error?.message}
-          extra={<Button onClick={() => window.location.reload()}>刷新页面</Button>}
-        />
-      );
-    }
-    return this.props.children;
-  }
-}
-```
-
-## 迁移策略
-
-### 阶段一：建立基础设施（不阻断开发）
-
-1. 配置 ESLint，规则设为 `warn`
-2. 配置 husky，但不强制阻断
-3. 统计存量问题数量作为基线
-
-### 阶段二：逐步收紧
-
-1. 新代码必须通过 lint
-2. 关键规则从 `warn` 改为 `error`
-3. 每周修复一定数量的存量问题
-
-### 阶段三：全面强制
-
-1. 所有规则改为 `error`
-2. CI 失败阻止合并
-3. 存量问题清零
-
-## 风险与应对
-
-| 风险 | 应对 |
-|------|------|
-| 存量问题太多 | 使用 `eslint-disable` 临时豁免 |
-| 开发效率下降 | 配置 IDE 自动修复 |
-| 规则过严导致抵触 | 先 warn 后 error |
+| 风险 | 影响 | 应对 |
+|------|------|------|
+| **Lint 升级报错** | 旧代码大量报错 | 暂不处理旧代码，仅对新代码生效 (或设为 warning 逐步修复)。 |
+| **Mock 数据漂移** | Mock 与后端不一致 | (L3规划) 引入后端契约测试，自动生成 Mock 数据。 |

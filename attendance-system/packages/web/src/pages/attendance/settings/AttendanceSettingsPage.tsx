@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Form, TimePicker, Button, message } from 'antd';
 import dayjs from 'dayjs';
 import { getSettings, updateSettings } from '../../../services/attendance-settings';
 import { logger } from '../../../utils/logger';
 
-const AttendanceSettingsPage: React.FC = () => {
+const AttendanceSettingsPage: React.FC = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       const data = await getSettings();
@@ -23,13 +23,13 @@ const AttendanceSettingsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [fetchSettings]);
 
-  const onFinish = async (values: { day_switch_time: dayjs.Dayjs; auto_calc_time: dayjs.Dayjs }) => {
+  const onFinish = async (values: { day_switch_time: dayjs.Dayjs; auto_calc_time: dayjs.Dayjs }): Promise<void> => {
     try {
       setSaving(true);
       await updateSettings({

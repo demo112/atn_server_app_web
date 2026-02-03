@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Form, Input, DatePicker, Select, Button, Tag, Space, Modal, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus, QueryDailyRecordsDto } from '@attendance/shared';
@@ -19,7 +19,7 @@ const statusMap: Record<AttendanceStatus, { text: string; color: string }> = {
 };
 
 const DailyRecords: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Unused
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DailyRecordVo[]>([]);
@@ -31,7 +31,7 @@ const DailyRecords: React.FC = () => {
   const [recalcLoading, setRecalcLoading] = useState(false);
   const [recalcForm] = Form.useForm();
 
-  const fetchRecords = async (page = 1, size = 20) => {
+  const fetchRecords = useCallback(async (page = 1, size = 20): Promise<void> => {
     setLoading(true);
     try {
       const values = form.getFieldsValue();
@@ -62,13 +62,13 @@ const DailyRecords: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+  }, [fetchRecords]);
 
-  const handleRecalculate = async () => {
+  const handleRecalculate = async (): Promise<void> => {
     try {
       const values = await recalcForm.validateFields();
       setRecalcLoading(true);

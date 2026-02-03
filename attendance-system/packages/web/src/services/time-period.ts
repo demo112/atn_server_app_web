@@ -9,28 +9,32 @@ import {
  * 获取所有时间段
  */
 export const getTimePeriods = async (): Promise<TimePeriod[]> => {
-  return api.get('/attendance/time-periods');
+  const res = await api.get('/attendance/time-periods');
+  return res.data;
 };
 
 /**
  * 获取单个时间段详情
  */
 export const getTimePeriod = async (id: number): Promise<TimePeriod> => {
-  return api.get(`/attendance/time-periods/${id}`);
+  const res = await api.get(`/attendance/time-periods/${id}`);
+  return res.data;
 };
 
 /**
  * 创建时间段
  */
 export const createTimePeriod = async (data: CreateTimePeriodDto): Promise<TimePeriod> => {
-  return api.post('/attendance/time-periods', data);
+  const res = await api.post('/attendance/time-periods', data);
+  return res.data;
 };
 
 /**
  * 更新时间段
  */
 export const updateTimePeriod = async (id: number, data: UpdateTimePeriodDto): Promise<TimePeriod> => {
-  return api.put(`/attendance/time-periods/${id}`, data);
+  const res = await api.put(`/attendance/time-periods/${id}`, data);
+  return res.data;
 };
 
 /**

@@ -12,12 +12,12 @@ import { logger } from '../../utils/logger';
 
 const { RangePicker } = DatePicker;
 
-const SummaryPage: React.FC = () => {
+const SummaryPage: React.FC = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<AttendanceSummaryVo[]>([]);
   const [form] = Form.useForm();
 
-  const handleSearch = async (values: any) => {
+  const handleSearch = async (values: { dateRange: [dayjs.Dayjs, dayjs.Dayjs]; deptId?: number }): Promise<void> => {
     try {
       setLoading(true);
       const { dateRange, deptId } = values;
@@ -46,7 +46,7 @@ const SummaryPage: React.FC = () => {
     }
   };
 
-  const handleRecalculate = async () => {
+  const handleRecalculate = async (): Promise<void> => {
     try {
       const values = form.getFieldsValue();
       const { dateRange } = values;
@@ -76,7 +76,7 @@ const SummaryPage: React.FC = () => {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = (): void => {
     if (data.length === 0) {
       message.warning('暂无数据可导出');
       return;
@@ -114,7 +114,7 @@ const SummaryPage: React.FC = () => {
          dateRange: [start, end]
      });
      handleSearch({ dateRange: [start, end] });
-  }, []);
+  }, [form]);
 
   const columns: ColumnsType<AttendanceSummaryVo> = [
     { title: '工号', dataIndex: 'employeeNo', key: 'employeeNo', fixed: 'left', width: 100 },

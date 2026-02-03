@@ -1,126 +1,92 @@
-# ENG01 - 工程质量治理体系建设
+# Requirements: 工程质量治理体系 (ENG01)
 
-## 概述
+## Overview
 
-建立"契约校验-统一异常-强制门禁-全链路测试"的工程闭环，从根本上解决 TypeScript 规范失效、前后端契约断裂、防御性编程缺失等系统性问题。
+工程质量治理体系 (ENG01) 是一个集"规范立法(Governance)"、"基础设施(Infrastructure)"、"运营落地(Operations)"于一体的系统化工程。
+旨在解决项目中存在的 TypeScript 类型失效、前后端契约断裂、测试覆盖率低、代码规范不统一等问题，通过建立从静态检查到运行时验证的完整质量闭环。
 
-## 背景
+## 核心价值
 
-### 问题现象
+- **统一规范**：消除 "Broken Windows"，确保三端 (Server/Web/App) 代码风格一致。
+- **质量基建**：提供开箱即用的测试工具链，降低编写测试的门槛。
+- **数据驱动**：通过覆盖率和错误率指标，量化质量现状，驱动持续改进。
 
-1. 前端频繁出现 `TypeError: xxx.map is not a function`（白屏）
-2. 后端 `AxiosError: 500`（服务崩溃）
-3. 代码中 `any` 满天飞，类型安全形同虚设
-4. `@ts-ignore` 和非空断言 `!` 滥用
-5. `console.log` 调试代码残留
+## User Stories
 
-### 根因分析
+### L1: 治理层 (Governance) - "立法"
 
-| 层级 | 问题 | 表现 |
-|------|------|------|
-| 机制层 | 契约断裂 | shared 定义 `data: T[]`，后端返回 `{ items: [], total }` |
-| 机制层 | 校验真空 | 无运行时数据校验，完全依赖编译时类型 |
-| 流程层 | DoD 流于形式 | 只测快乐路径，缺乏异常场景测试 |
-| 流程层 | 门禁缺失 | 无 ESLint error、无 pre-commit、无 CI |
-| 架构层 | 错误处理不统一 | 后端有的 try-catch，有的 next(error) |
+> 目标：制定规则，建立门禁，统一错误处理与类型契约。
 
-### 当前状态
+#### Story 1.1: 静态代码分析与规范
+As a **Tech Lead**, I want **统一的 ESLint/Prettier 配置**, So that **消除低级语法错误和风格争议**.
+- **AC1**: 三端统一禁用 `any` (`no-explicit-any: error`)。
+- **AC2**: 强制要求显式函数返回类型。
+- **AC3**: 消除所有未使用的变量。
 
-- ❌ 无 husky / pre-commit hooks
-- ❌ 无 GitHub Actions CI
-- ❌ 无项目级 ESLint 强制配置
-- ❌ 无运行时数据校验（Zod）
-- ❌ 无契约测试
+#### Story 1.2: 提交门禁 (Git Hooks)
+As a **Developer**, I want **在提交前自动检查代码**, So that **错误代码不会进入代码仓库**.
+- **AC1**: Pre-commit 阶段自动运行 Lint 和 Type Check。
+- **AC2**: Commit Message 必须符合 `<type>(<scope>): <subject>` 规范。
 
-## 用户故事
+#### Story 1.3: 运行时数据校验
+As a **Frontend Developer**, I want **在数据入口处校验后端响应**, So that **避免因数据结构变更导致的白屏**.
+- **AC1**: 引入 Zod 库。
+- **AC2**: 关键业务接口响应必须经过 Zod Schema 校验。
 
-- 作为开发者，我希望代码提交时自动检查类型和规范，以便在问题进入仓库前被拦截
-- 作为开发者，我希望前端能优雅处理后端异常，以便用户不会看到白屏
-- 作为项目管理者，我希望有统一的质量门禁，以便保证代码质量底线
+---
 
-## 功能需求
+### L2: 基建层 (Infrastructure) - "修路"
 
-### FR-1: ESLint 强制规则配置
+> 目标：提供统一的测试运行器、Mock 服务和 CI 流水线。
 
-在三端（server/web/app）配置统一的 ESLint 规则：
+#### Story 2.1: 统一测试运行环境
+As a **Developer**, I want **在根目录一键运行所有测试**, So that **无需切换目录即可验证全系统**.
+- **AC1**: `pnpm test` 可触发所有包的测试。
+- **AC2**: Shared 包配置好 Vitest (Node环境)。
+- **AC3**: Web 包配置好 Vitest + RTL (JSDOM环境)。
+- **AC4**: App 包配置好 Jest + RNTL (Mobile环境)。
 
-```javascript
-{
-  "@typescript-eslint/no-explicit-any": "error",
-  "@typescript-eslint/explicit-function-return-type": "warn",
-  "no-console": ["error", { allow: ["warn", "error"] }]
-}
-```
+#### Story 2.2: API Mock 服务
+As a **Frontend Developer**, I want **拦截并模拟 API 请求**, So that **前端测试不依赖真实后端服务**.
+- **AC1**: Web 端集成 MSW (Mock Service Worker)。
+- **AC2**: 提供常用业务数据的 Factory 或 Fixtures。
+- **AC3**: Mock 数据结构必须与真实 API 响应结构一致（含 `ApiResponse` 封套）。
 
-### FR-2: Pre-commit 本地门禁
+---
 
-使用 husky + lint-staged 实现提交前自动检查：
+### L3: 运营层 (Operations) - "行车"
 
-- 运行 ESLint 检查
-- 运行 Prettier 格式化
-- 运行 TypeScript 类型检查
+> 目标：执行具体的测试覆盖和专项治理行动。
 
-### FR-3: CI Pipeline 远程门禁
+#### Story 3.1: Web 端核心覆盖率提升 (S1)
+As a **QA**, I want **覆盖 Web 端核心业务路径**, So that **保证基本功能不回退**.
+- **AC1**: 核心工具函数 (`utils/auth`, `utils/request`) 覆盖率 > 90%。
+- **AC2**: 核心组件 (`DepartmentSelect`, `DepartmentTree`) 交互逻辑覆盖。
+- **AC3**: 关键页面 (`Login`, `Department`, `Employee`) 的 Happy Path 集成测试。
 
-GitHub Actions 配置：
+#### Story 3.2: 后端契约测试 (S2 - Planned)
+As a **Backend Developer**, I want **确保 API 变更不破坏前端**, So that **前后端协作更顺畅**.
+- **AC1**: 基于 Zod Schema 生成 API 文档或契约测试用例。
 
-- Push/PR 触发
-- 运行 lint、build、test
-- 失败阻止合并
+## Constraints
 
-### FR-4: 运行时数据校验
+- **技术栈**: Vitest (Web/Shared), Jest (App), MSW, Zod, ESLint, Husky.
+- **兼容性**: 必须兼容 Windows/PowerShell 开发环境。
+- **性能**: 提交门禁检查需在 10s 内完成（只检查 staged 文件）。
 
-前端 Service 层引入 Zod 校验：
+## Out of Scope
 
-```typescript
-const PaginatedResponseSchema = z.object({
-  items: z.array(EmployeeSchema),
-  total: z.number(),
-  page: z.number(),
-  pageSize: z.number(),
-});
+- E2E 测试 (Cypress/Playwright) - 暂不纳入 ENG01，后续单独规划。
+- 性能测试 (Load Testing) - 暂不纳入。
+- 遗留代码的全面重构 - 仅在涉及到的模块进行 "Boy Scout Rule" 式的小幅清理。
 
-const data = PaginatedResponseSchema.parse(response.data);
-```
+## Assumptions
 
-### FR-5: 统一错误响应格式
+- 团队成员已熟悉基本的 TypeScript 和 React 语法。
+- 现有的 CI 环境 (如 GitHub Actions) 可用。
 
-后端强制统一错误响应：
+## Metadata
 
-```typescript
-interface ErrorResponse {
-  success: false;
-  error: {
-    code: string;      // ERR_MODULE_TYPE
-    message: string;
-  };
-}
-```
-
-### FR-6: 前端错误边界与降级
-
-- 组件级 ErrorBoundary
-- 数据加载失败的 Fallback UI
-- 空数据状态处理
-
-## 非功能需求
-
-### NFR-1: 增量治理
-
-- 新代码严格执行规则
-- 存量代码逐步迁移
-- 不阻塞当前开发进度
-
-### NFR-2: 开发体验
-
-- ESLint 配置不能过于严苛导致开发效率下降
-- 提供 `// eslint-disable-next-line` 的合理使用指南
-
-## 验收标准
-
-- [ ] ESLint 配置完成，`npm run lint` 可执行
-- [ ] husky + lint-staged 配置完成，commit 时自动检查
-- [ ] GitHub Actions CI 配置完成，PR 自动运行检查
-- [ ] 前端至少一个 Service 引入 Zod 校验作为示例
-- [ ] 后端错误响应格式统一
-- [ ] 存量 `any` 数量统计并记录基线
+- **状态**: In Progress
+- **负责人**: AI Assistant
+- **最后更新**: 2026-02-03

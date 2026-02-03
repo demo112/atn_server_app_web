@@ -26,11 +26,11 @@ export const triggerCalculation = (data: { startDate: string; endDate: string; e
 };
 
 export const getDeptStats = (params: GetDeptStatsDto) => {
-  return request.get<any, ApiResponse<DeptStatsVo[]>>('/statistics/dept-stats', { params });
+  return request.get<any, ApiResponse<DeptStatsVo[]>>('/statistics/departments', { params });
 };
 
 export const getChartStats = (params: GetChartStatsDto) => {
-  return request.get<any, ApiResponse<ChartStatsVo>>('/statistics/chart-stats', { params });
+  return request.get<any, ApiResponse<ChartStatsVo>>('/statistics/charts', { params });
 };
 
 export const exportStats = (params: ExportStatsDto) => {

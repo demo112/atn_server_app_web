@@ -3,6 +3,7 @@ import { attendanceService } from '@/services/attendance';
 import { employeeService } from '@/services/employee';
 import { EmployeeVo, Shift } from '@attendance/shared';
 import { logger } from '../../../../utils/logger';
+import { message } from 'antd';
 
 interface ScheduleDialogProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface ScheduleDialogProps {
   onSuccess: () => void;
 }
 
-export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose, onSuccess }) => {
+export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose, onSuccess }): React.ReactElement | null => {
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<EmployeeVo[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -23,13 +24,7 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
     force: false
   });
 
-  useEffect(() => {
-    if (isOpen) {
-        loadData();
-    }
-  }, [isOpen]);
-
-  const loadData = async () => {
+  const loadData = async (): Promise<void> => {
     try {
         // 并行加载员工和班次
         const [empRes, shiftRes] = await Promise.all([
@@ -37,9 +32,9 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
             attendanceService.getShifts()
         ]);
         
-        if (empRes.items) {
+        if (empRes.success && empRes.data) {
             // PaginatedResponse
-            setEmployees(empRes.items || []);
+            setEmployees(empRes.data.items || []);
         }
         if (shiftRes.data) {
              // ApiResponse<Shift[]> or any[]
@@ -51,7 +46,13 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isOpen) {
+        loadData();
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -62,13 +63,12 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
         endDate: formData.endDate,
         force: formData.force
       });
-      alert('排班创建成功');
+      message.success('排班创建成功');
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Schedule creation failed', err);
-      const msg = err.response?.data?.error?.message || '创建失败';
-      alert(`创建失败: ${msg}`);
+      message.error('创建失败');
     } finally {
       setLoading(false);
     }

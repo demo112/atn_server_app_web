@@ -4,13 +4,15 @@ import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleDialog } from './components/ScheduleDialog';
 import { BatchScheduleDialog } from './components/BatchScheduleDialog';
 
-const SchedulePage: React.FC = () => {
+import { message } from 'antd';
+
+const SchedulePage: React.FC = (): React.ReactElement => {
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0); // 用于触发日历刷新
 
-  const handleSuccess = () => {
+  const handleSuccess = (): void => {
     setRefreshKey(k => k + 1);
   };
 
@@ -41,7 +43,7 @@ const SchedulePage: React.FC = () => {
             </button>
             <button 
               onClick={() => {
-                if (!selectedDeptId) return alert('请先选择部门');
+                if (!selectedDeptId) return message.error('请先选择部门');
                 setIsBatchOpen(true);
               }}
               style={{ marginLeft: '10px', padding: '8px 16px', cursor: 'pointer', backgroundColor: 'white', border: '1px solid #d9d9d9', borderRadius: '4px' }}

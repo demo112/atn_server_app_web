@@ -42,7 +42,7 @@ describe('EmployeeList Integration', () => {
   ];
 
   beforeAll(() => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    // vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   
   afterEach(() => {
@@ -64,12 +64,12 @@ describe('EmployeeList Integration', () => {
         }
         return HttpResponse.json({
           success: true,
-          data: data,
-          pagination: {
+          data: {
+            items: data,
             total: data.length,
             page: 1,
             pageSize: 10,
-          },
+          }
         });
       }),
       http.delete('http://localhost:3000/api/v1/employees/:id', () => {
