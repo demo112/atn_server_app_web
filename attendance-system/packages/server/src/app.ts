@@ -9,13 +9,14 @@ import { employeeRouter } from './modules/employee';
 import { departmentRouter } from './modules/department';
 import { statisticsRouter } from './modules/statistics/statistics.routes';
 import { errorHandler } from './common/error-handler';
+import { logger } from './common/logger';
 import { attendanceScheduler } from './modules/attendance/attendance-scheduler';
 
 export const app = express();
 
 // 初始化调度器
 attendanceScheduler.init().catch(err => {
-  console.error('Failed to initialize attendance scheduler', err);
+  logger.error({ err }, 'Failed to initialize attendance scheduler');
 });
 
 // 中间件

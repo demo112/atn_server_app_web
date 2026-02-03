@@ -6,10 +6,18 @@ import { createLogger } from '../../common/logger';
 const logger = createLogger('auth');
 
 export class AuthController {
-  async login(req: Request, res: Response) {
-    const dto = loginSchema.parse(req.body);
-    const result = await authService.login(dto);
-    res.json({ success: true, data: result });
+  async login(req: Request, res: Response, next: NextFunction) {
+    try {
+      logger.info({ body: req.body }, 'Login request received');
+      const dto = loginSchema.parse(req.body);
+      logger.info('Login schema parsed');
+      const result = await authService.login(dto);
+      logger.info('Login service returned');
+      res.json({ success: true, data: result });
+    } catch (e) {
+      logger.error({ err: e }, 'AuthController.login error');
+      next(e);
+    }
   }
 
   async me(req: Request, res: Response, next: NextFunction) {

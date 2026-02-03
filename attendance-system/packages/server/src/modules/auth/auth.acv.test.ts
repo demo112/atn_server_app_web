@@ -94,4 +94,41 @@ describe('AuthService - ACV Verification', () => {
        }
     });
   });
+
+  describe('Robustness Verification', () => {
+    it('should never crash with random inputs', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string(),
+          fc.string(),
+          async (username, password) => {
+            // Mock random behavior for DB
+            const exists = Math.random() > 0.5;
+            if (exists) {
+              prismaMock.user.findUnique.mockResolvedValue({
+                id: 1,
+                username,
+                passwordHash: 'hashed',
+                status: 'active',
+              });
+              // Mock password check failure to ensure we don't accidentally login
+              (bcrypt.compare as any).mockResolvedValue(false);
+            } else {
+              prismaMock.user.findUnique.mockResolvedValue(null);
+            }
+
+            try {
+              await service.login({ username, password });
+              // If it succeeds, that's fine too (if mocks aligned), but we mostly check for crash
+            } catch (e: any) {
+              // Should be AppError
+              if (e.name !== 'AppError') {
+                throw new Error(`Unexpected error type: ${e.name}, message: ${e.message}`);
+              }
+            }
+          }
+        )
+      );
+    });
+  });
 });

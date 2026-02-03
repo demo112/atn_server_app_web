@@ -31,13 +31,7 @@ export class AttendanceScheduler {
   async init() {
     // Lazy init Redis connection
     if (!this.connection) {
-       this.connection = new IORedis(redisConfig as any, { 
-         maxRetriesPerRequest: null,
-         retryStrategy: (times) => {
-           const delay = Math.min(times * 50, 2000);
-           return delay;
-         }
-       });
+       this.connection = await this.createRedisConnection();
        
        this.connection.on('error', (err) => {
          logger.error({ err }, 'Redis connection error');
@@ -201,6 +195,72 @@ export class AttendanceScheduler {
         leaveMinutes: result.leaveMinutes,
         // remark: 'Auto calculated' 
       }
+    });
+  }
+  private async createRedisConnection(): Promise<IORedis> {
+    const config = redisConfig as any;
+    
+    try {
+      return await this.tryConnect(config, 'Primary');
+    } catch (error) {
+      logger.warn({ error }, 'Failed to connect to primary Redis, trying local fallback');
+      
+      const localConfig = {
+        host: 'localhost',
+        port: 6379,
+        maxRetriesPerRequest: null,
+      };
+      
+      try {
+        return await this.tryConnect(localConfig, 'Local Fallback');
+      } catch (fallbackError) {
+        logger.error({ fallbackError }, 'Failed to connect to local Redis fallback');
+        throw fallbackError;
+      }
+    }
+  }
+
+  private tryConnect(config: any, name: string): Promise<IORedis> {
+    return new Promise((resolve, reject) => {
+      const redis = new IORedis(config, {
+        maxRetriesPerRequest: null,
+        retryStrategy: (times) => {
+          if (times > 3) {
+            return null;
+          }
+          return Math.min(times * 100, 1000);
+        },
+        connectTimeout: 5000,
+      });
+
+      const onReady = () => {
+        cleanup();
+        logger.info(`${name} Redis connected successfully`);
+        // Restore default retry strategy for stable connection
+        (redis as any).options.retryStrategy = (times: number) => {
+             return Math.min(times * 50, 2000);
+        };
+        resolve(redis);
+      };
+
+      const onEnd = () => {
+        cleanup();
+        reject(new Error(`${name} Redis connection failed`));
+      };
+
+      const onError = (err: Error) => {
+         // Suppress unhandled error logs during probe
+      };
+
+      const cleanup = () => {
+        redis.removeListener('ready', onReady);
+        redis.removeListener('end', onEnd);
+        redis.removeListener('error', onError);
+      };
+
+      redis.once('ready', onReady);
+      redis.once('end', onEnd);
+      redis.on('error', onError);
     });
   }
 }
