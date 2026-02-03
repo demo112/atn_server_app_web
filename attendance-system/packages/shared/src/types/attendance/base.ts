@@ -44,7 +44,7 @@ export interface CreateTimePeriodDto {
   rules?: TimePeriodRules;
 }
 
-export interface UpdateTimePeriodDto extends Partial<CreateTimePeriodDto> {}
+export type UpdateTimePeriodDto = Partial<CreateTimePeriodDto>;
 
 // 异常规则类型
 export interface LateRule {
@@ -88,4 +88,4 @@ export interface CreateShiftDto {
   }[];
 }
 
-export interface UpdateShiftDto extends Partial<CreateShiftDto> {}
+export type UpdateShiftDto = Partial<CreateShiftDto>;
