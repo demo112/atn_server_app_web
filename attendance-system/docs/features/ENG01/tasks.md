@@ -42,13 +42,23 @@
 
 ### 阶段2：L3 运营层 (Operations) - Web S1
 
-#### Task 4: 集成 Zod 运行时校验 (示例)
+#### Task 4: 集成 Zod 运行时校验 (Web S1)
 - **文件**: 
   - `packages/web/src/services/api.ts` (增强请求方法)
   - `packages/web/src/services/auth.ts` (应用校验)
 - **内容**: 在 API 请求层引入 Schema 校验，拦截不符合契约的数据
 - **验证**: `npm run test:web` (确保现有测试通过)
 - **依赖**: Task 2
+- **状态**: ✅ 已完成
+
+#### Task 5: 集成 Zod 运行时校验 (App)
+- **文件**: 
+  - `packages/app/src/utils/request.ts` (增强请求方法)
+  - `packages/app/src/services/*.ts` (应用校验)
+  - `packages/app/src/schemas/*.ts` (定义 Schema)
+- **内容**: 在 App 端 API 请求层引入 Schema 校验，并更新所有 Service 和 Screen
+- **验证**: `npm run type-check` (App)
+- **依赖**: Task 2, Task 3
 - **状态**: ✅ 已完成
 
 ### 阶段3：L3 运营层 (Operations) - Track C (前端容错)
