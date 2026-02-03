@@ -127,7 +127,7 @@ export class AttendanceCalculator {
     
     // 4. 计算实际工时
     if (checkIn && checkOut) {
-      actualMinutes = checkOut.diff(checkIn, 'minute');
+      actualMinutes = Math.max(0, checkOut.diff(checkIn, 'minute'));
     }
 
     // 5. 判定缺勤

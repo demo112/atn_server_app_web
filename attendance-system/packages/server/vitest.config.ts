@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.integration.test.ts', 'src/**/*.verification.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.integration.test.ts', 'src/**/*.verification.test.ts', 'src/**/*.pbt.test.ts'],
     alias: {
       '@attendance/shared': path.resolve(__dirname, '../shared/src'),
     },
