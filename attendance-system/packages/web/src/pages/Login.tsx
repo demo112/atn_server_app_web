@@ -8,26 +8,18 @@ const Login: React.FC = (): React.ReactElement => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  const [tab, setTab] = useState<'password' | 'code'>('password');
   const [username, setUsername] = useState('18660845170');
   const [password, setPassword] = useState('password123');
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
   const [isDark, setIsDark] = useState(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (tab === 'password') {
-      try {
-        const loginData: LoginDto = { username, password };
-        await login(loginData);
-        navigate('/');
-      } catch {
-        // Error handled in context or show toast here
-      }
-    } else {
-      console.warn('Code login not implemented yet', { phone, code });
-      message.info('验证码登录暂未接入后端');
+    try {
+      const loginData: LoginDto = { username, password };
+      await login(loginData);
+      navigate('/');
+    } catch {
+      // Error handled in context or show toast here
     }
   };
 
@@ -44,36 +36,18 @@ const Login: React.FC = (): React.ReactElement => {
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4 transition-colors duration-200">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-        {/* Tabs */}
+        {/* Header */}
         <div className="flex border-b border-gray-100 dark:border-gray-700">
-          <button
-            className={`flex-1 py-4 text-center font-medium transition-colors relative ${
-              tab === 'password' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
-            }`}
-            onClick={() => setTab('password')}
-          >
+          <div className="flex-1 py-4 text-center font-medium text-primary relative">
             密码登录
-            {tab === 'password' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
-          <button
-            className={`flex-1 py-4 text-center font-medium transition-colors relative ${
-              tab === 'code' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
-            }`}
-            onClick={() => setTab('code')}
-          >
-            验证码登录
-            {tab === 'code' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-8">
           {/* Password Form */}
-          <div className={`space-y-6 ${tab === 'password' ? '' : 'hidden'}`}>
+          <div className="space-y-6">
             <div className="relative">
               <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                 person_outline
@@ -102,39 +76,6 @@ const Login: React.FC = (): React.ReactElement => {
               <a href="#" className="text-sm text-primary hover:underline">
                 忘记密码
               </a>
-            </div>
-          </div>
-
-          {/* Code Form */}
-          <div className={`space-y-6 ${tab === 'code' ? '' : 'hidden'}`}>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                phone_iphone
-              </span>
-              <input
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                type="text"
-                placeholder="手机号"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-            <div className="relative flex gap-3">
-              <div className="relative flex-1">
-                <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  verified_user
-                </span>
-                <input
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                  type="text"
-                  placeholder="验证码"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                />
-              </div>
-              <button className="px-4 py-3 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded font-medium whitespace-nowrap transition-colors">
-                获取验证码
-              </button>
             </div>
           </div>
 
