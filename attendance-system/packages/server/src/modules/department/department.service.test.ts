@@ -52,7 +52,7 @@ describe('DepartmentService', () => {
         { id: 4, name: 'Grandchild', parentId: 2, sortOrder: 0, createdAt: now, updatedAt: now },
       ];
       
-      // @ts-ignore - Partial mock is enough
+      // Partial mock is enough
       prismaMock.department.findMany.mockResolvedValue(depts as any);
 
       const result = await service.getTree();
@@ -111,8 +111,8 @@ describe('DepartmentService', () => {
     const existing = { id: 2, name: 'Dept', parentId: 1, sortOrder: 0, createdAt: now, updatedAt: now };
 
     it('should update department name', async () => {
-      // @ts-ignore
-      prismaMock.department.findUnique.mockResolvedValue(existing);
+      
+      prismaMock.department.findUnique.mockResolvedValue(existing as any);
       prismaMock.department.findFirst.mockResolvedValue(null); // No conflict
       // @ts-ignore
       prismaMock.department.update.mockResolvedValue({ ...existing, name: 'New Name' });

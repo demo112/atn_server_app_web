@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { getDailyRecords, DailyRecordVo } from '../../services/attendance';
 import { useNavigation } from '@react-navigation/native';
+import { logger } from '../../utils/logger';
 
 const HistoryScreen = () => {
   const [records, setRecords] = useState<DailyRecordVo[]>([]);
@@ -24,12 +25,14 @@ const HistoryScreen = () => {
       const res = await getDailyRecords({ startDate, endDate });
       if (res.data && 'items' in res.data) {
         setRecords(res.data.items || []);
+      } else if (Array.isArray(res.data)) {
+        // Fallback if backend returns array directly
+        setRecords(res.data);
       } else {
-        // Fallback if backend returns array directly (though unlikely with updated service)
-        setRecords((res.data as any) || []);
+        setRecords([]);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }

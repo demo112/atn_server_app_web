@@ -3,10 +3,12 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from '
 import { Card, Text, Button } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { Calendar, DateData } from 'react-native-calendars';
+import { MarkingProps } from 'react-native-calendars/src/calendar/day/marking';
 import dayjs from 'dayjs';
 import { CalendarDailyVo, AttendanceStatus } from '@attendance/shared';
 import { getCalendar } from '../../services/statistics';
 import { useAuth } from '../../utils/auth';
+import { logger } from '../../utils/logger';
 
 const statusColors: Record<string, string> = {
   normal: '#52c41a',
@@ -17,9 +19,11 @@ const statusColors: Record<string, string> = {
   business_trip: '#13c2c2',
 };
 
+type MarkedDates = Record<string, MarkingProps>;
+
 export default function AttendanceCalendar() {
   const { user } = useAuth();
-  const [markedDates, setMarkedDates] = useState<any>({});
+  const [markedDates, setMarkedDates] = useState<MarkedDates>({});
   const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [currentMonth, setCurrentMonth] = useState(dayjs().format('YYYY-MM'));
   const [refreshing, setRefreshing] = useState(false);
@@ -35,7 +39,7 @@ export default function AttendanceCalendar() {
       const res = await getCalendar(date.year(), date.month() + 1, user?.id);
       
       if (res.success && res.data) {
-        const marks: any = {};
+        const marks: MarkedDates = {};
         let normalCount = 0;
         let abnormalCount = 0;
         let leaveCount = 0;
@@ -70,7 +74,7 @@ export default function AttendanceCalendar() {
         });
       }
     } catch (error) {
-      console.error('Failed to load calendar data:', error);
+      logger.error('Failed to load calendar data:', error);
     }
   };
 

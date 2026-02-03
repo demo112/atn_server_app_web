@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity }
 import { getSchedules, ScheduleVo } from '../../services/attendance';
 import { authService } from '../../services/auth';
 import { getUser, setUser } from '../../utils/auth';
+import { logger } from '../../utils/logger';
 
 const ScheduleScreen = () => {
   const [schedules, setSchedules] = useState<{date: string, shift?: any}[]>([]);
@@ -28,13 +29,13 @@ const ScheduleScreen = () => {
              await setUser(user);
           }
         } catch (e) {
-          console.warn('Failed to fetch user details', e);
+          logger.warn('Failed to fetch user details', e);
         }
       }
 
       if (!user || !user.employeeId) {
         // Fallback or error handling if employeeId is missing
-        console.warn('No employeeId found for user');
+        logger.warn('No employeeId found for user');
         setLoading(false);
         return; 
       }
@@ -86,7 +87,7 @@ const ScheduleScreen = () => {
       
       setSchedules(expandedSchedules);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }

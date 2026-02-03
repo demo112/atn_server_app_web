@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
 import request from '../../utils/request';
 import { authService } from '../../services/auth';
+import { getErrorMessage } from '../../utils/error';
 import type { LoginVo } from '@attendance/shared';
 
-const LoginScreen = ({ navigation }: any) => {
+const LoginScreen = () => {
+  const navigation = useNavigation<StackNavigationProp<any>>();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,8 +28,8 @@ const LoginScreen = ({ navigation }: any) => {
       
       // Navigate to Home
       navigation.replace('Home');
-    } catch (error: any) {
-      const msg = error.response?.data?.error?.message || '登录失败，请检查用户名密码';
+    } catch (error) {
+      const msg = getErrorMessage(error);
       Alert.alert('登录失败', msg);
     } finally {
       setLoading(false);

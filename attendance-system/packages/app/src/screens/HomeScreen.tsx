@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { clearAuth, getUser } from '../utils/auth';
+import { logger } from '../utils/logger';
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
@@ -16,7 +17,7 @@ const HomeScreen = () => {
       const userData = await getUser();
       setUser(userData);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
   };
 

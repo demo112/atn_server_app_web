@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Switch, Scr
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { CreateUserDto, UserRole, UserStatus } from '@attendance/shared';
 import { createUser, updateUser, getUserById } from '../../../services/user';
+import { logger } from '../../../utils/logger';
 
 export const UserEditScreen = () => {
   const navigation = useNavigation();
@@ -43,7 +44,7 @@ export const UserEditScreen = () => {
         setStatus(user.status);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '加载详情失败');
     } finally {
       setLoading(false);
@@ -73,7 +74,7 @@ export const UserEditScreen = () => {
         Alert.alert('成功', '创建成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '保存失败');
     } finally {
       setLoading(false);

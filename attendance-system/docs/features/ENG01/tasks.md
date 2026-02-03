@@ -45,10 +45,10 @@
 
 | ID | 任务 | 负责人 | 状态 | 预估 |
 |----|------|--------|------|------|
-| T20 | 清理 console.log（替换为 logger 或删除） | - | ⬜ | 2h |
-| T21 | 修复高优先级 any（error 处理相关） | - | ⬜ | 3h |
-| T22 | 修复 @ts-ignore（业务代码部分） | - | ⬜ | 1h |
-| T23 | 删除临时测试文件（AntdTest.test.tsx 等） | - | ⬜ | 0.5h |
+| T20 | 清理 console.log（替换为 logger 或删除） | AI | ✅ | 2h |
+| T21 | 修复高优先级 any（error 处理相关） | AI | ✅ | 3h |
+| T22 | 修复 @ts-ignore（业务代码部分） | AI | ✅ | 1h |
+| T23 | 删除临时测试文件（AntdTest.test.tsx 等） | AI | ✅ | 0.5h |
 
 ### 阶段六：规则收紧
 

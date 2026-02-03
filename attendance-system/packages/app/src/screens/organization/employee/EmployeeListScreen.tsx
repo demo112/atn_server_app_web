@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { EmployeeVo } from '@attendance/shared';
 import { getEmployees, deleteEmployee } from '../../../services/employee';
+import { logger } from '../../../utils/logger';
 
 export const EmployeeListScreen = () => {
   const navigation = useNavigation<any>();
@@ -49,7 +50,7 @@ export const EmployeeListScreen = () => {
         setHasMore(items.length === 20 && employees.length + items.length < total);
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       Alert.alert('错误', '加载失败');
     } finally {
       setLoading(false);

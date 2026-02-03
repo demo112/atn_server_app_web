@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Form, Input, DatePicker, Select, Button, Tag, Space, Modal, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
+import { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus, QueryDailyRecordsDto } from '@attendance/shared';
 import { getDailyRecords, triggerCalculation } from '../../api/statistics';
 import { useAuth } from '../../context/AuthContext';
+import { logger } from '../../utils/logger';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -34,16 +35,16 @@ const DailyRecords: React.FC = () => {
     setLoading(true);
     try {
       const values = form.getFieldsValue();
-      const params: any = {
+      const { dateRange, ...rest } = values;
+      const params: QueryDailyRecordsDto = {
         page,
         pageSize: size,
-        ...values,
+        ...rest,
       };
 
-      if (values.dateRange) {
-        params.startDate = values.dateRange[0].format('YYYY-MM-DD');
-        params.endDate = values.dateRange[1].format('YYYY-MM-DD');
-        delete params.dateRange;
+      if (dateRange) {
+        params.startDate = dateRange[0].format('YYYY-MM-DD');
+        params.endDate = dateRange[1].format('YYYY-MM-DD');
       }
 
       const res = await getDailyRecords(params);
@@ -56,7 +57,7 @@ const DailyRecords: React.FC = () => {
         message.error('获取数据失败');
       }
     } catch (error) {
-      console.error('Failed to fetch records:', error);
+      logger.error('Failed to fetch records:', error);
       message.error('获取考勤记录失败');
     } finally {
       setLoading(false);

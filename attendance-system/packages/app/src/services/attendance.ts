@@ -10,11 +10,12 @@ import {
   DailyRecordVo,
   CorrectionType,
   ScheduleVo,
+  Shift,
   QueryDailyRecordsDto,
   PaginatedResponse
 } from '@attendance/shared';
 
-export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, CorrectionVo, DailyRecordVo, CorrectionType, ScheduleVo, QueryDailyRecordsDto, PaginatedResponse };
+export { ClockRecord, CreateClockDto, LeaveVo, CreateLeaveDto, CorrectionVo, DailyRecordVo, CorrectionType, ScheduleVo, Shift, QueryDailyRecordsDto, PaginatedResponse };
 
 /**
  * 打卡

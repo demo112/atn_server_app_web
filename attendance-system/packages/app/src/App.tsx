@@ -19,6 +19,7 @@ import { EmployeeEditScreen } from './screens/organization/employee/EmployeeEdit
 import { UserListScreen } from './screens/organization/user/UserListScreen';
 import { UserEditScreen } from './screens/organization/user/UserEditScreen';
 import { getToken } from './utils/auth';
+import { logger } from './utils/logger';
 
 const Stack = createStackNavigator();
 
@@ -35,7 +36,7 @@ export default function App(): React.ReactElement {
       const token = await getToken();
       setIsAuthenticated(!!token);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     } finally {
       setIsLoading(false);
     }

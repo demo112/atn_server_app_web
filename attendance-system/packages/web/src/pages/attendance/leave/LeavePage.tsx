@@ -70,7 +70,7 @@ const LeavePage: React.FC = () => {
           await leaveService.cancelLeave(id);
           message.success('撤销成功');
           fetchData();
-        } catch (err: any) {
+        } catch (err) {
           logger.error('Leave cancellation failed', err);
           message.error('撤销失败');
         }

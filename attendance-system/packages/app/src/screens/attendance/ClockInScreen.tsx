@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList, ActivityIndicator } from 'react-native';
 import { clockIn, getClockRecords, ClockRecord, CreateClockDto } from '../../services/attendance';
 import { getUser } from '../../utils/auth';
+import { logger } from '../../utils/logger';
+import { getErrorMessage } from '../../utils/error';
 
 const ClockInScreen = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -42,7 +44,7 @@ const ClockInScreen = () => {
       const res = await getClockRecords({ startTime: start, endTime: end });
       setRecords(res.data || []);
     } catch (error) {
-      // console.error('Failed to load records', error);
+      logger.error('Failed to load records', error);
     }
   };
 
@@ -60,8 +62,8 @@ const ClockInScreen = () => {
       await clockIn(dto);
       Alert.alert('成功', `打卡成功 (${type === 'sign_in' ? '上班' : '下班'})`);
       loadTodayRecords();
-    } catch (error: any) {
-      const msg = error.response?.data?.error?.message || '打卡失败';
+    } catch (error) {
+      const msg = getErrorMessage(error);
       Alert.alert('失败', msg);
     } finally {
       setLoading(false);

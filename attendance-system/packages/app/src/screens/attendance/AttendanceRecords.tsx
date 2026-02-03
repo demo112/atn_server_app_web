@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { getDailyRecordDetails } from '../../services/statistics';
 import { useAuth } from '../../utils/auth';
+import { logger } from '../../utils/logger';
 
 const statusMap: Record<AttendanceStatus, { text: string; color: string }> = {
   normal: { text: '正常', color: '#52c41a' },
@@ -58,7 +59,7 @@ export default function AttendanceRecords() {
         setPage(pageNum);
       }
     } catch (error) {
-      console.error('Failed to fetch records:', error);
+      logger.error('Failed to fetch records:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

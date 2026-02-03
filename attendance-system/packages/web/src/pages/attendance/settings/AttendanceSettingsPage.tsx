@@ -29,7 +29,7 @@ const AttendanceSettingsPage: React.FC = () => {
     fetchSettings();
   }, []);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { day_switch_time: dayjs.Dayjs; auto_calc_time: dayjs.Dayjs }) => {
     try {
       setSaving(true);
       await updateSettings({

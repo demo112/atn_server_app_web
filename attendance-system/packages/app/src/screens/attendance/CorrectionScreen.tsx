@@ -4,6 +4,8 @@ import {
   Modal, TextInput, Alert, ActivityIndicator 
 } from 'react-native';
 import { getCorrections, supplementCheckIn, supplementCheckOut, CorrectionVo, CorrectionType } from '../../services/attendance';
+import { logger } from '../../utils/logger';
+import { getErrorMessage } from '../../utils/error';
 
 const CorrectionScreen = () => {
   const [corrections, setCorrections] = useState<CorrectionVo[]>([]);
@@ -28,7 +30,7 @@ const CorrectionScreen = () => {
       const res = await getCorrections({ page: 1, pageSize: 20 });
       setCorrections(res.data || []);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }
