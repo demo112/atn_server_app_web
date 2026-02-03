@@ -10,6 +10,9 @@ export default defineConfig({
     alias: {
       'react-native': 'react-native-web',
     },
+    define: {
+      __DEV__: true,
+    },
     // Mock react-native modules if needed
   },
 });
