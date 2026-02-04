@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach, vi } from 'vitest';
-import { fc, test as propTest } from '@fast-check/vitest';
+import * as fc from 'fast-check';
 import { 
   getToken, 
   setToken, 
@@ -7,7 +7,7 @@ import {
   setUser, 
   TOKEN_KEY, 
   USER_KEY 
-} from '../auth';
+} from './auth';
 
 // 模拟 localStorage
 const localStorageMock = (() => {
@@ -39,42 +39,49 @@ describe('Auth Utils Property Tests', () => {
   describe('Token Management', () => {
     // 属性：往返一致性 (Round-trip property)
     // setToken(t) -> getToken() === t
-    propTest.prop({
-      token: fc.string({ minLength: 1 }) // 假设 token 不为空字符串
-    })('should retrieve the same token that was set', ({ token }) => {
-      setToken(token);
-      expect(getToken()).toBe(token);
-      expect(localStorage.setItem).toHaveBeenCalledWith(TOKEN_KEY, token);
+    test('should retrieve the same token that was set', () => {
+      fc.assert(
+        fc.property(fc.string({ minLength: 1 }), (token) => {
+          setToken(token);
+          expect(getToken()).toBe(token);
+          expect(localStorage.setItem).toHaveBeenCalledWith(TOKEN_KEY, token);
+        })
+      );
     });
   });
 
   describe('User Management', () => {
     // 属性：JSON 序列化/反序列化一致性
     // setUser(u) -> getUser() deep equals u
-    propTest.prop({
-      user: fc.record({
-        id: fc.integer(),
-        username: fc.string(),
-        name: fc.string(),
-        role: fc.constantFrom('admin', 'user', 'manager'), // 假设这些是合法的角色
-        avatar: fc.option(fc.string()), // 可选字段
-        email: fc.email(),
-        departmentId: fc.option(fc.integer())
-      })
-    })('should retrieve the same user object that was set', ({ user }) => {
-      // 需要处理 undefined，因为 JSON.stringify 会忽略 undefined 字段
-      // 而 fast-check 生成的 record 可能包含 undefined
-      // 我们这里简单地做一次 JSON parse/stringify 规范化，或者让 fast-check 生成不含 undefined 的对象
-      // 为简单起见，我们直接比较经过 JSON 处理后的对象
-      
-      setUser(user);
-      
-      const retrieved = getUser();
-      // retrieved 应该是 user 的副本，undefined 字段会消失，null 会保留
-      const expected = JSON.parse(JSON.stringify(user));
-      
-      expect(retrieved).toEqual(expected);
-      expect(localStorage.setItem).toHaveBeenCalledWith(USER_KEY, expect.any(String));
+    test('should retrieve the same user object that was set', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            id: fc.integer(),
+            username: fc.string(),
+            name: fc.string(),
+            role: fc.constantFrom('admin', 'user', 'manager'), // 假设这些是合法的角色
+            avatar: fc.option(fc.string()), // 可选字段
+            email: fc.emailAddress(),
+            departmentId: fc.option(fc.integer())
+          }),
+          (user) => {
+            // 需要处理 undefined，因为 JSON.stringify 会忽略 undefined 字段
+            // 而 fast-check 生成的 record 可能包含 undefined
+            // 我们这里简单地做一次 JSON parse/stringify 规范化，或者让 fast-check 生成不含 undefined 的对象
+            // 为简单起见，我们直接比较经过 JSON 处理后的对象
+            
+            setUser(user);
+            
+            const retrieved = getUser();
+            // retrieved 应该是 user 的副本，undefined 字段会消失，null 会保留
+            const expected = JSON.parse(JSON.stringify(user));
+            
+            expect(retrieved).toEqual(expected);
+            expect(localStorage.setItem).toHaveBeenCalledWith(USER_KEY, expect.any(String));
+          }
+        )
+      );
     });
   });
 });

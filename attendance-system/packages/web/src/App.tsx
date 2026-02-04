@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet, Link, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Outlet, Link } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AuthGuard } from './components/AuthGuard';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
 import EmployeeList from './pages/employee/EmployeeList';
@@ -50,16 +51,6 @@ const MainLayout = (): React.ReactElement => (
   </div>
 );
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }): React.ReactElement => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
-
 const Home = (): React.ReactElement => <div><h2>Welcome to Attendance System</h2></div>;
 
 export default function App(): React.ReactElement {
@@ -70,9 +61,9 @@ export default function App(): React.ReactElement {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={
-              <PrivateRoute>
+              <AuthGuard>
                 <MainLayout />
-              </PrivateRoute>
+              </AuthGuard>
             }>
               <Route index element={<Home />} />
               <Route path="users" element={<UserList />} />

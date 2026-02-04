@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LoginDto } from '@attendance/shared';
+import { message } from 'antd';
 
 const Login: React.FC = (): React.ReactElement => {
   const { login, isLoading } = useAuth();
@@ -9,11 +10,16 @@ const Login: React.FC = (): React.ReactElement => {
   
   const [username, setUsername] = useState('18660845170');
   const [password, setPassword] = useState('password123');
+  const [agreed, setAgreed] = useState(false);
 
   const [isDark, setIsDark] = useState(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (!agreed) {
+      message.warning('请先阅读并同意服务协议和隐私协议');
+      return;
+    }
     try {
       const loginData: LoginDto = { username, password };
       await login(loginData);
@@ -86,6 +92,8 @@ const Login: React.FC = (): React.ReactElement => {
                 id="terms"
                 type="checkbox"
                 className="h-4 w-4 text-primary border-gray-300 dark:border-gray-600 rounded focus:ring-primary"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
               />
             </div>
             <div className="ml-3 text-sm">

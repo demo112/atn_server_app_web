@@ -48,6 +48,31 @@ describe('Login Integration', () => {
     expect(screen.getByRole('button', { name: /^登录$/ })).toBeInTheDocument();
   });
 
+  it('should prevent login if terms not agreed', async () => {
+    const messageSpy = vi.spyOn(message, 'warning');
+    
+    render(
+      <AuthProvider>
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    // Fill form but don't check terms
+    await userEvent.type(screen.getByPlaceholderText('手机号/邮箱'), 'admin');
+    await userEvent.type(screen.getByPlaceholderText('请输入密码'), '123456');
+    
+    // Click login
+    await userEvent.click(screen.getByRole('button', { name: '登录' }));
+
+    // Verify warning
+    expect(messageSpy).toHaveBeenCalledWith('请先阅读并同意服务协议和隐私协议');
+    
+    // Verify API was NOT called
+    expect(mockedNavigate).not.toHaveBeenCalled();
+  });
+
   it('should handle successful login', async () => {
     server.use(
       http.post('http://localhost:3000/api/v1/auth/login', () => {
@@ -71,6 +96,8 @@ describe('Login Integration', () => {
 
     await userEvent.type(screen.getByPlaceholderText('手机号/邮箱'), 'admin');
     await userEvent.type(screen.getByPlaceholderText('请输入密码'), '123456');
+    // Check terms
+    await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: '登录' }));
 
     await waitFor(() => {
@@ -110,6 +137,8 @@ describe('Login Integration', () => {
     // Fill form
     await user.type(screen.getByPlaceholderText('手机号/邮箱'), 'wrong');
     await user.type(screen.getByPlaceholderText('请输入密码'), 'wrong');
+    // Check terms
+    await user.click(screen.getByRole('checkbox'));
 
     // Submit
     const submitBtn = screen.getByRole('button', { name: /^登录$/ }); // Login button

@@ -16,7 +16,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.test.{ts,tsx}', 'src/**/*.property.test.{ts,tsx}'],
+    include: process.env.TEST_MODE === 'pbt'
+      ? ['src/**/*.pbt.test.ts', 'src/**/*.property.test.ts', 'src/**/*.prop.test.ts']
+      : ['src/**/*.test.{ts,tsx}', 'src/**/*.property.test.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
     server: {
       deps: {
