@@ -407,7 +407,9 @@ export class AttendanceCorrectionService {
       lateMinutes: record.lateMinutes || 0,
       earlyLeaveMinutes: record.earlyLeaveMinutes || 0,
       absentMinutes: record.absentMinutes || 0,
-      leaveMinutes: record.leaveMinutes || 0
+      leaveMinutes: record.leaveMinutes || 0,
+      workMinutes: record.actualMinutes || 0,
+      remark: record.remark
     };
   }
 }

@@ -159,6 +159,8 @@ export class StatisticsService {
         earlyLeaveMinutes: record.earlyLeaveMinutes || 0,
         absentMinutes: record.absentMinutes || 0,
         leaveMinutes: record.leaveMinutes || 0,
+        workMinutes: record.actualMinutes || undefined,
+        remark: record.remark || undefined,
       };
     });
 
