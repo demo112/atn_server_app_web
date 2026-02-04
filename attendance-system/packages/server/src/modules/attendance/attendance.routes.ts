@@ -8,32 +8,11 @@ import { AttendanceClockController } from './attendance-clock.controller';
 import { AttendanceCorrectionController } from './attendance-correction.controller';
 import { ScheduleController } from './schedule/schedule.controller';
 import { LeaveController } from './leave.controller';
-import { AttendanceScheduler } from './attendance-scheduler'; // Debug only
 
 const router = Router();
 
 // 所有考勤路由都需要认证
 router.use(authenticate);
-
-// Debug: 触发计算 (仅供集成测试使用)
-router.post('/debug/calc', async (req, res) => {
-  try {
-    const { employeeId, date } = req.body;
-    if (!employeeId || !date) {
-      return res.status(400).json({ success: false, message: 'Missing employeeId or date' });
-    }
-    const scheduler = new AttendanceScheduler();
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
-    
-    await scheduler.calculateEmployeeDaily(Number(employeeId), targetDate, nextDate);
-    res.json({ success: true, message: 'Calculation triggered' });
-  } catch (error) {
-    console.error('Debug calc error:', error);
-    res.status(500).json({ success: false, error });
-  }
-});
 
 const periodController = new TimePeriodController();
 const shiftController = new AttendanceShiftController();
