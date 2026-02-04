@@ -1,6 +1,7 @@
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
+import { ToastProvider } from '../components/common/ToastProvider';
 import { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 
@@ -14,11 +15,13 @@ const renderWithProviders = (
   return {
     user: userEvent.setup(),
     ...render(
-      <AuthProvider>
-        <BrowserRouter>
-          {ui}
-        </BrowserRouter>
-      </AuthProvider>,
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            {ui}
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>,
       options
     ),
   };

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Select, DatePicker, Input, message } from 'antd';
 import { LeaveType, LeaveVo } from '@attendance/shared';
-import * as leaveService from '@/services/leave';
+import * as leaveService from '@/services/attendance/leave';
 import dayjs from 'dayjs';
-
+import { useToast } from '@/components/common/ToastProvider';
 import { logger } from '@/utils/logger';
+import StandardModal from '@/components/common/StandardModal';
 
 interface LeaveDialogProps {
   isOpen: boolean;
@@ -19,120 +19,179 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
   onSuccess,
   initialData 
 }): React.ReactElement => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    type: LeaveType.annual as LeaveType,
+    startTime: '',
+    endTime: '',
+    reason: ''
+  });
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        form.setFieldsValue({
-          employeeId: initialData.employeeId,
+        setFormData({
+          employeeId: initialData.employeeId.toString(),
           type: initialData.type,
-          timeRange: [dayjs(initialData.startTime), dayjs(initialData.endTime)],
-          reason: initialData.reason
+          startTime: dayjs(initialData.startTime).format('YYYY-MM-DDTHH:mm'),
+          endTime: dayjs(initialData.endTime).format('YYYY-MM-DDTHH:mm'),
+          reason: initialData.reason || ''
         });
       } else {
-        form.resetFields();
-        form.setFieldValue('type', LeaveType.annual);
+        setFormData({
+          employeeId: '',
+          type: LeaveType.annual,
+          startTime: '',
+          endTime: '',
+          reason: ''
+        });
       }
     }
-  }, [isOpen, initialData, form]);
+  }, [isOpen, initialData]);
 
-  const handleSubmit = async (): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const values = await form.validateFields();
+      if (!formData.employeeId || !formData.startTime || !formData.endTime) {
+        toast.warning('请填写必填项');
+        return;
+      }
+
       setLoading(true);
 
       const payload = {
-        employeeId: Number(values.employeeId),
-        type: values.type,
-        startTime: values.timeRange[0].toISOString(),
-        endTime: values.timeRange[1].toISOString(),
-        reason: values.reason
+        employeeId: Number(formData.employeeId),
+        type: formData.type,
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString(),
+        reason: formData.reason
       };
 
       if (initialData) {
-        // Backend currently doesn't support update via API for all fields, but let's assume updateLeave exists or we only create
-        // Based on previous code, updateLeave was called. But I created createLeave.
-        // Let's check if updateLeave exists in services/leave.ts. 
-        // If not, I should probably add it or just support create for now.
-        // Wait, the previous code had leaveService.updateLeave. My new service only has createLeave.
-        // I should add updateLeave to service or disable edit.
-        // For now, let's assume create only or I'll add updateLeave to service later.
-        // Actually, let's just use createLeave for now and maybe alert that edit is not supported if I didn't implement it.
-        // Or better, I will check service again.
-        message.warning('编辑功能暂未开放');
+        toast.warning('编辑功能暂未开放');
         return;
       } else {
         await leaveService.createLeave({
           ...payload,
           operatorId: 0 // Backend injects
         });
-        message.success('创建成功');
+        toast.success('创建成功');
       }
       
       onSuccess();
       onClose();
     } catch (err: unknown) {
       logger.error('Leave submit failed', err);
-      message.error('操作失败');
+      toast.error('操作失败');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <Modal
-      title={initialData ? "编辑请假" : "申请请假"}
-      open={isOpen}
-      onOk={handleSubmit}
-      onCancel={onClose}
-      confirmLoading={loading}
-      width={600}
-    >
-      <Form
-        form={form}
-        layout="vertical"
+  const footer = (
+    <div className="flex justify-end gap-3 mt-6">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
       >
-        <Form.Item
-          name="employeeId"
-          label="员工ID"
-          rules={[{ required: true, message: '请输入员工ID' }]}
-        >
-          <Input type="number" placeholder="请输入员工ID" disabled={!!initialData} />
-        </Form.Item>
+        取消
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors disabled:opacity-50"
+      >
+        {loading ? '提交中...' : '确定'}
+      </button>
+    </div>
+  );
 
-        <Form.Item
-          name="type"
-          label="请假类型"
-          rules={[{ required: true, message: '请选择类型' }]}
-        >
-          <Select
-            options={[
-              { value: LeaveType.annual, label: '年假' },
-              { value: LeaveType.sick, label: '病假' },
-              { value: LeaveType.personal, label: '事假' },
-              { value: LeaveType.business_trip, label: '出差' },
-              { value: LeaveType.other, label: '其他' }
-            ]}
+  return (
+    <StandardModal
+      title={initialData ? "编辑请假" : "申请请假"}
+      isOpen={isOpen}
+      onClose={onClose}
+      footer={footer}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            员工ID <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+            placeholder="请输入员工ID"
+            value={formData.employeeId}
+            disabled={!!initialData}
+            onChange={e => setFormData({...formData, employeeId: e.target.value})}
+            required
           />
-        </Form.Item>
+        </div>
 
-        <Form.Item
-          name="timeRange"
-          label="起止时间"
-          rules={[{ required: true, message: '请选择起止时间' }]}
-        >
-          <DatePicker.RangePicker showTime format="YYYY-MM-DD HH:mm" />
-        </Form.Item>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            请假类型 <span className="text-red-500">*</span>
+          </label>
+          <select
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+            value={formData.type}
+            onChange={e => setFormData({...formData, type: e.target.value as LeaveType})}
+            required
+          >
+            <option value={LeaveType.annual}>年假</option>
+            <option value={LeaveType.sick}>病假</option>
+            <option value={LeaveType.personal}>事假</option>
+            <option value={LeaveType.business_trip}>出差</option>
+            <option value={LeaveType.other}>其他</option>
+          </select>
+        </div>
 
-        <Form.Item
-          name="reason"
-          label="事由"
-        >
-          <Input.TextArea rows={4} placeholder="请输入请假/出差事由" />
-        </Form.Item>
-      </Form>
-    </Modal>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              开始时间 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+              value={formData.startTime}
+              onChange={e => setFormData({...formData, startTime: e.target.value})}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              结束时间 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+              value={formData.endTime}
+              onChange={e => setFormData({...formData, endTime: e.target.value})}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            事由
+          </label>
+          <textarea
+            rows={4}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+            placeholder="请输入请假/出差事由"
+            value={formData.reason}
+            onChange={e => setFormData({...formData, reason: e.target.value})}
+          />
+        </div>
+      </form>
+    </StandardModal>
   );
 };

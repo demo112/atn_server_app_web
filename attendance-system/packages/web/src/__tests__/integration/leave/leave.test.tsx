@@ -2,13 +2,12 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderWithProviders } from '../../../test/utils';
 import LeavePage from '../../../pages/attendance/leave/LeavePage';
-import * as leaveService from '@/services/leave';
+import * as leaveService from '@/services/attendance/leave';
 import { LeaveType, LeaveStatus } from '@attendance/shared';
 import userEvent from '@testing-library/user-event';
-import { message, Modal } from 'antd';
 
 // Mock services
-vi.mock('@/services/leave', () => ({
+vi.mock('@/services/attendance/leave', () => ({
   getLeaves: vi.fn(),
   createLeave: vi.fn(),
   cancelLeave: vi.fn(),
@@ -17,48 +16,44 @@ vi.mock('@/services/leave', () => ({
 // Helper to fill form
 const fillLeaveForm = async (user: any) => {
   console.log('fillLeaveForm: starting');
-  // Wait for modal to be visible
+  // Wait for modal to be visible (StandardModal uses role dialog)
   const modal = await screen.findByRole('dialog');
   console.log('fillLeaveForm: modal found');
 
   // Employee ID
-  const empInput = within(modal).getByLabelText('员工ID');
+  const empInput = screen.getByPlaceholderText('请输入员工ID');
   await user.type(empInput, '102');
   console.log('fillLeaveForm: empId filled');
 
   // Type (Select)
-  const typeSelect = within(modal).getByLabelText('请假类型');
-  await user.click(typeSelect);
-  // Options are in a portal, outside modal
-  const option = await screen.findByText('病假', {}, { timeout: 3000 }); 
-  await user.click(option);
+  const typeSelect = screen.getByRole('combobox');
+  await user.selectOptions(typeSelect, LeaveType.sick);
   console.log('fillLeaveForm: type selected');
 
   // Reason
-  const reasonInput = within(modal).getByLabelText('事由');
+  const reasonInput = screen.getByPlaceholderText('请输入请假/出差事由');
   await user.type(reasonInput, 'Sick leave');
   console.log('fillLeaveForm: reason filled');
 
   // Date Range
-  // Use class selector to find RangePicker inputs within modal
-  // Note: RangePicker has two inputs.
-  const pickerInputs = modal.querySelectorAll('.ant-picker-input input');
-  console.log(`fillLeaveForm: found ${pickerInputs.length} picker inputs`);
+  // Tailwind implementation uses input[type="datetime-local"]
+  const inputs = modal.querySelectorAll('input[type="datetime-local"]');
+  console.log(`fillLeaveForm: found ${inputs.length} datetime inputs`);
   
-  if (pickerInputs.length >= 2) {
+  if (inputs.length >= 2) {
       // First input (Start)
-      await user.click(pickerInputs[0]);
-      await user.type(pickerInputs[0], '2023-10-10 09:00');
-      await user.keyboard('{Enter}');
+      // Note: datetime-local inputs require specific format for testing? or just string
+      // userEvent might need '2023-10-10T09:00'
+      await user.clear(inputs[0]);
+      await user.type(inputs[0], '2023-10-10T09:00');
       console.log('fillLeaveForm: start date filled');
       
       // Second input (End)
-      await user.click(pickerInputs[1]);
-      await user.type(pickerInputs[1], '2023-10-11 18:00');
-      await user.keyboard('{Enter}');
+      await user.clear(inputs[1]);
+      await user.type(inputs[1], '2023-10-11T18:00');
       console.log('fillLeaveForm: end date filled');
   } else {
-      console.warn('fillLeaveForm: Could not find DatePicker inputs');
+      console.warn('fillLeaveForm: Could not find datetime inputs');
   }
 };
 
@@ -87,16 +82,6 @@ describe('LeavePage Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(leaveService.getLeaves).mockResolvedValue(mockLeaves);
-    
-    // Spy on Antd components
-    vi.spyOn(message, 'success').mockImplementation(() => null as any);
-    vi.spyOn(message, 'error').mockImplementation(() => null as any);
-    vi.spyOn(message, 'warning').mockImplementation(() => null as any);
-    
-    vi.spyOn(Modal, 'confirm').mockImplementation((config: any) => {
-        if (config.onOk) config.onOk();
-        return { destroy: vi.fn(), update: vi.fn() } as any;
-    });
   });
 
   it('renders leave list correctly', async () => {
@@ -121,18 +106,21 @@ describe('LeavePage Integration', () => {
     await user.click(createBtn);
 
     await waitFor(() => {
-      expect(screen.getByText('申请请假', { selector: '.ant-modal-title' })).toBeVisible();
+      // StandardModal title is h3
+      expect(screen.getByText('申请请假', { selector: 'h3' })).toBeVisible();
     });
 
+    // Fill form
     await fillLeaveForm(user);
-
+    
     // Submit
-    const submitBtn = screen.getByText('确 定');
+    const submitBtn = screen.getByText('确定');
     await user.click(submitBtn);
 
     await waitFor(() => {
       expect(leaveService.createLeave).toHaveBeenCalled();
-      expect(message.success).toHaveBeenCalledWith('创建成功');
+      // Expect toast message
+      expect(screen.getByText('创建成功')).toBeInTheDocument();
     }, { timeout: 15000 });
   }, 20000); // Test timeout
 
@@ -144,12 +132,14 @@ describe('LeavePage Integration', () => {
 
     await user.click(screen.getByText('申请请假'));
 
+    // Fill form
     await fillLeaveForm(user);
 
-    await user.click(screen.getByText('确 定'));
+    await user.click(screen.getByText('确定'));
 
     await waitFor(() => {
-      expect(message.error).toHaveBeenCalled();
+      // Expect error toast
+      expect(screen.getByText('操作失败')).toBeInTheDocument();
     }, { timeout: 15000 });
   }, 20000); // Test timeout
 
@@ -166,10 +156,18 @@ describe('LeavePage Integration', () => {
 
     const cancelLink = screen.getByText('撤销');
     await user.click(cancelLink);
+    
+    // Confirm dialog (StandardModal)
+    // Title '确认撤销'
+    const confirmTitle = await screen.findByText('确认撤销', { selector: 'h3' });
+    expect(confirmTitle).toBeVisible();
+
+    const confirmBtn = await screen.findByText('确定');
+    await user.click(confirmBtn);
 
     await waitFor(() => {
       expect(leaveService.cancelLeave).toHaveBeenCalledWith(1);
-      expect(message.success).toHaveBeenCalledWith('撤销成功');
+      expect(screen.getByText('撤销成功')).toBeInTheDocument();
     }, { timeout: 5000 });
   });
 });
