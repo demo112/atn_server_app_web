@@ -74,6 +74,7 @@ const HomeScreen = () => {
           <MenuItem title="补卡申请" icon="file-document-edit" route="Correction" />
           <MenuItem title="考勤记录" icon="chart-bar" route="History" />
           <MenuItem title="我的排班" icon="calendar-clock" route="Schedule" />
+          <MenuItem title="班次管理" icon="calendar-edit" route="ShiftList" />
         </View>
 
         {isAdmin && (

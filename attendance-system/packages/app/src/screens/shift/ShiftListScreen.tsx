@@ -1,18 +1,38 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Card, FAB, useTheme, Searchbar, Avatar, IconButton } from 'react-native-paper';
+import { Text, Card, useTheme, Searchbar, Avatar, IconButton, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { Shift } from '../../types/shift';
-import AddShiftModal from '../../components/shift/AddShiftModal';
+import { Shift, TimeSlot } from '../../types/shift';
+
+const generateTimeSlot = (id: string, start: string, end: string): TimeSlot => ({
+  id,
+  startTime: start,
+  endTime: end,
+  mustCheckIn: true,
+  checkInWindow: '08:30-09:30',
+  mustCheckOut: true,
+  checkOutWindow: '17:30-18:30',
+});
 
 const INITIAL_SHIFTS: Shift[] = [
-  { id: '7', name: '默认班次_7', startTime: '09:00', endTime: '18:00' },
-  { id: '6', name: '默认班次_6', startTime: '09:00', endTime: '18:00' },
-  { id: '5', name: '默认班次_5', startTime: '09:00', endTime: '18:00' },
-  { id: '4', name: '默认班次_4', startTime: '09:00', endTime: '18:00' },
-  { id: '3', name: '默认班次_3', startTime: '09:00', endTime: '18:00' },
-  { id: '2', name: '默认班次_2', startTime: '09:00', endTime: '18:00' },
-  { id: '1', name: '默认班次_1', startTime: '09:00', endTime: '18:00' },
+  {
+    id: '1',
+    name: '默认班次_1',
+    timeSlots: [generateTimeSlot('ts1', '09:00', '18:00')]
+  },
+  {
+    id: '2',
+    name: '早班',
+    timeSlots: [generateTimeSlot('ts2', '07:00', '15:00')]
+  },
+  {
+    id: '3',
+    name: '两头班',
+    timeSlots: [
+      generateTimeSlot('ts3a', '09:00', '12:00'),
+      generateTimeSlot('ts3b', '14:00', '18:00')
+    ]
+  },
 ];
 
 export default function ShiftListScreen() {
@@ -20,28 +40,28 @@ export default function ShiftListScreen() {
   const navigation = useNavigation();
   const [shifts, setShifts] = useState<Shift[]>(INITIAL_SHIFTS);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const filteredShifts = useMemo(() => {
     return shifts.filter(s =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${s.startTime}-${s.endTime}`.includes(searchTerm)
+      s.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [shifts, searchTerm]);
 
-  const handleAddShift = (newShift: Omit<Shift, 'id'>) => {
-    const shift: Shift = {
-      ...newShift,
-      id: Date.now().toString()
-    };
-    setShifts([shift, ...shifts]);
+  // Navigate to ShiftEditScreen for adding a new shift
+  const handleAddShift = () => {
+    (navigation as any).navigate('ShiftEdit', { shift: null });
+  };
+
+  // Navigate to ShiftEditScreen for editing an existing shift
+  const handleEditShift = (shift: Shift) => {
+    (navigation as any).navigate('ShiftEdit', { shift });
   };
 
   const renderItem = ({ item }: { item: Shift }) => (
     <Card 
       style={styles.card} 
       mode="elevated"
-      onPress={() => (navigation as any).navigate('ShiftEdit', { shift: item, id: item.id })}
+      onPress={() => handleEditShift(item)}
     >
       <Card.Content style={styles.cardContent}>
         <Avatar.Icon 
@@ -52,9 +72,14 @@ export default function ShiftListScreen() {
         />
         <View style={styles.info}>
           <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.name}</Text>
-          <Text variant="bodyMedium" style={{ color: theme.colors.secondary }}>
-            {item.startTime} - {item.endTime}
-          </Text>
+          <View style={styles.timeSlotsContainer}>
+            {item.timeSlots.map((slot, index) => (
+              <Text key={slot.id} variant="bodyMedium" style={{ color: theme.colors.secondary }}>
+                {slot.startTime} - {slot.endTime}
+                {index < item.timeSlots.length - 1 ? ', ' : ''}
+              </Text>
+             ))}
+          </View>
         </View>
         <IconButton icon="chevron-right" size={20} />
       </Card.Content>
@@ -63,19 +88,32 @@ export default function ShiftListScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.searchContainer}>
+      <View style={styles.headerContainer}>
+        <Text variant="titleLarge" style={styles.headerTitle}>班次设置</Text>
         <Searchbar
           placeholder="搜索班次"
           onChangeText={setSearchTerm}
           value={searchTerm}
           style={styles.searchbar}
-          elevation={1}
+          elevation={0}
         />
+      </View>
+
+      <View style={styles.actionContainer}>
+        <Button
+          mode="contained"
+          onPress={handleAddShift}
+          icon="plus"
+          style={styles.addButton}
+          contentStyle={styles.addButtonContent}
+        >
+          添加班次
+        </Button>
       </View>
 
       <View style={styles.listHeader}>
         <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-          班次列表 ({shifts.length})
+          班次列表 <Text style={{ color: theme.colors.primary }}>({filteredShifts.length})</Text>
         </Text>
       </View>
 
@@ -90,20 +128,6 @@ export default function ShiftListScreen() {
           </Text>
         }
       />
-
-      <FAB
-        icon="plus"
-        label="添加班次"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        color="white"
-        onPress={() => setIsModalVisible(true)}
-      />
-
-      <AddShiftModal 
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onAdd={handleAddShift}
-      />
     </View>
   );
 }
@@ -112,12 +136,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  searchContainer: {
+  headerContainer: {
     padding: 16,
     paddingBottom: 8,
+    backgroundColor: 'white',
+  },
+  headerTitle: {
+    textAlign: 'center',
+    marginBottom: 16,
+    fontWeight: 'bold',
   },
   searchbar: {
-    backgroundColor: 'white',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  actionContainer: {
+    padding: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  addButton: {
+    borderRadius: 8,
+  },
+  addButtonContent: {
+    height: 48,
   },
   listHeader: {
     paddingHorizontal: 16,
@@ -140,10 +182,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 16,
   },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+  timeSlotsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 });
