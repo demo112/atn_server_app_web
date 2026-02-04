@@ -174,8 +174,13 @@ export class DepartmentService {
       throw AppError.badRequest('Cannot delete department with sub-departments', 'ERR_DEPT_HAS_CHILDREN');
     }
 
-    // 校验员工
-    const employeeCount = await prisma.employee.count({ where: { deptId: id } });
+    // 校验员工 (不包括已删除的)
+    const employeeCount = await prisma.employee.count({ 
+      where: { 
+        deptId: id,
+        status: { not: 'deleted' }
+      } 
+    });
     if (employeeCount > 0) {
       throw AppError.badRequest('Cannot delete department with employees', 'ERR_DEPT_HAS_EMPLOYEES');
     }

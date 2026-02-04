@@ -6,8 +6,8 @@ export const userRouter = Router();
 
 userRouter.use(authenticate); // Protect all routes
 
-userRouter.post('/', (req, res) => userController.create(req, res));
-userRouter.get('/', (req, res) => userController.findAll(req, res));
-userRouter.get('/:id', (req, res) => userController.findOne(req, res));
-userRouter.put('/:id', (req, res) => userController.update(req, res));
-userRouter.delete('/:id', (req, res) => userController.delete(req, res));
+userRouter.post('/', userController.create.bind(userController));
+userRouter.get('/', userController.findAll.bind(userController));
+userRouter.get('/:id', userController.findOne.bind(userController));
+userRouter.put('/:id', userController.update.bind(userController));
+userRouter.delete('/:id', userController.delete.bind(userController));

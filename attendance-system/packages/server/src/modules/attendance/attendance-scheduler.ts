@@ -4,6 +4,7 @@ import { attendanceSettingsService } from './attendance-settings.service';
 import { prisma } from '../../common/db/prisma';
 import dayjs from 'dayjs';
 import { AttendanceCalculator } from './domain/attendance-calculator';
+import { CorrectionType } from '@prisma/client';
 
 const logger = createLogger('AttendanceScheduler');
 
@@ -174,6 +175,50 @@ export class AttendanceScheduler {
        return;
     }
 
+    // 1. Aggregation: Find Clock Records and Corrections
+    const [clockRecords, corrections] = await Promise.all([
+      prisma.attClockRecord.findMany({
+        where: {
+          employeeId,
+          clockTime: {
+            gte: targetDate,
+            lt: nextDate
+          }
+        }
+      }),
+      prisma.attCorrection.findMany({
+        where: { dailyRecordId: record.id }
+      })
+    ]);
+
+    // Determine effective Check-In
+    let checkInTime: Date | null = null;
+    const checkInCorrection = corrections.find(c => c.type === CorrectionType.check_in);
+    if (checkInCorrection) {
+      checkInTime = checkInCorrection.correctionTime;
+    } else {
+      const signIns = clockRecords
+        .filter(c => c.type === 'sign_in')
+        .sort((a, b) => a.clockTime.getTime() - b.clockTime.getTime());
+      if (signIns.length > 0) {
+        checkInTime = signIns[0].clockTime;
+      }
+    }
+
+    // Determine effective Check-Out
+    let checkOutTime: Date | null = null;
+    const checkOutCorrection = corrections.find(c => c.type === CorrectionType.check_out);
+    if (checkOutCorrection) {
+      checkOutTime = checkOutCorrection.correctionTime;
+    } else {
+      const signOuts = clockRecords
+        .filter(c => c.type === 'sign_out')
+        .sort((a, b) => b.clockTime.getTime() - a.clockTime.getTime());
+      if (signOuts.length > 0) {
+        checkOutTime = signOuts[0].clockTime;
+      }
+    }
+
     // Fetch Leaves
     const leaves = await prisma.attLeave.findMany({
       where: {
@@ -185,12 +230,22 @@ export class AttendanceScheduler {
       }
     });
 
-    const result = this.calculator.calculate(record, record.period, leaves);
+    // 2. Calculation
+    // Construct temp record with updated times
+    const tempRecord = {
+      ...record,
+      checkInTime: checkInTime || null,
+      checkOutTime: checkOutTime || null
+    };
 
-    // Update Record
+    const result = this.calculator.calculate(tempRecord, record.period, leaves);
+
+    // 3. Update Record
     await prisma.attDailyRecord.update({
       where: { id: record.id },
       data: {
+        checkInTime: checkInTime || null,
+        checkOutTime: checkOutTime || null,
         status: result.status,
         actualMinutes: result.actualMinutes,
         effectiveMinutes: result.effectiveMinutes,
@@ -198,7 +253,6 @@ export class AttendanceScheduler {
         earlyLeaveMinutes: result.earlyLeaveMinutes,
         absentMinutes: result.absentMinutes,
         leaveMinutes: result.leaveMinutes,
-        // remark: 'Auto calculated' 
       }
     });
   }
@@ -213,6 +267,7 @@ export class AttendanceScheduler {
       const localConfig = {
         host: '127.0.0.1',
         port: 6379,
+        password: process.env.REDIS_PASSWORD,
         maxRetriesPerRequest: null,
       };
       

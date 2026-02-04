@@ -16,6 +16,7 @@
   - `packages/server/src/modules/employee/employee.test.ts`
   - `packages/server/src/modules/employee/employee.acv.test.ts`
   - `packages/server/src/modules/employee/employee.integration.test.ts`
+  - `packages/server/verify-integration.ts` (手动集成验证脚本)
 
 - **覆盖范围**:
   - `create`: 创建员工，校验必填字段和工号唯一性
@@ -23,8 +24,11 @@
   - `delete`: 删除员工（逻辑删除）
   - `list`: 分页查询，支持筛选
   - `bindUser`: 关联系统账号
+  - **E2E流程**: 登录 -> 创建部门 -> 创建员工 -> 查询员工 -> 删除员工 -> 删除部门
 
-- **结果**: 全部通过 (Vitest)
+- **结果**: 
+  - 单元测试: 全部通过 (Vitest)
+  - 集成验证: 全部通过 (verify-integration.ts)
 
 ### App端集成验证 (New)
 

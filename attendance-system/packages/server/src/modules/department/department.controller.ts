@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { departmentService } from './department.service';
 import { CreateDepartmentDto, UpdateDepartmentDto } from '@attendance/shared';
+import { AppError } from '../../common/errors';
 
 export class DepartmentController {
   async getTree(req: Request, res: Response) {

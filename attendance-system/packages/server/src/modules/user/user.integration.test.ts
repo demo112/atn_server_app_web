@@ -119,5 +119,68 @@ describe('User API Integration', () => {
           expect(res.status).toBe(200);
           expect(res.body.data.items).toHaveLength(2);
       });
+
+      it('should filter users by keyword', async () => {
+        (prisma.user.findMany as any).mockResolvedValue([
+            { id: 2, username: 'user', role: 'user', createdAt: new Date(), status: 'active' }
+        ]);
+        (prisma.user.count as any).mockResolvedValue(1);
+
+        const res = await request(app)
+          .get('/api/v1/users')
+          .query({ keyword: 'user' })
+          .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.items).toHaveLength(1);
+        expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({
+            where: expect.objectContaining({
+                OR: expect.arrayContaining([
+                    expect.objectContaining({ username: { contains: 'user' } })
+                ])
+            })
+        }));
+      });
+  });
+
+  describe('PUT /api/v1/users/:id', () => {
+    it('should update user successfully', async () => {
+      const updateDto = { role: 'admin', status: 'inactive' };
+      
+      (prisma.user.update as any).mockResolvedValue({
+        id: 2,
+        username: 'testuser',
+        role: 'admin',
+        status: 'inactive',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      const res = await request(app)
+        .put('/api/v1/users/2')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateDto);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.role).toBe('admin');
+      expect(res.body.data.status).toBe('inactive');
+      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+          where: { id: 2 },
+          data: expect.objectContaining(updateDto)
+      }));
+    });
+  });
+
+  describe('DELETE /api/v1/users/:id', () => {
+    it('should delete user successfully', async () => {
+      (prisma.user.delete as any).mockResolvedValue({ id: 2 });
+
+      const res = await request(app)
+        .delete('/api/v1/users/2')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 2 } });
+    });
   });
 });

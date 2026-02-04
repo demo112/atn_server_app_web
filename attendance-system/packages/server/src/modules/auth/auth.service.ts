@@ -43,7 +43,7 @@ export class AuthService {
         employeeId: user.employeeId 
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN as any }
     );
 
     return {
