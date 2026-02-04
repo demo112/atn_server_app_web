@@ -1,5 +1,6 @@
 
 import { prisma } from '../../common/db/prisma';
+import { createLogger } from '../../common/logger';
 import { 
   GetSummaryDto, 
   AttendanceSummaryVo, 
@@ -34,7 +35,10 @@ interface AggregationResult {
 }
 
 export class StatisticsService {
+  private logger = createLogger('StatisticsService');
+
   async getDailyRecords(query: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> {
+    this.logger.info({ query }, 'Fetching daily records');
     const { startDate, endDate, deptId, employeeId, employeeName, status, page = 1, pageSize = 20 } = query;
     const skip = (Number(page) - 1) * Number(pageSize);
     const take = Number(pageSize);
@@ -125,7 +129,10 @@ export class StatisticsService {
         skip,
         take,
         orderBy: { workDate: 'desc' },
-        include: { shift: true },
+        include: { 
+          shift: true,
+          period: true 
+        },
       }),
     ]);
 
@@ -150,8 +157,8 @@ export class StatisticsService {
         deptName: emp?.department?.name || '未分配',
         workDate: record.workDate.toISOString().split('T')[0],
         shiftName: record.shift?.name,
-        startTime: record.startTime || undefined,
-        endTime: record.endTime || undefined,
+        startTime: record.period?.startTime || undefined,
+        endTime: record.period?.endTime || undefined,
         checkInTime: record.checkInTime ? record.checkInTime.toISOString() : undefined,
         checkOutTime: record.checkOutTime ? record.checkOutTime.toISOString() : undefined,
         status: record.status as AttendanceStatus,
@@ -200,6 +207,7 @@ export class StatisticsService {
   }
 
   async getDepartmentSummary(dto: GetSummaryDto): Promise<AttendanceSummaryVo[]> {
+    this.logger.info({ dto }, 'Calculating department summary');
     const { startDate, endDate, deptId, employeeId } = dto;
     
     const queryStart = new Date(startDate + 'T00:00:00');
@@ -305,6 +313,7 @@ export class StatisticsService {
   }
 
   async getDeptStats(dto: GetDeptStatsDto): Promise<DeptStatsVo[]> {
+    this.logger.info({ dto }, 'Calculating department stats');
     const { month, deptId } = dto;
     const [yearStr, monthStr] = month.split('-');
     const year = parseInt(yearStr);
@@ -391,6 +400,7 @@ export class StatisticsService {
   }
 
   async getChartStats(dto: GetChartStatsDto): Promise<ChartStatsVo> {
+    this.logger.info({ dto }, 'Calculating chart stats');
     const { startDate, endDate, deptId } = dto;
     const start = new Date(startDate + 'T00:00:00');
     const end = new Date(endDate + 'T23:59:59.999');

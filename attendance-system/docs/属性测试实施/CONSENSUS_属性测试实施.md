@@ -1,53 +1,23 @@
-# CONSENSUS - 属性测试实施 (Server & Web)
+# CONSENSUS - 属性测试实施 (Phase 2)
 
-## 1. 实施目标与验收标准
-- **核心目标**: 建立全栈属性测试能力，Server 端保障逻辑正确性，Web 端保障输入健壮性。
-- **验收标准**:
-  - **Server**: 核心 Service (考勤、排班) 关键算法实现 PBT 覆盖，验证业务不变量。
-  - **Web**: 引入 `fast-check`，对核心 Utils 和 Zod Schemas 进行 Fuzzing 测试。
-  - **Shared**: 建立可复用的生成器库 (`arbitraries`)。
-  - **CI**: 流水线包含 PBT 步骤，并能正确报告失败 Seed。
+## 1. 核心共识
+- **实施目标**: "聚焦App"，通过在 Node.js 环境下运行属性测试，解决 App 端因环境不稳定导致的测试难题。
+- **实施策略**: **逻辑剥离 (Logic Extraction)**。将业务逻辑从 UI/Network 副作用中剥离为纯函数。
 
-## 2. 技术方案
-- **测试框架**: Vitest (统一)
-- **属性测试库**: fast-check
-- **文件命名**: 
-  - 推荐: `*.pbt.test.ts` (独立文件，便于区分和单独运行)
-  - 允许: `*.test.ts` (简单的 PBT 可与单元测试共存)
-- **运行配置**:
-  - **Local**: `numRuns: 100` (快速反馈)
-  - **CI**: `numRuns: 1000+` (深度扫描，Nightly Build 可更高)
+## 2. 交付物清单
+| ID | 交付物 | 说明 |
+|----|--------|------|
+| D1 | `packages/app/src/utils/error-handler.ts` | 重构后的纯逻辑错误处理器 |
+| D2 | `packages/app/src/utils/__tests__/error-handler.prop.test.ts` | 错误处理逻辑的 PBT |
+| D3 | `packages/app/src/utils/__tests__/request.prop.test.ts` | API 响应验证的 PBT |
+| D4 | `packages/app/src/schemas/__tests__/attendance.prop.test.ts` | 考勤核心数据结构的 PBT |
 
-## 3. 渐进式实施策略 (4 Phases)
+## 3. 风险与缓解
+- **风险**: 重构 `request.ts` 可能破坏现有功能。
+- **缓解**: 
+  - 保持 `request.ts` 的对外接口不变。
+  - 仅提取逻辑，保留原有副作用调用代码。
+  - 先写测试，再重构 (如果可能)，或者重构后立即手动验证。
 
-### Phase 1: Server Core Domain (核心域 - P0)
-- **目标**: 覆盖最复杂的算法逻辑，建立生成器基础。
-- **模块**: 
-  - `server/src/modules/attendance/domain` (考勤计算)
-  - `shared/src/test/arbitraries` (基础生成器)
-- **价值**: 收益最高，解决核心痛点。
-
-### Phase 2: Web Foundation & Schemas (Web 基础 - P1)
-- **目标**: 建立 Web 端 PBT 环境，验证输入契约。
-- **模块**:
-  - `web/src/schemas` (Zod Schema Fuzzing)
-  - `web/src/utils` (纯函数)
-- **价值**: 拦截异常数据，提升前端稳定性。
-
-### Phase 3: Server Business Logic (业务逻辑 - P1)
-- **目标**: 覆盖状态流转和权限约束。
-- **模块**:
-  - `server/src/modules/attendance/correction` (补卡)
-  - `server/src/modules/attendance/leave` (请假)
-- **重点**: 状态机属性、权限模型。
-
-### Phase 4: Expansion (扩展与推广 - P2)
-- **目标**: 推广至 App 端，完善文档与培训。
-- **模块**:
-  - `packages/app` (App 端适配)
-  - 团队培训与 Code Review 规范固化。
-
-## 4. 风险缓解
-- **超时问题**: 将 PBT 标记为耗时测试，避免阻塞日常开发。
-- **Flaky Tests**: 强制要求 CI 失败时打印 Seed，本地通过 Seed 复现。
-- **学习成本**: 提供 "PBT vs Example-based" 对比示例库。
+## 4. 下一步行动
+请确认执行 **Phase 5: Automate**，我将按照 T1 -> T4 的顺序执行代码修改和测试编写。

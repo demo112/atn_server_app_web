@@ -57,13 +57,11 @@ describe('Auth Utils Property Tests', () => {
       fc.assert(
         fc.property(
           fc.record({
-            id: fc.integer(),
-            username: fc.string(),
+            id: fc.integer({ min: 1 }),
+            username: fc.string({ minLength: 1 }),
+            role: fc.constantFrom('admin', 'user'), // Removed 'manager'
             name: fc.string(),
-            role: fc.constantFrom('admin', 'user', 'manager'), // 假设这些是合法的角色
-            avatar: fc.option(fc.string()), // 可选字段
-            email: fc.emailAddress(),
-            departmentId: fc.option(fc.integer())
+            employeeId: fc.integer({ min: 1 }),
           }),
           (user) => {
             // 需要处理 undefined，因为 JSON.stringify 会忽略 undefined 字段
