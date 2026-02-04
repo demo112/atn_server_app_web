@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Text, Surface, useTheme, Card, Chip, IconButton } from 'react-native-paper';
 import { getDailyRecords, DailyRecordVo } from '../../services/attendance';
 import { useNavigation } from '@react-navigation/native';
 import { logger } from '../../utils/logger';
 
 const HistoryScreen = () => {
+  const theme = useTheme();
   const [records, setRecords] = useState<DailyRecordVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -19,7 +21,6 @@ const HistoryScreen = () => {
       // Get first and last day of current month
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      // Format manually to avoid timezone issues with toISOString()
       const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
       
       const lastDay = new Date(year, month + 1, 0);
@@ -42,11 +43,11 @@ const HistoryScreen = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'normal': return 'green';
-      case 'late': return 'orange';
-      case 'early_leave': return 'orange';
-      case 'absent': return 'red';
-      default: return '#666';
+      case 'normal': return theme.colors.primary;
+      case 'late': return theme.colors.error;
+      case 'early_leave': return theme.colors.error;
+      case 'absent': return theme.colors.error;
+      default: return theme.colors.secondary;
     }
   };
 
@@ -60,52 +61,67 @@ const HistoryScreen = () => {
     return map[status] || status;
   };
 
-  const renderItem = ({ item }: { item: DailyRecordVo }) => (
-    <View style={styles.item}>
-      <View style={styles.itemHeader}>
-        <Text style={styles.date}>{item.workDate} (ID: {item.id})</Text>
-        <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
-          {getStatusText(item.status)}
-        </Text>
-      </View>
-      <View style={styles.timeRow}>
-        <Text style={styles.timeLabel}>签到:</Text>
-        <Text style={styles.timeValue}>
-          {item.checkInTime ? new Date(item.checkInTime).toLocaleTimeString() : '-'}
-        </Text>
-      </View>
-      <View style={styles.timeRow}>
-        <Text style={styles.timeLabel}>签退:</Text>
-        <Text style={styles.timeValue}>
-          {item.checkOutTime ? new Date(item.checkOutTime).toLocaleTimeString() : '-'}
-        </Text>
-      </View>
-    </View>
-  );
+  const renderItem = ({ item }: { item: DailyRecordVo }) => {
+    const statusColor = getStatusColor(item.status);
+    return (
+      <Card style={styles.card} mode="elevated">
+        <Card.Content>
+          <View style={styles.cardHeader}>
+            <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+              {item.workDate}
+            </Text>
+            <Chip 
+              mode="flat" 
+              style={{ backgroundColor: statusColor + '20' }} 
+              textStyle={{ color: statusColor }}
+            >
+              {getStatusText(item.status)}
+            </Chip>
+          </View>
+          
+          <View style={styles.timeContainer}>
+            <View style={styles.timeRow}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.secondary }}>签到</Text>
+              <Text variant="bodyLarge">
+                {item.checkInTime ? new Date(item.checkInTime).toLocaleTimeString() : '-'}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.timeRow}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.secondary }}>签退</Text>
+              <Text variant="bodyLarge">
+                {item.checkOutTime ? new Date(item.checkOutTime).toLocaleTimeString() : '-'}
+              </Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.monthButton}>
-          <Text style={styles.monthButtonText}>{'<'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={styles.header} elevation={2}>
+        <IconButton icon="chevron-left" onPress={() => changeMonth(-1)} />
+        <Text variant="titleLarge" style={{ fontWeight: 'bold' }}>
           {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月
         </Text>
-        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.monthButton}>
-          <Text style={styles.monthButtonText}>{'>'}</Text>
-        </TouchableOpacity>
-      </View>
+        <IconButton icon="chevron-right" onPress={() => changeMonth(1)} />
+      </Surface>
 
       {loading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+        <ActivityIndicator style={{ margin: 20 }} />
       ) : (
         <FlatList
           data={records}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.emptyText}>本月无记录</Text>}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+              本月暂无记录
+            </Text>
+          }
         />
       )}
     </View>
@@ -115,67 +131,44 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 8,
     backgroundColor: 'white',
-    marginBottom: 10,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  monthButton: {
-    padding: 10,
-  },
-  monthButtonText: {
-    fontSize: 18,
-    color: '#1890ff',
+    marginBottom: 8,
   },
   list: {
     padding: 16,
   },
-  item: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
+  card: {
     marginBottom: 12,
+    backgroundColor: 'white',
   },
-  itemHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 8,
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  date: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  status: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    padding: 12,
+    borderRadius: 8,
   },
   timeRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
+    alignItems: 'center',
+    gap: 4,
   },
-  timeLabel: {
-    width: 50,
-    color: '#666',
-  },
-  timeValue: {
-    color: '#333',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#999',
+  divider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#e5e7eb',
   },
 });
 

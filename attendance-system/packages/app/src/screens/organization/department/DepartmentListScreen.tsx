@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { Text, Card, FAB, useTheme, ActivityIndicator, IconButton, Surface } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { DepartmentVO } from '@attendance/shared';
 import { getDepartmentTree, deleteDepartment } from '../../../services/department';
 import { logger } from '../../../utils/logger';
 
 export const DepartmentListScreen = () => {
+  const theme = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const [loading, setLoading] = useState(false);
@@ -17,20 +19,17 @@ export const DepartmentListScreen = () => {
     navigation.setOptions({
       title: parentName,
       headerRight: () => (
-        <TouchableOpacity 
-          testID="header-add-btn"
+        <IconButton 
+          icon="plus" 
+          iconColor={theme.colors.primary}
           onPress={() => navigation.navigate('DepartmentEdit', { parentId })}
-          style={{ marginRight: 16 }}
-        >
-          <Text style={{ fontSize: 16, color: '#007AFF' }}>新增</Text>
-        </TouchableOpacity>
+        />
       ),
     });
-  }, [navigation, parentId, parentName]);
+  }, [navigation, parentId, parentName, theme]);
 
   useEffect(() => {
     loadData();
-    // 监听焦点事件，返回时刷新
     const unsubscribe = navigation.addListener('focus', () => {
         loadData();
     });
@@ -88,9 +87,9 @@ export const DepartmentListScreen = () => {
   };
 
   const renderItem = ({ item }: { item: DepartmentVO }) => (
-    <TouchableOpacity
-      testID={`department-item-${item.id}`}
-      style={styles.item}
+    <Card 
+      style={styles.card} 
+      mode="elevated"
       onPress={() => {
         navigation.push('DepartmentList', { parentId: item.id, title: item.name });
       }}
@@ -102,36 +101,70 @@ export const DepartmentListScreen = () => {
          ]);
       }}
     >
-      <View style={styles.itemContent}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.arrow}>›</Text>
-      </View>
-    </TouchableOpacity>
+      <Card.Content style={styles.cardContent}>
+        <View style={styles.cardLeft}>
+          <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.name}</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+            负责人: {item.managerId || '未设置'}
+          </Text>
+        </View>
+        <IconButton icon="chevron-right" size={20} />
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {loading ? (
-        <ActivityIndicator testID="loading-indicator" style={styles.loading} size="large" />
+        <ActivityIndicator style={{ margin: 20 }} />
       ) : (
         <FlatList
-          testID="department-list"
           data={departments}
-          keyExtractor={item => item.id.toString()}
           renderItem={renderItem}
-          ListEmptyComponent={<Text testID="empty-text" style={styles.emptyText}>无子部门</Text>}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+              暂无子部门
+            </Text>
+          }
         />
       )}
+      
+      <FAB
+        icon="plus"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="white"
+        onPress={() => navigation.navigate('DepartmentEdit', { parentId })}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  item: { backgroundColor: '#fff', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  itemContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  itemName: { fontSize: 16 },
-  arrow: { fontSize: 20, color: '#999' },
-  loading: { marginTop: 20 },
-  emptyText: { textAlign: 'center', marginTop: 20, color: '#999' }
+  container: {
+    flex: 1,
+  },
+  list: {
+    padding: 16,
+    paddingBottom: 80,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  cardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardLeft: {
+    flex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+  },
 });

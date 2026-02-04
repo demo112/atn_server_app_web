@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, FlatList, TouchableOpacity, 
-  Modal, TextInput, Alert, ActivityIndicator 
-} from 'react-native';
+import { View, StyleSheet, FlatList, Modal, ScrollView, Alert } from 'react-native';
+import { Text, FAB, Surface, useTheme, Card, Chip, TextInput, Button, ActivityIndicator, RadioButton } from 'react-native-paper';
 import { getCorrections, supplementCheckIn, supplementCheckOut, CorrectionVo, CorrectionType } from '../../services/attendance';
 import { logger } from '../../utils/logger';
 import { getErrorMessage } from '../../utils/error';
 
 const CorrectionScreen = () => {
+  const theme = useTheme();
   const [corrections, setCorrections] = useState<CorrectionVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -63,98 +62,109 @@ const CorrectionScreen = () => {
   };
 
   const renderItem = ({ item }: { item: CorrectionVo }) => (
-    <View style={styles.item}>
-      <View style={styles.itemHeader}>
-        <Text style={styles.itemType}>{item.type === 'check_in' ? '补上班卡' : '补下班卡'}</Text>
-        <Text style={styles.itemTime}>
-          {new Date(item.correctionTime).toLocaleString()}
+    <Card style={styles.card} mode="elevated">
+      <Card.Content>
+        <View style={styles.cardHeader}>
+          <Chip icon="clock-edit-outline" mode="outlined" style={{ borderColor: theme.colors.primary }}>
+            {item.type === 'check_in' ? '补上班卡' : '补下班卡'}
+          </Chip>
+          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+            {new Date(item.correctionTime).toLocaleString()}
+          </Text>
+        </View>
+        <Text variant="bodyMedium" style={{ marginTop: 12 }}>
+          备注: {item.remark}
         </Text>
-      </View>
-      <Text style={styles.itemRemark}>备注: {item.remark}</Text>
-    </View>
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.addButtonText}>+ 补卡申请</Text>
-      </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {loading && <ActivityIndicator style={{ margin: 20 }} />}
+      
+      <FlatList
+        data={corrections}
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+            暂无补卡记录
+          </Text>
+        }
+      />
 
-      {loading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={corrections}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      <FAB
+        icon="plus"
+        label="补卡申请"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="white"
+        onPress={() => setModalVisible(true)}
+      />
 
       <Modal
         visible={modalVisible}
         animationType="slide"
         transparent={true}
+        onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>补卡申请</Text>
+        <View style={styles.modalOverlay}>
+          <Surface style={styles.modalContent}>
+            <Text variant="titleLarge" style={styles.modalTitle}>补卡申请</Text>
             
-            <Text style={styles.label}>考勤记录ID (DailyRecordId)</Text>
-            <TextInput
-              testID="input-dailyRecordId"
-              style={styles.input}
-              value={formData.dailyRecordId}
-              onChangeText={text => setFormData({...formData, dailyRecordId: text})}
-              keyboardType="numeric"
-              placeholder="e.g. 123"
-            />
-
-            <Text style={styles.label}>类型 (check_in/check_out)</Text>
-            <TextInput
-              testID="input-type"
-              style={styles.input}
-              value={formData.type}
-              onChangeText={text => setFormData({...formData, type: text as CorrectionType})}
-              placeholder="check_in"
-            />
-
-            <Text style={styles.label}>补卡时间 (YYYY-MM-DD HH:mm)</Text>
-            <TextInput
-              testID="input-clockTime"
-              style={styles.input}
-              value={formData.clockTime}
-              onChangeText={text => setFormData({...formData, clockTime: text})}
-              placeholder="2024-01-01 09:00"
-            />
-
-            <Text style={styles.label}>原因/备注</Text>
-            <TextInput
-              testID="input-remark"
-              style={[styles.input, styles.textArea]}
-              value={formData.remark}
-              onChangeText={text => setFormData({...formData, remark: text})}
-              multiline
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
+            <ScrollView contentContainerStyle={styles.form}>
+              <Text variant="titleMedium">补卡类型</Text>
+              <RadioButton.Group 
+                onValueChange={value => setFormData({...formData, type: value as CorrectionType})} 
+                value={formData.type}
               >
-                <Text style={styles.cancelButtonText}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.submitButton]}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.submitButtonText}>提交</Text>
-              </TouchableOpacity>
+                <View style={styles.radioRow}>
+                  <View style={styles.radioItem}>
+                    <RadioButton value="check_in" />
+                    <Text>补上班</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton value="check_out" />
+                    <Text>补下班</Text>
+                  </View>
+                </View>
+              </RadioButton.Group>
+
+              <TextInput
+                mode="outlined"
+                label="关联考勤记录ID"
+                value={formData.dailyRecordId}
+                onChangeText={(text) => setFormData({...formData, dailyRecordId: text})}
+                style={styles.input}
+                keyboardType="numeric"
+              />
+
+              <TextInput
+                mode="outlined"
+                label="补卡时间 (YYYY-MM-DD HH:mm)"
+                value={formData.clockTime}
+                onChangeText={(text) => setFormData({...formData, clockTime: text})}
+                placeholder="2024-01-01 09:00"
+                style={styles.input}
+              />
+
+              <TextInput
+                mode="outlined"
+                label="补卡原因"
+                value={formData.remark}
+                onChangeText={(text) => setFormData({...formData, remark: text})}
+                multiline
+                numberOfLines={3}
+                style={styles.input}
+              />
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Button onPress={() => setModalVisible(false)} style={styles.modalButton}>取消</Button>
+              <Button mode="contained" onPress={handleSubmit} style={styles.modalButton}>提交</Button>
             </View>
-          </View>
+          </Surface>
         </View>
       </Modal>
     </View>
@@ -164,100 +174,66 @@ const CorrectionScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   list: {
     padding: 16,
+    paddingBottom: 80,
   },
-  addButton: {
-    margin: 16,
-    backgroundColor: '#1890ff',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  item: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
+  card: {
     marginBottom: 12,
+    backgroundColor: 'white',
   },
-  itemHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
   },
-  itemType: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
-  itemTime: {
-    color: '#666',
-  },
-  itemRemark: {
-    color: '#333',
-  },
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
     padding: 20,
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
+    maxHeight: '80%',
   },
   modalTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
     textAlign: 'center',
   },
-  label: {
-    marginBottom: 4,
-    color: '#666',
+  form: {
+    gap: 12,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 8,
-    marginBottom: 12,
+    backgroundColor: 'white',
   },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  modalButtons: {
+  radioRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
+    marginBottom: 8,
+  },
+  radioItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 20,
+    gap: 12,
   },
   modalButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  cancelButton: {
-    backgroundColor: '#f5f5f5',
-  },
-  submitButton: {
-    backgroundColor: '#1890ff',
-  },
-  cancelButtonText: {
-    color: '#666',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontWeight: '600',
+    minWidth: 80,
   },
 });
 
