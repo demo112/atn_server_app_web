@@ -47,6 +47,9 @@ describe('LeaveService PBT', () => {
   it('should throw ERR_LEAVE_INVALID_TIME if startTime >= endTime', () => {
     return fc.assert(
       fc.asyncProperty(createLeaveDtoArb, async (dto) => {
+        // Mock employee exists
+        findUniqueEmployee.mockResolvedValue({ id: dto.employeeId });
+
         // Force invalid time
         const invalidDto = { ...dto, endTime: dto.startTime };
         

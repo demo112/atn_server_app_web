@@ -46,7 +46,7 @@ describe('AttendanceCalculator PBT', () => {
 
   it('should calculate leave minutes correctly when leaves cover the shift', () => {
     // Custom arbitrary to ensure overlap
-    const overlapScenarioArb = attDailyRecordArb.chain(record => {
+    const overlapScenarioArb = attDailyRecordArb.filter(r => isValidDate(r.workDate)).chain(record => {
       return attTimePeriodArb.chain(period => {
         return fc.record({
           record: fc.constant(record),

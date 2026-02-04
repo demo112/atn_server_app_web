@@ -9,7 +9,7 @@ import {
 } from '@attendance/shared/src/types/attendance/correction';
 import { createLogger } from '../../common/logger';
 import { AppError } from '../../common/errors';
-import { success } from '../../common/types/response';
+import { success, paginated } from '../../common/types/response';
 
 const service = new AttendanceCorrectionService();
 const logger = createLogger('AttendanceCorrectionController');

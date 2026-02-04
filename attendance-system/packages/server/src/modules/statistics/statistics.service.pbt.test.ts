@@ -37,8 +37,16 @@ describe('StatisticsService PBT', () => {
   const dailyRecordQueryArb = fc.record({
     page: fc.option(fc.integer({ min: 1, max: 100 })),
     pageSize: fc.option(fc.integer({ min: 1, max: 50 })),
-    startDate: fc.option(fc.date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') }).map(d => d.toISOString().split('T')[0])),
-    endDate: fc.option(fc.date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') }).map(d => d.toISOString().split('T')[0])),
+    startDate: fc.option(fc.record({
+        year: fc.integer({min: 2000, max: 2030}),
+        month: fc.integer({min: 1, max: 12}),
+        day: fc.integer({min: 1, max: 28})
+    }).map(d => `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`)),
+    endDate: fc.option(fc.record({
+        year: fc.integer({min: 2000, max: 2030}),
+        month: fc.integer({min: 1, max: 12}),
+        day: fc.integer({min: 1, max: 28})
+    }).map(d => `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`)),
     deptId: fc.option(fc.integer({ min: 1 })),
     employeeId: fc.option(fc.integer({ min: 1 })),
     employeeName: fc.option(fc.string({ minLength: 1 })),

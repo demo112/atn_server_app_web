@@ -24,7 +24,7 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 // Mock Alert
-jest.spyOn(Alert, 'alert');
+jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
 describe('ClockInScreen', () => {
   const mockUser = { employeeId: 123, username: 'test_user' };
@@ -40,9 +40,14 @@ describe('ClockInScreen', () => {
   ];
 
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllMocks();
     (getUser as jest.Mock).mockResolvedValue(mockUser);
     (getClockRecords as jest.Mock).mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('renders correctly', async () => {
