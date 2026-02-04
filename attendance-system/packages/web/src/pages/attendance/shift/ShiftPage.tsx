@@ -1,10 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { message } from 'antd';
-import { 
-  PlusOutlined, 
-  ReloadOutlined, 
-  SearchOutlined
-} from '@ant-design/icons';
 import { getShifts, deleteShift, createShift, updateShift } from '../../../services/shift';
 import { createTimePeriod, updateTimePeriod } from '../../../services/time-period';
 import type { 
@@ -17,6 +11,8 @@ import type {
 import ShiftModal from './components/ShiftModal';
 import ShiftTable from './components/ShiftTable';
 import { Shift as UIShift, ShiftTimeConfig } from './types';
+import StandardModal from '../../../components/common/StandardModal';
+import { useToast } from '../../../components/common/ToastProvider';
 
 const ShiftPage: React.FC = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +22,13 @@ const ShiftPage: React.FC = (): React.ReactElement => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentShift, setCurrentShift] = useState<UIShift | null>(null);
+
+  // Confirm Modal state
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [shiftToDelete, setShiftToDelete] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  
+  const { toast } = useToast();
 
   const mapBackendToUI = useCallback((backendShift: BackendShift): UIShift => {
     // Sort periods by sortOrder
@@ -90,11 +93,11 @@ const ShiftPage: React.FC = (): React.ReactElement => {
       setShifts(uiShifts);
     } catch (err) {
       console.error(err);
-      message.error('Failed to fetch shifts');
+      toast.error('获取班次列表失败');
     } finally {
       setLoading(false);
     }
-  }, [mapBackendToUI]);
+  }, [mapBackendToUI, toast]);
 
   useEffect(() => {
     fetchShifts();
@@ -106,15 +109,24 @@ const ShiftPage: React.FC = (): React.ReactElement => {
     fetchShifts(value);
   };
 
-  const handleDelete = async (id: string): Promise<void> => {
-    if (window.confirm('Are you sure you want to delete this shift?')) {
-      try {
-        await deleteShift(parseInt(id));
-        message.success('Deleted successfully');
-        fetchShifts();
-      } catch {
-        message.error('Delete failed');
-      }
+  const handleDeleteClick = (id: string): void => {
+    setShiftToDelete(id);
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!shiftToDelete) return;
+    setConfirmLoading(true);
+    try {
+      await deleteShift(parseInt(shiftToDelete));
+      toast.success('删除成功');
+      fetchShifts();
+      setConfirmModalOpen(false);
+    } catch {
+      toast.error('删除失败');
+    } finally {
+      setConfirmLoading(false);
+      setShiftToDelete(null);
     }
   };
 
@@ -181,7 +193,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
           periods: shiftPeriods
         };
         await updateShift(parseInt(currentShift.id), updateDto);
-        message.success('Updated successfully');
+        toast.success('更新成功');
       } else {
         const createDto: CreateShiftDto = {
           name: uiData.name,
@@ -189,18 +201,36 @@ const ShiftPage: React.FC = (): React.ReactElement => {
           periods: shiftPeriods
         };
         await createShift(createDto);
-        message.success('Created successfully');
+        toast.success('创建成功');
       }
       
       setIsModalOpen(false);
       fetchShifts();
     } catch (error) {
       console.error(error);
-      message.error('Operation failed');
+      toast.error('操作失败');
     } finally {
       setLoading(false);
     }
   };
+
+  const confirmFooter = (
+    <div className="flex justify-end space-x-2">
+      <button
+        onClick={() => setConfirmModalOpen(false)}
+        className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleConfirmDelete}
+        disabled={confirmLoading}
+        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+      >
+        {confirmLoading ? '删除中...' : '删除'}
+      </button>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#141414] p-6">
@@ -212,23 +242,23 @@ const ShiftPage: React.FC = (): React.ReactElement => {
               onClick={handleAdd}
               className="flex items-center px-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded text-sm hover:border-blue-500 hover:text-blue-500 transition-colors bg-white dark:bg-transparent text-slate-600 dark:text-slate-300"
             >
-              <PlusOutlined className="text-lg mr-1" />
-              Add
+              <span className="material-icons text-lg mr-1">add</span>
+              新增
             </button>
             <button 
               onClick={() => fetchShifts()}
               className="flex items-center px-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded text-sm hover:border-blue-500 hover:text-blue-500 transition-colors bg-white dark:bg-transparent text-slate-600 dark:text-slate-300"
             >
-              <ReloadOutlined className="text-lg mr-1" />
-              Refresh
+              <span className="material-icons text-lg mr-1">refresh</span>
+              刷新
             </button>
           </div>
           
           <div className="relative w-64">
-            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+            <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
             <input 
               type="text" 
-              placeholder="Search shift name" 
+              placeholder="搜索班次名称" 
               value={searchText}
               onChange={handleSearch}
               className="w-full pl-10 pr-4 py-1.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -240,7 +270,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
         <div className="flex-1 relative overflow-auto p-4">
           <ShiftTable 
             shifts={shifts} 
-            onDelete={handleDelete} 
+            onDelete={handleDeleteClick} 
             onEdit={handleEdit} 
           />
         </div>
@@ -252,6 +282,24 @@ const ShiftPage: React.FC = (): React.ReactElement => {
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleModalConfirm}
       />
+
+      {/* Delete Confirmation Modal */}
+      <StandardModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="确认删除"
+        footer={confirmFooter}
+        width="400px"
+      >
+        <div className="flex items-start">
+          <span className="material-icons text-yellow-500 text-3xl mr-3">warning</span>
+          <div>
+            <p className="text-sm text-gray-500 mt-1">
+              确定要删除这个班次吗？此操作无法撤销。
+            </p>
+          </div>
+        </div>
+      </StandardModal>
     </div>
   );
 };
