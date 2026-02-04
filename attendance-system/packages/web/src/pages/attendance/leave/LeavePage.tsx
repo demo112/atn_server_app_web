@@ -26,7 +26,6 @@ const LeavePage: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      console.log('LeavePage: fetching data...');
       setLoading(true);
       const res = await leaveService.getLeaves({
         page,
@@ -36,11 +35,9 @@ const LeavePage: React.FC = () => {
         startTime: filters.dateRange ? filters.dateRange[0].toISOString() : undefined,
         endTime: filters.dateRange ? filters.dateRange[1].toISOString() : undefined,
       });
-      console.log('LeavePage: fetched data', res);
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {
-      console.error('LeavePage: fetch error', error);
       logger.error('Failed to fetch leaves', error);
       message.error('加载请假列表失败');
     } finally {

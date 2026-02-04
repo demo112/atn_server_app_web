@@ -87,6 +87,8 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
       open={isOpen}
       onOk={handleSubmit}
       onCancel={onClose}
+      okText="确定"
+      cancelText="取消"
       confirmLoading={loading}
       width={600}
     >
