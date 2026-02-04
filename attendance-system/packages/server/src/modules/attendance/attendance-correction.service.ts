@@ -9,10 +9,8 @@ import {
   SupplementResultVo,
   QueryCorrectionsDto,
   CorrectionVo,
-  CorrectionListVo,
   UpdateCorrectionDto,
   AttendanceStatus,
-  DailyRecord,
   CorrectionDailyRecordVo
 } from '@attendance/shared';
 import { CorrectionType, LeaveStatus, Prisma, AttCorrection } from '@prisma/client';
@@ -392,13 +390,13 @@ export class AttendanceCorrectionService {
     return updated;
   }
 
-  private toDailyRecordVo(record: any): DailyRecordVo {
+  private toDailyRecordVo(record: any): CorrectionDailyRecordVo {
     return {
       id: record.id.toString(),
       employeeId: record.employeeId,
-      employeeName: record.employee.name,
-      employeeNo: record.employee.employeeNo,
-      deptName: record.employee.department?.name || '',
+      employeeName: record.employee?.name || '',
+      employeeNo: record.employee?.employeeNo || '',
+      deptName: record.employee?.department?.name || '',
       workDate: dayjs(record.workDate).format('YYYY-MM-DD'),
       shiftName: record.shift?.name,
       startTime: record.period?.startTime,

@@ -9,7 +9,7 @@ import {
 } from '@attendance/shared/src/types/attendance/correction';
 import { createLogger } from '../../common/logger';
 import { AppError } from '../../common/errors';
-import { success, paginated } from '../../common/types/response';
+import { success } from '../../common/types/response';
 
 const service = new AttendanceCorrectionService();
 const logger = createLogger('AttendanceCorrectionController');
@@ -131,11 +131,6 @@ export class AttendanceCorrectionController {
     
     const result = await service.getDailyRecords(query);
     
-    res.json(paginated(
-      result.items,
-      Number(query.page) || 1,
-      Number(query.pageSize) || 20,
-      result.total
-    ));
+    res.json(success(result));
   }
 }

@@ -14,22 +14,7 @@ export const EmployeeListScreen = () => {
   const [keyword, setKeyword] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  // 初始化加载
-  useFocusEffect(
-    useCallback(() => {
-      loadData(1, true);
-    }, [])
-  );
-
-  useEffect(() => {
-    // 防抖搜索
-    const timer = setTimeout(() => {
-      loadData(1, true);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [keyword]);
-
-  const loadData = async (pageNum: number, isRefresh = false) => {
+  const loadData = useCallback(async (pageNum: number, isRefresh = false) => {
     if (loading) return;
     setLoading(true);
     try {
@@ -53,14 +38,29 @@ export const EmployeeListScreen = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [keyword, loading, employees.length]);
+
+  // 初始化加载
+  useFocusEffect(
+    useCallback(() => {
+      loadData(1, true);
+    }, [loadData])
+  );
+
+  useEffect(() => {
+    // 防抖搜索
+    const timer = setTimeout(() => {
+      loadData(1, true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [keyword, loadData]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     loadData(1, true);
   };
 
-  const handleLoadMore = () => {
+  const onLoadMore = () => {
     if (!loading && hasMore) {
       loadData(page + 1);
     }
@@ -129,7 +129,7 @@ export const EmployeeListScreen = () => {
         renderItem={renderItem}
         onRefresh={handleRefresh}
         refreshing={refreshing}
-        onEndReached={handleLoadMore}
+        onEndReached={onLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={loading && !refreshing ? <ActivityIndicator style={styles.loading} /> : null}
         ListEmptyComponent={!loading ? <Text style={styles.emptyText}>无数据</Text> : null}

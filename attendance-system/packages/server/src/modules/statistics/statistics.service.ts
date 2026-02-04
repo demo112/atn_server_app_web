@@ -150,6 +150,8 @@ export class StatisticsService {
         deptName: emp?.department?.name || '未分配',
         workDate: record.workDate.toISOString().split('T')[0],
         shiftName: record.shift?.name,
+        startTime: record.startTime || undefined,
+        endTime: record.endTime || undefined,
         checkInTime: record.checkInTime ? record.checkInTime.toISOString() : undefined,
         checkOutTime: record.checkOutTime ? record.checkOutTime.toISOString() : undefined,
         status: record.status as AttendanceStatus,
