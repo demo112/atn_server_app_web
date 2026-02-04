@@ -10,7 +10,7 @@ describe('ScheduleService Property Tests', () => {
 
   it('resolveConflict logic coverage', async () => {
     await fc.assert(
-      fc.property(
+      fc.asyncProperty(
         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }), 
         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }), 
         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }), 
@@ -28,8 +28,8 @@ describe('ScheduleService Property Tests', () => {
            // Here: (oldStart <= newEnd) and (oldEnd >= newStart)
            if (oldStart > newEnd || oldEnd < newStart) return true; // No overlap
 
-           // Reset mocks
-           vi.clearAllMocks();
+           // Create fresh mock for each run
+           const txMock = mockDeep<Prisma.TransactionClient>();
            
            // Mock data
            const oldSchedule = { 
@@ -84,6 +84,8 @@ describe('ScheduleService Property Tests', () => {
              expect((createCall.data.startDate as Date).getTime()).toBeGreaterThan(newEnd.getTime());
              expect(createCall.data.endDate).toEqual(oldEnd);
            }
+           
+           return true;
         }
       )
     );

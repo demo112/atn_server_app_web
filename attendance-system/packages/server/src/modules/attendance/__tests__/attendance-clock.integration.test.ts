@@ -1,5 +1,6 @@
 
 import 'reflect-metadata';
+import 'express-async-errors'; // Import async errors handling
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
@@ -7,6 +8,7 @@ import { attendanceRouter } from '../attendance.routes';
 import { prisma } from '../../../common/db/prisma';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import { ClockType, ClockSource, PrismaClient } from '@prisma/client';
+import { errorHandler } from '../../../common/error-handler'; // Import global error handler
 
 // Mock prisma
 vi.mock('../../../common/db/prisma', async () => {
@@ -35,12 +37,16 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/api/v1/attendance', attendanceRouter);
+app.use(errorHandler); // Register error handler
 
 describe('Attendance Clock Integration', () => {
   const prismaMock = prisma as unknown as ReturnType<typeof mockDeep<PrismaClient>>;
 
   beforeEach(() => {
     mockReset(prismaMock);
+    // Mock transaction to execute callback immediately
+    // @ts-ignore
+    prismaMock.$transaction.mockImplementation((cb) => cb(prismaMock));
   });
 
   describe('POST /clock (App)', () => {
@@ -92,6 +98,7 @@ describe('Attendance Clock Integration', () => {
         next();
       });
       appNoEmp.use('/api/v1/attendance', attendanceRouter);
+      appNoEmp.use(errorHandler); // Register error handler
 
       const res = await request(appNoEmp)
         .post('/api/v1/attendance/clock')
@@ -182,8 +189,8 @@ describe('Attendance Clock Integration', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.items).toHaveLength(1);
-      expect(res.body.pagination.total).toBe(1);
+      expect(res.body.data.items).toHaveLength(1);
+      expect(res.body.data.pagination.total).toBe(1);
     });
 
     it('should enforce permission: regular user only sees own records', async () => {

@@ -37,7 +37,11 @@ export class UserService {
         status: user.status,
         employeeId: user.employeeId,
       };
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === 'P2002' && error.meta?.target?.includes('employeeId')) {
+        logger.warn({ err: error, dto }, 'Employee already linked to a user');
+        throw AppError.conflict('Employee is already linked to a user');
+      }
       logger.error({ err: error, dto }, 'Failed to create user');
       throw error;
     }

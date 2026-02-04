@@ -86,5 +86,70 @@ describe('EmployeeService', () => {
       expect(updateCall.data.status).toBe(EmployeeStatus.deleted);
       expect(updateCall.data.employeeNo).toMatch(/^del_/);
     });
+    it('should throw error if transaction fails', async () => {
+      const employee = { 
+        id: 1, 
+        employeeNo: 'E001', 
+        userId: 100,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as any;
+      (prisma.employee.findUnique as any).mockResolvedValue(employee);
+      
+      // Simulate transaction failure by rejecting the mock
+      (prisma.$transaction as any).mockRejectedValueOnce(new Error('Transaction failed'));
+
+      await expect(service.delete(1)).rejects.toThrow('Transaction failed');
+    });
+  });
+
+  describe('bindUser', () => {
+    const baseEmployee = {
+      id: 1,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    it('should bind user successfully', async () => {
+      const employee = { ...baseEmployee, userId: null };
+      const user = { id: 100, employeeId: null };
+      
+      (prisma.employee.findUnique as any).mockResolvedValue(employee);
+      (prisma.user.findUnique as any).mockResolvedValue(user);
+      (prisma.user.update as any).mockResolvedValue({});
+
+      const result = await service.bindUser(1, { userId: 100 });
+      expect(result.success).toBe(true);
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 100 },
+        data: { employeeId: 1 }
+      });
+    });
+
+    it('should throw conflict if user already bound', async () => {
+      const employee = { ...baseEmployee, userId: null };
+      const user = { id: 100, employeeId: 2 }; // Bound to another employee
+      
+      (prisma.employee.findUnique as any).mockResolvedValue(employee);
+      (prisma.user.findUnique as any).mockResolvedValue(user);
+
+      await expect(service.bindUser(1, { userId: 100 }))
+        .rejects.toThrow('User already bound to another employee');
+    });
+
+    it('should throw conflict if employee already bound', async () => {
+      // findOne maps employee.user.id to userId. So we need to mock user relation.
+      const employee = { 
+        ...baseEmployee, 
+        user: { id: 200 } 
+      }; 
+      const user = { id: 100, employeeId: null };
+      
+      (prisma.employee.findUnique as any).mockResolvedValue(employee);
+      (prisma.user.findUnique as any).mockResolvedValue(user);
+
+      await expect(service.bindUser(1, { userId: 100 }))
+        .rejects.toThrow('Employee already bound to another user');
+    });
   });
 });

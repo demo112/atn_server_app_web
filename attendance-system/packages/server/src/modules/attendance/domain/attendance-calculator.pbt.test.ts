@@ -21,6 +21,8 @@ describe('AttendanceCalculator PBT', () => {
         (record, period, leaves) => {
           // Pre-conditions
           fc.pre(isValidDate(record.workDate));
+          if (record.checkInTime) fc.pre(isValidDate(record.checkInTime));
+          if (record.checkOutTime) fc.pre(isValidDate(record.checkOutTime));
           
           // Execute
           const result = calculator.calculate(record, period, leaves);
@@ -76,7 +78,16 @@ describe('AttendanceCalculator PBT', () => {
     fc.assert(
       fc.property(overlapScenarioArb, ({ record, period, leaves }) => {
         const result = calculator.calculate(record, period, leaves);
-        expect(result.leaveMinutes).toBeGreaterThan(0);
+        
+        // Handle 0-length shifts (e.g. 03:01 - 03:01)
+        const start = period.startTime || '09:00';
+        const end = period.endTime || '18:00';
+        const isZeroLength = start === end;
+        if (isZeroLength) {
+             expect(result.leaveMinutes).toBe(0);
+        } else {
+             expect(result.leaveMinutes).toBeGreaterThan(0);
+        }
       })
     );
   });

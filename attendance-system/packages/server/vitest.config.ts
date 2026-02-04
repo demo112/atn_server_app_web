@@ -12,17 +12,15 @@ export default defineConfig(({ mode }) => {
     // Default run, let setup-pbt.ts handle default or use env var if passed manually
     // But for consistency we can set a default here too if we want. 
     // Let's leave it empty so existing FC defaults (100) or manual env vars work.
-    // If explicit 'test' mode is passed, we might want 100.
-    if (mode === 'test') {
-       env.FC_NUM_RUNS = '100';
-    }
   }
 
   return {
     test: {
       globals: true,
       environment: 'node',
-      include: ['src/**/*.test.ts', 'src/**/*.integration.test.ts', 'src/**/*.verification.test.ts', 'src/**/*.pbt.test.ts'],
+      include: process.env.TEST_MODE === 'pbt'
+        ? ['src/**/*.pbt.test.ts', 'src/**/*.property.test.ts', 'src/**/*.prop.test.ts']
+        : ['src/**/*.test.ts', 'src/**/*.integration.test.ts', 'src/**/*.verification.test.ts', 'src/**/*.pbt.test.ts'],
       setupFiles: ['./src/common/test/setup-pbt.ts'],
       alias: {
         '@attendance/shared': path.resolve(__dirname, '../shared/src'),

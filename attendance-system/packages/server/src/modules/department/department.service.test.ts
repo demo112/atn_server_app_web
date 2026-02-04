@@ -65,6 +65,24 @@ describe('DepartmentService', () => {
       expect(result[0].children![0].children).toHaveLength(1);
       expect(result[0].children![0].children![0].id).toBe(4);
     });
+
+    it('should handle orphaned nodes by treating them as roots', async () => {
+      const now = new Date();
+      // Child points to non-existent parent 99
+      const depts = [
+        { id: 1, name: 'Root', parentId: null, sortOrder: 0, createdAt: now, updatedAt: now },
+        { id: 2, name: 'Orphan', parentId: 99, sortOrder: 0, createdAt: now, updatedAt: now },
+      ];
+      
+      // @ts-expect-error: mock value
+      prismaMock.department.findMany.mockResolvedValue(depts as any);
+
+      const result = await service.getTree();
+
+      expect(result).toHaveLength(2);
+      expect(result.find(d => d.id === 1)).toBeDefined();
+      expect(result.find(d => d.id === 2)).toBeDefined();
+    });
   });
 
   describe('create', () => {
@@ -167,6 +185,47 @@ describe('DepartmentService', () => {
       });
 
       await expect(service.update(1, { parentId: 3 })).rejects.toThrow('Circular reference detected');
+    });
+
+    it('should stop checking circular reference after MAX_DEPTH', async () => {
+      const now = new Date();
+      const dept1 = { id: 1, parentId: null, createdAt: now, updatedAt: now };
+      
+      mockReset(prismaMock);
+      // @ts-expect-error: mock implementation
+      prismaMock.department.findUnique.mockImplementation((args) => {
+        if (args.where.id === 1) return Promise.resolve(dept1);
+        // Simulate a very deep chain: N -> N-1 -> ... -> 2 -> 1
+        // We are updating 1 to have parent N.
+        // The check starts at N, goes up.
+        // We simulate that after 20 steps, we still haven't reached 1 (or we just mock it to be safe)
+        // Actually, let's just simulate a chain of 25 nodes that DOES lead to 1, 
+        // but ensure the code stops checking after 20.
+        
+        // args.where.id will be the 'currentId' in the loop
+        const id = args.where.id;
+        if (id > 1 && id <= 25) {
+          return Promise.resolve({ parentId: id - 1 });
+        }
+        if (id === 1) return Promise.resolve({ parentId: null });
+        return Promise.resolve(null);
+      });
+
+      // Update 1 to be child of 25. Cycle is 1 -> 25 -> 24 ... -> 1
+      // Check starts at 25.
+      // 25 -> 24 (depth 0)
+      // ...
+      // 5 -> 4 (depth 20) -> LOOP BREAKS (MAX_DEPTH = 20)
+      // So it should NOT throw.
+      
+      // Note: This relies on internal implementation detail MAX_DEPTH=20.
+      // If we want to strictly test this, we should verify it DOES NOT throw.
+      
+      // Mock update to succeed
+      // @ts-expect-error: mock value
+      prismaMock.department.update.mockResolvedValue({ ...dept1, parentId: 25, name: 'Dept1', sortOrder: 0 });
+
+      await expect(service.update(1, { parentId: 25 })).resolves.not.toThrow();
     });
   });
 

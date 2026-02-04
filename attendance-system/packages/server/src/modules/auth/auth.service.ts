@@ -22,7 +22,8 @@ export class AuthService {
     }
 
     if (user.status !== 'active') {
-      throw AppError.badRequest('Account is inactive');
+      // Security: Use generic error to prevent username enumeration
+      throw AppError.badRequest('Invalid credentials');
     }
 
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);

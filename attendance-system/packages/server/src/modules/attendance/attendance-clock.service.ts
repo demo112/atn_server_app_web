@@ -47,60 +47,66 @@ export class AttendanceClockService {
     invariant(data.type, 'Clock type is required');
     invariant(data.source, 'Clock source is required');
 
-    const clockTime = data.clockTime ? new Date(data.clockTime) : new Date();
-    const now = new Date();
+    return prisma.$transaction(async (tx) => {
+      // 0. 并发控制: 锁定员工记录，防止毫秒级并发打卡
+      // 使用 SELECT ... FOR UPDATE 序列化同一员工的请求
+      await tx.$queryRaw`SELECT 1 FROM Employee WHERE id = ${data.employeeId} FOR UPDATE`;
 
-    // 1. 禁止未来时间打卡 (允许 1 分钟容错)
-    if (clockTime.getTime() > now.getTime() + 60 * 1000) {
-      throw new AppError('ERR_CLOCK_FUTURE_TIME_NOT_ALLOWED', 'Future clock time not allowed', 400);
-    }
+      const clockTime = data.clockTime ? new Date(data.clockTime) : new Date();
+      const now = new Date();
 
-    // 2. 处理重复打卡 (1 分钟内禁止重复)
-    const lastClock = await prisma.attClockRecord.findFirst({
-      where: {
-        employeeId: data.employeeId,
-        clockTime: {
-          gte: new Date(clockTime.getTime() - 60 * 1000),
-          lte: clockTime
-        }
-      },
-      orderBy: { clockTime: 'desc' }
-    });
-
-    if (lastClock) {
-      throw new AppError('ERR_CLOCK_TOO_FREQUENT', 'Clock in too frequent', 400);
-    }
-
-    // 检查员工是否存在
-    const employee = await prisma.employee.findUnique({
-      where: { id: data.employeeId }
-    });
-    if (!employee) {
-      throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
-    }
-
-    // 创建记录
-    const record = await prisma.attClockRecord.create({
-      data: {
-        employeeId: data.employeeId,
-        clockTime: clockTime,
-        type: data.type,
-        source: data.source,
-        deviceInfo: data.deviceInfo ?? Prisma.JsonNull,
-        location: data.location ?? Prisma.JsonNull,
-        operatorId: data.operatorId,
-        remark: data.remark,
-      },
-      include: {
-        employee: {
-          include: { department: true }
-        },
-        operator: true
+      // 1. 禁止未来时间打卡 (允许 1 分钟容错)
+      if (clockTime.getTime() > now.getTime() + 60 * 1000) {
+        throw new AppError('ERR_CLOCK_FUTURE_TIME_NOT_ALLOWED', 'Future clock time not allowed', 400);
       }
-    });
 
-    this.logger.info(`Created clock record: Emp ${record.employeeId} Type ${record.type} (ID: ${record.id})`);
-    return this.mapToVo(record);
+      // 2. 处理重复打卡 (1 分钟内禁止重复)
+      const lastClock = await tx.attClockRecord.findFirst({
+        where: {
+          employeeId: data.employeeId,
+          clockTime: {
+            gte: new Date(clockTime.getTime() - 60 * 1000),
+            lte: clockTime
+          }
+        },
+        orderBy: { clockTime: 'desc' }
+      });
+
+      if (lastClock) {
+        throw new AppError('ERR_CLOCK_TOO_FREQUENT', 'Clock in too frequent', 400);
+      }
+
+      // 检查员工是否存在
+      const employee = await tx.employee.findUnique({
+        where: { id: data.employeeId }
+      });
+      if (!employee) {
+        throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
+      }
+
+      // 创建记录
+      const record = await tx.attClockRecord.create({
+        data: {
+          employeeId: data.employeeId,
+          clockTime: clockTime,
+          type: data.type,
+          source: data.source,
+          deviceInfo: data.deviceInfo ?? Prisma.JsonNull,
+          location: data.location ?? Prisma.JsonNull,
+          operatorId: data.operatorId,
+          remark: data.remark,
+        },
+        include: {
+          employee: {
+            include: { department: true }
+          },
+          operator: true
+        }
+      });
+
+      this.logger.info(`Created clock record: Emp ${record.employeeId} Type ${record.type} (ID: ${record.id})`);
+      return this.mapToVo(record);
+    });
   }
 
   /**

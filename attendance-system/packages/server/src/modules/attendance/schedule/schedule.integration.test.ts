@@ -1,5 +1,6 @@
 
 import 'reflect-metadata';
+import 'express-async-errors';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
@@ -7,6 +8,7 @@ import { attendanceRouter } from '../attendance.routes';
 import { prisma } from '../../../common/db/prisma';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import { PrismaClient } from '@prisma/client';
+import { errorHandler } from '../../../common/error-handler';
 
 // Mock prisma
 vi.mock('../../../common/db/prisma', async () => {
@@ -34,6 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/api/v1/attendance', attendanceRouter);
+app.use(errorHandler);
 
 describe('Schedule Integration', () => {
   const prismaMock = prisma as unknown as ReturnType<typeof mockDeep<PrismaClient>>;

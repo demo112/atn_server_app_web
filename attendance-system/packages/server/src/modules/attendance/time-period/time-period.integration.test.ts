@@ -1,11 +1,13 @@
 
 import 'reflect-metadata';
+import 'express-async-errors';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { attendanceRouter } from '../attendance.routes';
 import { prisma } from '../../../common/db/prisma';
 import { PrismaClient } from '@prisma/client';
+import { errorHandler } from '../../../common/error-handler';
 
 // Mock prisma
 vi.mock('../../../common/db/prisma', async () => {
@@ -27,6 +29,7 @@ app.use(express.json());
 // Mock auth middleware if needed, but TimePeriodController currently doesn't check user context explicitly
 // (Assuming auth middleware is applied globally or higher up, but here we just test the route logic)
 app.use('/api/v1/attendance', attendanceRouter);
+app.use(errorHandler);
 
 describe('TimePeriod Integration', () => {
   const prismaMock = prisma as unknown as ReturnType<typeof mockDeep<PrismaClient>>;
