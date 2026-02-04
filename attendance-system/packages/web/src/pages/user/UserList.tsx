@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { userService } from '../../services/user';
 import type { UserRole, UserStatus } from '@attendance/shared';
 import { useToast } from '@/components/common/ToastProvider';
+import StandardModal from '@/components/common/StandardModal';
 import dayjs from 'dayjs';
 import UserModal, { UserFormData } from './components/UserModal';
 
@@ -36,6 +37,14 @@ const UserList: React.FC = () => {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [currentRecord, setCurrentRecord] = useState<UserListItem | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+
+  // Confirm Modal State
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    content: string;
+    onConfirm: () => Promise<void>;
+  }>({ title: '', content: '', onConfirm: async () => {} });
 
   const fetchData = async (currentPage = 1, currentSearch = searchName): Promise<void> => {
     setLoading(true);
@@ -101,39 +110,50 @@ const UserList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('确定要删除该用户吗？此操作无法撤销。')) return;
-    
-    try {
-      await userService.deleteUser(id);
-      toast.success('删除成功');
-      // Refresh
-      if (data.length === 1 && page > 1) {
-        setPage(page - 1);
-      } else {
-        fetchData(page);
+  const handleDelete = (id: number) => {
+    setConfirmConfig({
+      title: '确认删除',
+      content: '确定要删除该用户吗？此操作无法撤销。',
+      onConfirm: async () => {
+        try {
+          await userService.deleteUser(id);
+          toast.success('删除成功');
+          if (data.length === 1 && page > 1) {
+            setPage(page - 1);
+          } else {
+            fetchData(page);
+          }
+          setConfirmModalOpen(false);
+        } catch (error) {
+          console.error(error);
+          toast.error('删除失败');
+        }
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('删除失败');
-    }
+    });
+    setConfirmModalOpen(true);
   };
 
-  const handleBatchDelete = async () => {
+  const handleBatchDelete = () => {
     if (selectedIds.size === 0) return;
-    if (!window.confirm(`确定要删除选中的 ${selectedIds.size} 个用户吗？`)) return;
-
-    try {
-      // Parallel delete (simple implementation)
-      await Promise.all(Array.from(selectedIds).map(id => userService.deleteUser(id)));
-      toast.success('批量删除成功');
-      setSelectedIds(new Set());
-      fetchData(1); // Back to first page to be safe
-    } catch (error) {
-      console.error(error);
-      toast.error('部分删除失败，请刷新重试');
-      fetchData(page);
-    }
+    
+    setConfirmConfig({
+      title: '批量删除确认',
+      content: `确定要删除选中的 ${selectedIds.size} 个用户吗？`,
+      onConfirm: async () => {
+        try {
+          await Promise.all(Array.from(selectedIds).map(id => userService.deleteUser(id)));
+          toast.success('批量删除成功');
+          setSelectedIds(new Set());
+          fetchData(1);
+          setConfirmModalOpen(false);
+        } catch (error) {
+          console.error(error);
+          toast.error('部分删除失败，请刷新重试');
+          fetchData(page);
+        }
+      }
+    });
+    setConfirmModalOpen(true);
   };
 
   const handleModalConfirm = async (formData: UserFormData) => {
@@ -362,6 +382,41 @@ const UserList: React.FC = () => {
         onConfirm={handleModalConfirm}
         loading={submitLoading}
       />
+
+      {/* Confirmation Modal */}
+      <StandardModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title={confirmConfig.title}
+        width="max-w-sm"
+        footer={
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              onClick={() => setConfirmModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+              取消
+            </button>
+            <button
+              onClick={confirmConfig.onConfirm}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              确定
+            </button>
+          </div>
+        }
+      >
+        <div className="flex items-start">
+          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+            <span className="material-icons text-red-600">warning</span>
+          </div>
+          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">{confirmConfig.content}</p>
+            </div>
+          </div>
+        </div>
+      </StandardModal>
     </div>
   );
 };

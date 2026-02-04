@@ -1,17 +1,10 @@
 import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../test/mocks/server';
 import EmployeeList from '../../pages/employee/EmployeeList';
-import { MemoryRouter } from 'react-router-dom';
-import { Modal, message } from 'antd';
-
-// Mock child components to simplify integration test
-// But for integration test, we usually want to test real components. 
-// However, if they are complex, we can mock them.
-// Let's try to use real components first, but if they depend on other services, we might need to mock services.
-// Assuming EmployeeModal and BindUserModal are present.
+import { renderWithProviders } from '../../test/utils';
 
 describe('EmployeeList Integration', () => {
   const mockEmployees = [
@@ -86,8 +79,6 @@ describe('EmployeeList Integration', () => {
       http.put('http://localhost:3000/api/v1/employees/:id', () => {
         return HttpResponse.json({ success: true });
       }),
-       // Need to mock departments tree for EmployeeModal usually, but maybe it's lazy loaded or mocked globally?
-       // Let's add it here just in case EmployeeModal fetches it.
        http.get('http://localhost:3000/api/v1/departments/tree', () => {
            return HttpResponse.json({ success: true, data: [] });
        })
@@ -96,11 +87,7 @@ describe('EmployeeList Integration', () => {
 
   it('should load and render employee list', async () => {
     setupServer();
-    render(
-      <MemoryRouter>
-        <EmployeeList />
-      </MemoryRouter>
-    );
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('张三')).toBeInTheDocument();
@@ -111,11 +98,7 @@ describe('EmployeeList Integration', () => {
 
   it('should filter employees by keyword', async () => {
     setupServer();
-    render(
-      <MemoryRouter>
-        <EmployeeList />
-      </MemoryRouter>
-    );
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
         expect(screen.getByText('张三')).toBeInTheDocument();
@@ -123,13 +106,7 @@ describe('EmployeeList Integration', () => {
 
     const searchInput = screen.getByPlaceholderText('Search by name/no');
     await userEvent.type(searchInput, '张三{enter}');
-    // Or click search button if form.submit() is triggered by enter. 
-    // The code says onSearch={() => form.submit()}.
     
-    // We expect filter to happen.
-    // In our mock, we filter by keyword.
-    
-    // Wait for list update. Since '张三' is still there, we check '李四' is gone.
     await waitFor(() => {
         expect(screen.queryByText('李四')).not.toBeInTheDocument();
         expect(screen.getByText('张三')).toBeInTheDocument();
@@ -138,45 +115,20 @@ describe('EmployeeList Integration', () => {
 
   it('should open add employee modal', async () => {
     setupServer();
-    render(
-      <MemoryRouter>
-        <EmployeeList />
-      </MemoryRouter>
-    );
+    renderWithProviders(<EmployeeList />);
 
     await userEvent.click(screen.getByText('Add Employee'));
     
     await waitFor(() => {
-        // Check for modal title or some field
-        // Assuming EmployeeModal has title 'Create Employee' or similar. 
-        // Or check for form fields like 'Name', 'Phone'
-        expect(screen.getByLabelText(/Name/i)).toBeInTheDocument(); 
-        // Note: Antd Form Item label might not be directly associated with input for getByLabelText sometimes, 
-        // but let's try. If fails, use getByText.
+        expect(screen.getByRole('dialog', { name: /Add Employee/i })).toBeInTheDocument();
     });
   });
   
   it('should delete employee', async () => {
         setupServer();
+        const user = userEvent.setup();
         
-        // Spy on Modal.confirm
-        const confirmSpy = vi.spyOn(Modal, 'confirm');
-        confirmSpy.mockImplementation((config) => {
-            // Simulate user clicking OK
-            if (config && config.onOk) {
-                config.onOk(); 
-            }
-            return { destroy: vi.fn(), update: vi.fn() };
-        });
-
-        // Spy on message.success
-        const messageSpy = vi.spyOn(message, 'success');
-
-        render(
-          <MemoryRouter>
-            <EmployeeList />
-          </MemoryRouter>
-        );
+        renderWithProviders(<EmployeeList />);
         
         await waitFor(() => {
             expect(screen.getByText('张三')).toBeInTheDocument();
@@ -185,14 +137,19 @@ describe('EmployeeList Integration', () => {
         // Find delete button for first row
         const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
         expect(deleteButtons.length).toBeGreaterThan(0);
-        await userEvent.click(deleteButtons[0]);
+        await user.click(deleteButtons[0]);
         
-        // Verify Modal.confirm was called
-        expect(confirmSpy).toHaveBeenCalled();
+        // Verify StandardModal appears
+        const modal = await screen.findByRole('dialog', { name: /Are you sure to delete this employee\?/i });
+        expect(modal).toBeInTheDocument();
         
-        // Wait for success message call
+        // Find and click "确定" button in modal
+        const confirmButton = within(modal).getByRole('button', { name: '确定' });
+        await user.click(confirmButton);
+        
+        // Wait for success toast
         await waitFor(() => {
-            expect(messageSpy).toHaveBeenCalledWith(expect.stringMatching(/Deleted successfully/i));
+            expect(screen.getByText('Deleted successfully')).toBeInTheDocument();
         });
     });
 

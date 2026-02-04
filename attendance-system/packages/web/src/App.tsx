@@ -8,7 +8,6 @@ import Login from './pages/Login';
 import UserList from './pages/user/UserList';
 import EmployeeList from './pages/employee/EmployeeList';
 import EmployeeManagement from './pages/employee/EmployeeManagement';
-import DepartmentPage from './pages/department/DepartmentPage';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import ShiftPage from '@/pages/attendance/shift/ShiftPage';
 import ClockRecordPage from '@/pages/attendance/clock/ClockRecordPage';
@@ -58,7 +57,6 @@ export default function App(): React.ReactElement {
                 <Route index element={<Home />} />
                 <Route path="users" element={<UserList />} />
                 <Route path="employees" element={<EmployeeManagement />} />
-                <Route path="departments" element={<DepartmentPage />} />
                 <Route path="attendance">
                    <Route path="time-periods" element={<TimePeriodPage />} />
                    <Route path="shifts" element={<ShiftPage />} />
