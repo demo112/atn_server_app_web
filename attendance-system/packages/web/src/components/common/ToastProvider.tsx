@@ -14,6 +14,12 @@ interface ToastContextType {
   error: (message: string) => void;
   info: (message: string) => void;
   warning: (message: string) => void;
+  toast: {
+    success: (message: string) => void;
+    error: (message: string) => void;
+    info: (message: string) => void;
+    warning: (message: string) => void;
+  };
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -26,16 +32,17 @@ export const useToast = () => {
   return context;
 };
 
+// Global dispatch for non-component usage
+const dispatchToast = (message: string, type: ToastType) => {
+  const event = new CustomEvent('app-toast', { detail: { message, type } });
+  window.dispatchEvent(event);
+};
+
 export const toast = {
   success: (message: string) => dispatchToast(message, 'success'),
   error: (message: string) => dispatchToast(message, 'error'),
   info: (message: string) => dispatchToast(message, 'info'),
   warning: (message: string) => dispatchToast(message, 'warning'),
-};
-
-const dispatchToast = (message: string, type: ToastType) => {
-  const event = new CustomEvent('app-toast', { detail: { message, type } });
-  window.dispatchEvent(event);
 };
 
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -70,8 +77,10 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const info = useCallback((message: string) => showToast(message, 'info'), [showToast]);
   const warning = useCallback((message: string) => showToast(message, 'warning'), [showToast]);
 
+  const toastObject = { success, error, info, warning };
+
   return (
-    <ToastContext.Provider value={{ showToast, success, error, info, warning }}>
+    <ToastContext.Provider value={{ showToast, success, error, info, warning, toast: toastObject }}>
       {children}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => (

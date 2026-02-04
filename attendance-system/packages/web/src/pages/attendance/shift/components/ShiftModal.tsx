@@ -16,6 +16,8 @@ const DEFAULT_TIME_CONFIG: ShiftTimeConfig = {
   validFromEnd: '10:00',
   validUntilStart: '17:00',
   validUntilEnd: '19:00',
+  isClockInMandatory: true,
+  isClockOutMandatory: true,
 };
 
 const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onConfirm, initialData }) => {

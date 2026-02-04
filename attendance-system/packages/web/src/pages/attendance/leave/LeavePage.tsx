@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { LeaveVo, LeaveType, LeaveStatus } from '@attendance/shared';
-import * as leaveService from '@/services/attendance/leave';
+import * as leaveService from '@/services/leave';
 import { LeaveDialog } from './components/LeaveDialog';
 import dayjs from 'dayjs';
 import { logger } from '@/utils/logger';

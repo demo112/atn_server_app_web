@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderWithProviders } from '../../../test/utils';
 import LeavePage from '../../../pages/attendance/leave/LeavePage';
-import * as leaveService from '@/services/attendance/leave';
+import * as leaveService from '@/services/leave';
 import { LeaveType, LeaveStatus } from '@attendance/shared';
 import userEvent from '@testing-library/user-event';
 
