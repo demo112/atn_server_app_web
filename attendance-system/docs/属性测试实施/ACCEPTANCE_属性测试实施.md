@@ -34,6 +34,13 @@
 - [x] **工具函数**: `auth.prop.test.ts`
   - 解决了 Vitest/Jest 框架冲突，成功迁移至 Jest。
   - 验证了 `expo-secure-store` Mock 环境下的 Auth 流程。
+- [x] **错误处理**: `error-handler.prop.test.ts`
+  - 验证了纯函数化的错误分析逻辑，覆盖了各种 HTTP 状态码和消息结构。
+- [x] **API 契约**: `request.prop.test.ts`
+  - 验证了响应验证逻辑，确保符合 Schema 定义，拒绝非法数据。
+- [x] **业务 Schema**: `attendance.prop.test.ts`
+  - 验证了考勤核心 Schema (TimePeriod, Leave, Schedule) 的健壮性。
+  - 修复了 `NaN` 和无效日期生成的边界问题。
 
 ### 2.5 Shared (公共库)
 - [x] **日期工具**: `date.property.test.ts`
@@ -51,6 +58,9 @@
 | Web | `attendance.property.test.ts` | 3 | ✅ Pass | Schema 健壮性 |
 | Web | `auth.property.test.ts` | 3 | ✅ Pass | Auth 工具 |
 | App | `auth.prop.test.ts` | 3 | ✅ Pass | 移动端兼容性 |
+| App | `error-handler.prop.test.ts` | 1 | ✅ Pass | 错误逻辑覆盖 |
+| App | `request.prop.test.ts` | 1 | ✅ Pass | API契约覆盖 |
+| App | `attendance.prop.test.ts` | 3 | ✅ Pass | 业务Schema覆盖 |
 | Shared | `date.property.test.ts` | 3 | ✅ Pass | 基础工具 |
 
 ## 4. 后续建议

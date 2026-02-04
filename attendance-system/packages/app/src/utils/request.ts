@@ -4,6 +4,7 @@ import { getToken, clearAuth } from './auth';
 import { z } from 'zod';
 import { ApiResponse } from '@attendance/shared';
 import { logger } from './logger';
+import { analyzeErrorResponse } from './error-handler';
 
 // Use local IP for Android Emulator (10.0.2.2) or physical device (LAN IP)
 // localhost works for iOS simulator but not Android
@@ -59,29 +60,19 @@ request.interceptors.response.use(
   async (error: AxiosError<{ message?: string; error?: { message?: string } }>) => {
     if (error.response) {
       const { status, data } = error.response;
-      const errorMessage = data?.message || data?.error?.message || 'Request failed';
+      const action = analyzeErrorResponse(status, data);
 
-      switch (status) {
-        case 400:
-          Alert.alert('Error', errorMessage);
+      switch (action.type) {
+        case 'ALERT':
+          Alert.alert(action.title, action.message);
           break;
-        case 401:
-          Alert.alert('Session Expired', 'Please login again');
+        case 'CLEAR_AUTH_AND_ALERT':
+          Alert.alert(action.title, action.message);
           await clearAuth();
-          // Navigation logic to redirect to login might be needed here
-          // or handle it in the UI by checking token existence
           break;
-        case 403:
-          Alert.alert('Permission Denied', 'You do not have permission to perform this action');
+        case 'REJECT':
+          // Default behavior for unhandled cases if any
           break;
-        case 404:
-          Alert.alert('Error', 'Resource not found');
-          break;
-        case 500:
-          Alert.alert('Server Error', 'Please try again later');
-          break;
-        default:
-          Alert.alert('Error', errorMessage);
       }
     } else if (error.request) {
       Alert.alert('Network Error', 'Please check your internet connection');
