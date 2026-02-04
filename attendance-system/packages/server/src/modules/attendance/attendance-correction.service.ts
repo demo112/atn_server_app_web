@@ -90,7 +90,13 @@ export class AttendanceCorrectionService {
   /**
    * 获取补签记录列表
    */
-  async getCorrections(dto: QueryCorrectionsDto): Promise<CorrectionListVo> {
+  async getCorrections(dto: QueryCorrectionsDto): Promise<{
+    items: CorrectionVo[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
     const { page = 1, pageSize = 20, deptId, startDate, endDate } = dto;
     const skip = (Number(page) - 1) * Number(pageSize);
 
@@ -136,7 +142,6 @@ export class AttendanceCorrectionService {
     // 根据 schema, operatorId 只是 Int。暂返回 ID 或 "System"
     
     return {
-      total,
       items: items.map(item => ({
         id: item.id,
         employeeId: item.employeeId,
@@ -147,14 +152,24 @@ export class AttendanceCorrectionService {
         operatorName: `User ${item.operatorId}`, // 暂位符
         updatedAt: item.updatedAt.toISOString(),
         remark: item.remark || undefined
-      }))
+      })),
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+      totalPages: Math.ceil(total / Number(pageSize))
     };
   }
 
   /**
    * 查询每日考勤记录
    */
-  async getDailyRecords(dto: QueryDailyRecordsDto): Promise<{ total: number; items: CorrectionDailyRecordVo[] }> {
+  async getDailyRecords(dto: QueryDailyRecordsDto): Promise<{ 
+    items: CorrectionDailyRecordVo[]; 
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
     const { page = 1, pageSize = 20, deptId, startDate, endDate, status, employeeName } = dto;
     const skip = (Number(page) - 1) * Number(pageSize);
 
@@ -195,8 +210,11 @@ export class AttendanceCorrectionService {
     ]);
 
     return {
+      items: items.map(item => this.toDailyRecordVo(item)),
       total,
-      items: items.map(item => this.toDailyRecordVo(item))
+      page: Number(page),
+      pageSize: Number(pageSize),
+      totalPages: Math.ceil(total / Number(pageSize))
     };
   }
 
