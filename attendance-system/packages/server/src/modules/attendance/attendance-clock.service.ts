@@ -50,7 +50,7 @@ export class AttendanceClockService {
     return prisma.$transaction(async (tx) => {
       // 0. 并发控制: 锁定员工记录，防止毫秒级并发打卡
       // 使用 SELECT ... FOR UPDATE 序列化同一员工的请求
-      await tx.$queryRaw`SELECT 1 FROM Employee WHERE id = ${data.employeeId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT 1 FROM employees WHERE id = ${data.employeeId} FOR UPDATE`;
 
       const clockTime = data.clockTime ? new Date(data.clockTime) : new Date();
       const now = new Date();
