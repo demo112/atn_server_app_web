@@ -5,10 +5,10 @@ import { z } from 'zod';
 import { ApiResponse } from '@attendance/shared';
 import { logger } from './logger';
 
-// Use local IP for Android Emulator or physical device
+// Use local IP for Android Emulator (10.0.2.2) or physical device (LAN IP)
 // localhost works for iOS simulator but not Android
-// You might need to change this to your machine's IP
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.134:3000/api/v1';
+// For Android Emulator, 10.0.2.2 is the special alias to your host loopback interface (127.0.0.1)
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000/api/v1';
 
 const request = axios.create({
   baseURL: BASE_URL,

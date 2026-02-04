@@ -81,11 +81,7 @@ export class LeaveController {
 
     const result = await service.findAll(query);
     
-    res.json({
-      success: true,
-      data: result.items,
-      pagination: result.pagination
-    });
+    res.json(success(result));
   }
 
   /**

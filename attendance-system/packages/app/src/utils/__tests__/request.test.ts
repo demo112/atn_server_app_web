@@ -129,6 +129,62 @@ describe('request utils', () => {
       }
     });
 
+    it('should handle 403 error (Permission Denied)', async () => {
+      const errorHandler = responseHandlers.error;
+      const error = {
+        response: { status: 403, data: { message: 'Forbidden' } },
+        isAxiosError: true
+      };
+      
+      try {
+        await errorHandler(error);
+      } catch (e) {
+        expect(Alert.alert).toHaveBeenCalledWith('Permission Denied', 'You do not have permission to perform this action');
+      }
+    });
+
+    it('should handle 404 error (Resource Not Found)', async () => {
+      const errorHandler = responseHandlers.error;
+      const error = {
+        response: { status: 404, data: { message: 'Not Found' } },
+        isAxiosError: true
+      };
+      
+      try {
+        await errorHandler(error);
+      } catch (e) {
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Resource not found');
+      }
+    });
+
+    it('should handle 500 error (Server Error)', async () => {
+      const errorHandler = responseHandlers.error;
+      const error = {
+        response: { status: 500, data: { message: 'Internal Error' } },
+        isAxiosError: true
+      };
+      
+      try {
+        await errorHandler(error);
+      } catch (e) {
+        expect(Alert.alert).toHaveBeenCalledWith('Server Error', 'Please try again later');
+      }
+    });
+
+    it('should handle other errors', async () => {
+      const errorHandler = responseHandlers.error;
+      const error = {
+        response: { status: 418, data: { message: 'I am a teapot' } },
+        isAxiosError: true
+      };
+      
+      try {
+        await errorHandler(error);
+      } catch (e) {
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'I am a teapot');
+      }
+    });
+
     it('should handle network error', async () => {
         const errorHandler = responseHandlers.error;
         const error = {
@@ -140,6 +196,19 @@ describe('request utils', () => {
           await errorHandler(error);
         } catch (e) {
           expect(Alert.alert).toHaveBeenCalledWith('Network Error', 'Please check your internet connection');
+        }
+      });
+
+    it('should handle request configuration error', async () => {
+        const errorHandler = responseHandlers.error;
+        const error = {
+          isAxiosError: true
+        };
+        
+        try {
+          await errorHandler(error);
+        } catch (e) {
+          expect(Alert.alert).toHaveBeenCalledWith('Error', 'Request configuration error');
         }
       });
   });

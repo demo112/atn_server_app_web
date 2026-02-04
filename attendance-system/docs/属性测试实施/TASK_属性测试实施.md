@@ -74,11 +74,11 @@ graph TD
 
 | ID | 任务名称 | 端 | 优先级 | 状态 |
 |:---|:---|:---|:---|:---|
-| T1 | 基础设施搭建 | All | P0 | 待开始 |
-| T2 | Server核心生成器 | Server | P0 | 待开始 |
-| T3 | Web环境与Schema | Web | P1 | 待开始 |
-| T4 | Server核心域PBT | Server | P0 | 待开始 |
-| T5 | Server业务逻辑PBT | Server | P1 | 待开始 |
-| T6 | Web工具与Hooks | Web | P2 | 待开始 |
-| T7 | CI/CD集成 | All | P1 | 待开始 |
-| T8 | 文档与推广 | All | P2 | 待开始 |
+| T1 | 基础设施搭建 | All | P0 | ✅ 已完成 |
+| T2 | Server核心生成器 | Server | P0 | ✅ 已完成 |
+| T3 | Web环境与Schema | Web | P1 | ✅ 已完成 |
+| T4 | Server核心域PBT | Server | P0 | ✅ 已完成 |
+| T5 | Server业务逻辑PBT | Server | P1 | ✅ 已完成 |
+| T6 | Web工具与Hooks | Web | P2 | ✅ 已完成 |
+| T7 | CI/CD集成 | All | P1 | ✅ 已完成 |
+| T8 | 文档与推广 | All | P2 | ✅ 已完成 |

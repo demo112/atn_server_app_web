@@ -11,6 +11,7 @@ const LeavePage: React.FC = () => {
   const [data, setData] = useState<LeaveVo[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LeaveVo | undefined>(undefined);
@@ -25,6 +26,7 @@ const LeavePage: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      console.log('LeavePage: fetching data...');
       setLoading(true);
       const res = await leaveService.getLeaves({
         page,
@@ -34,9 +36,11 @@ const LeavePage: React.FC = () => {
         startTime: filters.dateRange ? filters.dateRange[0].toISOString() : undefined,
         endTime: filters.dateRange ? filters.dateRange[1].toISOString() : undefined,
       });
+      console.log('LeavePage: fetched data', res);
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {
+      console.error('LeavePage: fetch error', error);
       logger.error('Failed to fetch leaves', error);
       message.error('加载请假列表失败');
     } finally {

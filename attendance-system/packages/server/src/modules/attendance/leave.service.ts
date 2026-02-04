@@ -142,12 +142,10 @@ export class LeaveService {
 
     return {
       items: items.map(item => this.mapToVo(item)),
-      pagination: {
-        total,
-        page: Number(page),
-        pageSize: Number(pageSize),
-        totalPages: Math.ceil(total / Number(pageSize))
-      }
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+      totalPages: Math.ceil(total / Number(pageSize))
     };
   }
 

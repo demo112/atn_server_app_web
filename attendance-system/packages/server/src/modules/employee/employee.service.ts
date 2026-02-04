@@ -82,6 +82,7 @@ export class EmployeeService {
       total,
       page,
       pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 

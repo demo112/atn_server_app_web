@@ -81,16 +81,10 @@ describe('ClockInScreen', () => {
     const { getByText } = render(<ClockInScreen />);
     
     // Wait for user load effect to complete
-    await waitFor(() => expect(getUser).toHaveBeenCalled());
-    // Give a small tick for state update (or mock getUser to return immediately)
-    // Since we can't easily wait for internal state, we can retry the action or assume waitFor handles microtasks.
-    // However, setEmployeeId triggers re-render.
-    
-    // To be safe, we can mock getUser to be instantaneous if not already.
-    // Let's rely on waitFor wrapping the assertion which retries, but here the input to clockIn is fixed at call time.
-    
-    // Let's add a small delay to ensure useEffect async completes
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await waitFor(() => {
+      expect(getUser).toHaveBeenCalled();
+      expect(getClockRecords).toHaveBeenCalled();
+    });
 
     const clockInBtn = getByText('上班打卡');
     fireEvent.press(clockInBtn);
@@ -126,6 +120,12 @@ describe('ClockInScreen', () => {
     (clockIn as jest.Mock).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
     
     const { getByText } = render(<ClockInScreen />);
+    
+    // Wait for initial load to prevent act warnings
+    await waitFor(() => {
+      expect(getClockRecords).toHaveBeenCalled();
+    });
+
     const clockInBtn = getByText('上班打卡');
     
     fireEvent.press(clockInBtn);

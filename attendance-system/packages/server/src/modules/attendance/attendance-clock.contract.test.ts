@@ -18,6 +18,14 @@ describe('AttendanceClockService - Contract Verification', () => {
   beforeEach(() => {
     mockReset(prismaMock);
     service = new AttendanceClockService();
+    
+    // Mock transaction to execute callback immediately using prismaMock as tx
+    prismaMock.$transaction.mockImplementation(async (cb) => {
+      return cb(prismaMock);
+    });
+    
+    // Mock $queryRaw for locking
+    prismaMock.$queryRaw.mockResolvedValue([]);
   });
 
   describe('create (打卡)', () => {
