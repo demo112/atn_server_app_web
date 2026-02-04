@@ -1,0 +1,8 @@
+
+{
+  "name": "Shift Master",
+  "description": "A professional work shift management application with an elegant mobile-first design and AI-powered shift suggestions.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

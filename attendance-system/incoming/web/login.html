@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Attendance App - Login</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4A90E2",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "8px",
+                    },
+                },
+            },
+        };
+        function switchTab(tab) {
+            const passwordTab = document.getElementById('password-tab');
+            const codeTab = document.getElementById('code-tab');
+            const passwordForm = document.getElementById('password-form');
+            const codeForm = document.getElementById('code-form');
+            const passwordUnderline = document.getElementById('password-underline');
+            const codeUnderline = document.getElementById('code-underline');
+            if (tab === 'password') {
+                passwordForm.classList.remove('hidden');
+                codeForm.classList.add('hidden');
+                passwordTab.classList.add('text-primary');
+                passwordTab.classList.remove('text-gray-500');
+                codeTab.classList.remove('text-primary');
+                codeTab.classList.add('text-gray-500');
+                passwordUnderline.classList.remove('invisible');
+                codeUnderline.classList.add('invisible');
+            } else {
+                passwordForm.classList.add('hidden');
+                codeForm.classList.remove('hidden');
+                codeTab.classList.add('text-primary');
+                codeTab.classList.remove('text-gray-500');
+                passwordTab.classList.remove('text-primary');
+                passwordTab.classList.add('text-gray-500');
+                codeUnderline.classList.remove('invisible');
+                passwordUnderline.classList.add('invisible');
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4 transition-colors duration-200">
+<div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+<div class="flex border-b border-gray-100 dark:border-gray-700">
+<button class="flex-1 py-4 text-center text-primary font-medium transition-colors relative" id="password-tab" onclick="switchTab('password')">
+                密码登录
+                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" id="password-underline"></div>
+</button>
+<button class="flex-1 py-4 text-center text-gray-500 dark:text-gray-400 font-medium transition-colors relative" id="code-tab" onclick="switchTab('code')">
+                验证码登录
+                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary invisible" id="code-underline"></div>
+</button>
+</div>
+<div class="p-8">
+<div class="space-y-6" id="password-form">
+<div class="relative">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">person_outline</span>
+<input class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="手机号/邮箱" type="text"/>
+</div>
+<div class="relative">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock_outline</span>
+<input class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="请输入密码" type="password"/>
+</div>
+<div class="flex justify-end">
+<a class="text-sm text-primary hover:underline" href="#">忘记密码</a>
+</div>
+</div>
+<div class="space-y-6 hidden" id="code-form">
+<div class="relative">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">phone_iphone</span>
+<input class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="手机号" type="text"/>
+</div>
+<div class="relative flex gap-3">
+<div class="relative flex-1">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">verified_user</span>
+<input class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="验证码" type="text"/>
+</div>
+<button class="px-4 py-3 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded font-medium whitespace-nowrap transition-colors">
+                        获取验证码
+                    </button>
+</div>
+</div>
+<div class="mt-6 flex items-start">
+<div class="flex items-center h-5">
+<input class="h-4 w-4 text-primary border-gray-300 dark:border-gray-600 rounded focus:ring-primary" id="terms" type="checkbox"/>
+</div>
+<div class="ml-3 text-sm">
+<label class="text-gray-500 dark:text-gray-400" for="terms">
+                        我已阅读并接受 <a class="text-primary hover:underline" href="#">服务协议</a> 和 <a class="text-primary hover:underline" href="#">隐私协议</a>
+</label>
+</div>
+</div>
+<button class="w-full mt-8 py-3.5 bg-primary text-white font-semibold rounded shadow-lg shadow-primary/30 hover:bg-primary/90 active:transform active:scale-[0.98] transition-all">
+                登录
+            </button>
+<div class="mt-6 text-center text-sm">
+<span class="text-gray-500 dark:text-gray-400">您还没有账户？</span>
+<a class="text-primary font-medium hover:underline" href="#">立即注册</a>
+</div>
+</div>
+</div>
+<button class="fixed bottom-6 right-6 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:scale-110 transition-transform" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-icons">dark_mode</span>
+</button>
+
+</body></html>
