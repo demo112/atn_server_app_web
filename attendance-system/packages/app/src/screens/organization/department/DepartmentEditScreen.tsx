@@ -23,7 +23,7 @@ export const DepartmentEditScreen = () => {
     navigation.setOptions({
       title: isEdit ? '编辑部门' : '新增部门',
       headerRight: () => (
-        <TouchableOpacity onPress={handleSave} style={{ marginRight: 16 }}>
+        <TouchableOpacity testID="header-save-btn" onPress={handleSave} style={{ marginRight: 16 }}>
           <Text style={{ fontSize: 16, color: '#007AFF', fontWeight: 'bold' }}>保存</Text>
         </TouchableOpacity>
       ),
@@ -99,6 +99,7 @@ export const DepartmentEditScreen = () => {
         <View style={styles.formGroup}>
           <Text style={styles.label}>部门名称</Text>
           <TextInput
+            testID="input-name"
             style={styles.input}
             value={name}
             onChangeText={setName}
@@ -108,7 +109,7 @@ export const DepartmentEditScreen = () => {
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>上级部门</Text>
-          <TouchableOpacity style={styles.select} onPress={() => setSelectVisible(true)}>
+          <TouchableOpacity testID="select-parent" style={styles.select} onPress={() => setSelectVisible(true)}>
             <Text style={styles.selectText}>{parentName}</Text>
           </TouchableOpacity>
         </View>
@@ -116,6 +117,7 @@ export const DepartmentEditScreen = () => {
         <View style={styles.formGroup}>
           <Text style={styles.label}>排序 (数字越小越靠前)</Text>
           <TextInput
+            testID="input-sort"
             style={styles.input}
             value={sortOrder}
             onChangeText={setSortOrder}

@@ -152,6 +152,7 @@ export default function AttendanceRecords() {
         </View>
 
         <FlatList
+          testID="records-list"
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id}
@@ -182,6 +183,7 @@ export default function AttendanceRecords() {
                 selected={status === undefined} 
                 onPress={() => setStatus(undefined)}
                 style={styles.statusChip}
+                testID="filter-chip-all"
               >全部</Chip>
               {Object.keys(statusMap).map((key) => (
                 <Chip 
@@ -189,11 +191,12 @@ export default function AttendanceRecords() {
                   selected={status === key}
                   onPress={() => setStatus(key as AttendanceStatus)}
                   style={styles.statusChip}
+                  testID={`filter-chip-${key}`}
                 >{statusMap[key as AttendanceStatus].text}</Chip>
               ))}
             </View>
 
-            <Button mode="contained" onPress={() => setShowFilterModal(false)} style={styles.confirmBtn}>
+            <Button mode="contained" onPress={() => setShowFilterModal(false)} style={styles.confirmBtn} testID="filter-confirm-btn">
               确定
             </Button>
           </Modal>

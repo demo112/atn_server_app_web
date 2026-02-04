@@ -26,6 +26,7 @@ const Stack = createStackNavigator();
 export default function App(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [debugStatus, setDebugStatus] = useState('Initializing...');
 
   useEffect(() => {
     checkAuth();
@@ -33,19 +34,29 @@ export default function App(): React.ReactElement {
 
   const checkAuth = async () => {
     try {
+      setDebugStatus('Checking auth token...');
+      console.log('[App] Starting checkAuth');
       const token = await getToken();
+      console.log('[App] Token result:', token ? 'Present' : 'Null');
+      setDebugStatus(`Auth check complete. Token: ${token ? 'Yes' : 'No'}`);
       setIsAuthenticated(!!token);
     } catch (e) {
+      console.error('[App] checkAuth failed:', e);
+      setDebugStatus(`Auth error: ${e instanceof Error ? e.message : String(e)}`);
       logger.error(e);
     } finally {
-      setIsLoading(false);
+      // Short delay to allow reading the debug status if it was fast
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
     }
   };
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
         <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 20, textAlign: 'center' }}>{debugStatus}</Text>
       </View>
     );
   }

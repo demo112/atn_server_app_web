@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import * as AuthUtils from '../auth';
 import * as SecureStore from 'expo-secure-store';
 
-// Mock expo-secure-store
+// Mock expo-secure-store BEFORE imports to prevent module loading
 jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
   getItemAsync: jest.fn(),
@@ -17,13 +17,13 @@ describe('Auth Utils Property Tests', () => {
     store = new Map();
     
     // Mock implementation using memory map
-    (SecureStore.setItemAsync as jest.Mock).mockImplementation(async (key, value) => {
+    (SecureStore.setItemAsync as jest.Mock).mockImplementation(async (key: string, value: string) => {
       store.set(key, value);
     });
-    (SecureStore.getItemAsync as jest.Mock).mockImplementation(async (key) => {
+    (SecureStore.getItemAsync as jest.Mock).mockImplementation(async (key: string) => {
       return store.get(key) ?? null;
     });
-    (SecureStore.deleteItemAsync as jest.Mock).mockImplementation(async (key) => {
+    (SecureStore.deleteItemAsync as jest.Mock).mockImplementation(async (key: string) => {
       store.delete(key);
     });
   });

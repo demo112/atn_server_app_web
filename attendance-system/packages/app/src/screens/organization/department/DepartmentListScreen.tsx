@@ -18,6 +18,7 @@ export const DepartmentListScreen = () => {
       title: parentName,
       headerRight: () => (
         <TouchableOpacity 
+          testID="header-add-btn"
           onPress={() => navigation.navigate('DepartmentEdit', { parentId })}
           style={{ marginRight: 16 }}
         >
@@ -88,6 +89,7 @@ export const DepartmentListScreen = () => {
 
   const renderItem = ({ item }: { item: DepartmentVO }) => (
     <TouchableOpacity
+      testID={`department-item-${item.id}`}
       style={styles.item}
       onPress={() => {
         navigation.push('DepartmentList', { parentId: item.id, title: item.name });
@@ -110,13 +112,14 @@ export const DepartmentListScreen = () => {
   return (
     <View style={styles.container}>
       {loading ? (
-        <ActivityIndicator style={styles.loading} size="large" />
+        <ActivityIndicator testID="loading-indicator" style={styles.loading} size="large" />
       ) : (
         <FlatList
+          testID="department-list"
           data={departments}
           keyExtractor={item => item.id.toString()}
           renderItem={renderItem}
-          ListEmptyComponent={<Text style={styles.emptyText}>无子部门</Text>}
+          ListEmptyComponent={<Text testID="empty-text" style={styles.emptyText}>无子部门</Text>}
         />
       )}
     </View>
