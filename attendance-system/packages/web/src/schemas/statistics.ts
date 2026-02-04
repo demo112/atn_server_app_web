@@ -18,6 +18,7 @@ export const AttendanceSummaryVoSchema = z.object({
   leaveMinutes: z.number(),
   actualMinutes: z.number(),
   effectiveMinutes: z.number(),
+  daily: z.array(z.string()).optional(),
 });
 
 export const DeptStatsVoSchema = z.object({

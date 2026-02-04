@@ -12,6 +12,11 @@ router.use(authenticate);
 router.get('/summary', controller.getDepartmentSummary);
 router.get('/details', controller.getDailyRecords);
 router.get('/calendar', controller.getCalendar);
+
+// API alignment with design.md
+router.get('/daily', controller.getDailyRecords);
+router.get('/monthly', controller.getDepartmentSummary);
+router.get('/card', controller.getCalendar);
 router.get('/departments', controller.getDeptStats);
 router.get('/charts', controller.getChartStats);
 router.get('/export', controller.exportStats);

@@ -35,6 +35,7 @@ const Sidebar: React.FC = () => {
       path: '/statistics', 
       icon: 'bar_chart',
       subItems: [
+        { id: 'dashboard', label: '统计仪表盘', path: '/statistics/dashboard' },
         { id: 'summary', label: '个人汇总', path: '/statistics/summary' },
         { id: 'reports', label: '统计报表', path: '/statistics/reports' },
       ]

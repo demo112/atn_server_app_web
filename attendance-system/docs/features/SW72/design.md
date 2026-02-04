@@ -71,13 +71,18 @@ interface ChartStatsVo {
 
 ### GET /api/v1/statistics/export
 
-导出部门统计报表。
+导出统计报表（支持月度汇总和每日明细）。
 
 **Request:**
 ```typescript
 interface ExportStatsDto {
-  month: string; // YYYY-MM
+  type?: 'summary' | 'daily'; // default: summary
+  month?: string; // YYYY-MM (Required for summary)
+  startDate?: string; // YYYY-MM-DD (Required for daily)
+  endDate?: string;   // YYYY-MM-DD (Required for daily)
   deptId?: number;
+  deptName?: string;
+  employeeName?: string;
 }
 ```
 

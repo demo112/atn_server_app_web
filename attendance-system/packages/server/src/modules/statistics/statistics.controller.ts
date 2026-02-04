@@ -121,25 +121,69 @@ export class StatisticsController {
   };
 
   exportStats = async (req: Request, res: Response) => {
-    const { month, deptId } = req.query as unknown as ExportStatsDto;
+    const { 
+      type = 'summary', 
+      month, 
+      deptId, 
+      employeeName, 
+      deptName,
+      startDate: qStartDate,
+      endDate: qEndDate,
+    } = req.query as any;
 
-    if (!month) {
-      throw new AppError('ERR_INVALID_PARAMS', 'Month is required (YYYY-MM)', 400);
+    let buffer: Buffer;
+    let filename: string;
+
+    if (type === 'daily') {
+      // 每日明细导出
+      if (!qStartDate || !qEndDate) {
+        throw new AppError('ERR_INVALID_PARAMS', 'StartDate and EndDate are required for daily export', 400);
+      }
+      
+      buffer = await this.service.exportDailyRecords({
+        startDate: qStartDate,
+        endDate: qEndDate,
+        deptId: deptId ? Number(deptId) : undefined,
+        employeeName,
+        deptName,
+        page: 1,
+        pageSize: 100000
+      });
+      filename = `attendance-daily-${qStartDate}-${qEndDate}.xlsx`;
+    } else {
+      // 月度汇总导出 (default)
+      if (!month) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Month is required (YYYY-MM)', 400);
+      }
+
+      if (!/^\d{4}-\d{2}$/.test(month)) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Month must be in YYYY-MM format', 400);
+      }
+
+      // Convert month to startDate and endDate
+      const [yearStr, monthStr] = month.split('-');
+      const year = parseInt(yearStr);
+      const monthNum = parseInt(monthStr);
+      const end = new Date(year, monthNum, 0); // Last day of month
+      
+      const startDate = `${yearStr}-${monthStr.padStart(2, '0')}-01`;
+      const endDate = `${yearStr}-${monthStr.padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+
+      const dto: GetSummaryDto = {
+        startDate,
+        endDate,
+        deptId: deptId ? Number(deptId) : undefined,
+        employeeName,
+        deptName,
+      };
+
+      // Use exportDepartmentSummary to export detailed employee records match the UI
+      buffer = await this.service.exportDepartmentSummary(dto);
+      filename = `attendance-summary-${month}.xlsx`;
     }
-
-    if (!/^\d{4}-\d{2}$/.test(month)) {
-      throw new AppError('ERR_INVALID_PARAMS', 'Month must be in YYYY-MM format', 400);
-    }
-
-    const dto: ExportStatsDto = {
-      month: month as string,
-      deptId: deptId ? Number(deptId) : undefined,
-    };
-
-    const buffer = await this.service.exportStats(dto);
     
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=attendance-stats-${month}.xlsx`);
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(buffer);
   };
 

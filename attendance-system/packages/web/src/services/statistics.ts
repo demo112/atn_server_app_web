@@ -9,7 +9,8 @@ import {
   DeptStatsVo,
   GetChartStatsDto,
   ChartStatsVo,
-  ExportStatsDto
+  ExportStatsDto,
+  CalendarDailyVo
 } from '@attendance/shared';
 import {
   AttendanceSummaryVoSchema,
@@ -20,13 +21,22 @@ import { PaginatedDailyRecordVoSchema } from '../schemas/attendance';
 import { z } from 'zod';
 
 export const getDepartmentSummary = async (params: GetSummaryDto): Promise<AttendanceSummaryVo[]> => {
-  const res = await api.get('/statistics/summary', { params });
+  const res = await api.get('/statistics/monthly', { params });
   return validateResponse(z.array(AttendanceSummaryVoSchema), res);
 };
 
 export const getDailyRecords = async (params: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> => {
-  const res = await api.get('/statistics/details', { params });
+  const res = await api.get('/statistics/daily', { params });
   return validateResponse(PaginatedDailyRecordVoSchema, res);
+};
+
+export const getCalendar = async (year: number, month: number, employeeId?: number): Promise<CalendarDailyVo[]> => {
+  const res = await api.get('/statistics/card', { params: { year, month, employeeId } });
+  return validateResponse(z.array(z.object({
+    date: z.string(),
+    status: z.any(), // z.custom<AttendanceStatus>() is tricky without enum definition here, using any or string
+    isAbnormal: z.boolean()
+  })), res);
 };
 
 export const triggerCalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<void> => {

@@ -16,17 +16,21 @@ export interface AttendanceSummaryVo {
   earlyLeaveMinutes: number; // 早退总分钟
   absentCount: number;       // 缺勤次数
   absentMinutes: number;     // 缺勤总分钟
+  missingCount: number;      // 缺卡次数
   leaveCount: number;        // 请假次数
   leaveMinutes: number;      // 请假总分钟
   actualMinutes: number;     // 实际出勤总分钟
   effectiveMinutes: number;  // 有效出勤总分钟
+  daily?: string[];          // 每日考勤状态 (用于前端月度报表)
 }
 
 export interface GetSummaryDto {
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
   deptId?: number;
+  deptName?: string;
   employeeId?: number;
+  employeeName?: string;
 }
 
 export interface DeptStatsVo {
@@ -64,6 +68,12 @@ export interface GetChartStatsDto {
 }
 
 export interface ExportStatsDto {
-  month: string; // YYYY-MM
+  type?: 'summary' | 'daily';
+  month?: string; // YYYY-MM (Required for summary)
+  startDate?: string; // YYYY-MM-DD (Required for daily)
+  endDate?: string;   // YYYY-MM-DD (Required for daily)
   deptId?: number;
+  deptName?: string;
+  employeeName?: string;
 }
+

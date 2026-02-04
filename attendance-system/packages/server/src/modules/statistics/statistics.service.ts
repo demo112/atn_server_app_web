@@ -28,6 +28,7 @@ interface AggregationResult {
   early_leave_minutes: number | bigint;
   absent_count: number | bigint;
   absent_minutes: number | bigint;
+  missing_count: number | bigint;
   leave_count: number | bigint;
   leave_minutes: number | bigint;
   actual_minutes: number | bigint;
@@ -39,7 +40,7 @@ export class StatisticsService {
 
   async getDailyRecords(query: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> {
     this.logger.info({ query }, 'Fetching daily records');
-    const { startDate, endDate, deptId, employeeId, employeeName, status, page = 1, pageSize = 20 } = query;
+    const { startDate, endDate, deptId, deptName, employeeId, employeeName, status, page = 1, pageSize = 20 } = query;
     const skip = (Number(page) - 1) * Number(pageSize);
     const take = Number(pageSize);
 
@@ -81,10 +82,14 @@ export class StatisticsService {
     }
 
     // 4. 部门筛选
-    if (deptId) {
+    if (deptId || deptName) {
+      const deptWhere: Prisma.EmployeeWhereInput = {};
+      if (deptId) deptWhere.deptId = Number(deptId);
+      if (deptName) deptWhere.department = { name: { contains: deptName } };
+
       // 查找该部门下的所有员工
       const employees = await prisma.employee.findMany({
-        where: { deptId: Number(deptId) },
+        where: deptWhere,
         select: { id: true },
       });
       if (employees.length > 0) {
@@ -97,7 +102,10 @@ export class StatisticsService {
           const deptEmployeeIds = employees.map(e => e.id);
           const intersection = existingIds.filter(id => deptEmployeeIds.includes(id));
           
-          if (intersection.length === 0) {
+          if (intersection.length > 0) {
+            whereClause.employeeId = { in: intersection };
+          } else {
+            // 交集为空，返回空
             return {
               items: [],
               total: 0,
@@ -106,11 +114,11 @@ export class StatisticsService {
               totalPages: 0,
             };
           }
-          whereClause.employeeId = { in: intersection };
         } else {
           whereClause.employeeId = { in: employees.map(e => e.id) };
         }
       } else {
+        // 部门下无员工，返回空
         return {
           items: [],
           total: 0,
@@ -208,7 +216,7 @@ export class StatisticsService {
 
   async getDepartmentSummary(dto: GetSummaryDto): Promise<AttendanceSummaryVo[]> {
     this.logger.info({ dto }, 'Calculating department summary');
-    const { startDate, endDate, deptId, employeeId } = dto;
+    const { startDate, endDate, deptId, deptName, employeeId, employeeName } = dto;
     
     const queryStart = new Date(startDate + 'T00:00:00');
     const queryEnd = new Date(endDate + 'T23:59:59.999');
@@ -217,7 +225,13 @@ export class StatisticsService {
       status: 'active',
     };
     if (deptId) whereClause.deptId = deptId;
+    if (deptName) {
+      whereClause.department = {
+        name: { contains: deptName }
+      };
+    }
     if (employeeId) whereClause.id = employeeId;
+    if (employeeName) whereClause.name = { contains: employeeName };
 
     // 1. 获取员工列表
     const employees = await prisma.employee.findMany({
@@ -243,6 +257,7 @@ export class StatisticsService {
         SUM(COALESCE(early_leave_minutes, 0)) as early_leave_minutes,
         SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent_count,
         SUM(COALESCE(absent_minutes, 0)) as absent_minutes,
+        SUM(CASE WHEN status = 'missing' THEN 1 ELSE 0 END) as missing_count,
         SUM(CASE WHEN leave_minutes > 0 THEN 1 ELSE 0 END) as leave_count,
         SUM(COALESCE(leave_minutes, 0)) as leave_minutes,
         SUM(COALESCE(actual_minutes, 0)) as actual_minutes,
@@ -254,15 +269,52 @@ export class StatisticsService {
       GROUP BY employee_id
     `;
 
-    // 3. 组装结果
-    const summaryMap = new Map<number, AggregationResult>();
-    for (const agg of aggregations) {
-      summaryMap.set(Number(agg.employee_id), agg);
+    // 2.5 获取每日详情用于生成 monthly grid
+    const dailyRecords = await prisma.attDailyRecord.findMany({
+      where: {
+        employeeId: { in: employeeIds },
+        workDate: {
+          gte: queryStart,
+          lte: queryEnd,
+        },
+      },
+      select: {
+        employeeId: true,
+        workDate: true,
+        status: true,
+      },
+    });
+
+    const dailyStatusMap = new Map<number, Map<number, string>>();
+    for (const r of dailyRecords) {
+      if (!dailyStatusMap.has(r.employeeId)) dailyStatusMap.set(r.employeeId, new Map());
+      // 使用 UTC Date 以保持与 toISOString 一致
+      const day = r.workDate.getUTCDate(); 
+      dailyStatusMap.get(r.employeeId)!.set(day, r.status);
     }
 
-    const result: AttendanceSummaryVo[] = employees.map(emp => {
-      const agg = summaryMap.get(emp.id);
+    const statusSymbolMap: Record<string, string> = {
+      'normal': '√',
+      'late': '迟',
+      'early_leave': '早',
+      'absent': '旷',
+      'leave': '假',
+      'missing': '缺',
+    };
+
+    return employees.map(emp => {
+      const agg = aggregations.find(a => Number(a.employee_id) === emp.id);
+      const dailyMap = dailyStatusMap.get(emp.id);
       
+      // 生成每日状态数组 (1-31)
+      const daily: string[] = [];
+      const daysInMonth = new Date(queryEnd.getFullYear(), queryEnd.getMonth() + 1, 0).getDate();
+      
+      for (let d = 1; d <= daysInMonth; d++) {
+        const status = dailyMap?.get(d);
+        daily.push(status ? (statusSymbolMap[status] || status) : '-');
+      }
+
       return {
         employeeId: emp.id,
         employeeNo: emp.employeeNo,
@@ -277,22 +329,22 @@ export class StatisticsService {
         earlyLeaveMinutes: Number(agg?.early_leave_minutes || 0),
         absentCount: Number(agg?.absent_count || 0),
         absentMinutes: Number(agg?.absent_minutes || 0),
+        missingCount: Number(agg?.missing_count || 0),
         leaveCount: Number(agg?.leave_count || 0),
         leaveMinutes: Number(agg?.leave_minutes || 0),
         actualMinutes: Number(agg?.actual_minutes || 0),
         effectiveMinutes: Number(agg?.effective_minutes || 0),
+        daily
       };
     });
-
-    return result;
   }
 
   async exportDepartmentSummary(dto: GetSummaryDto): Promise<Buffer> {
     const data = await this.getDepartmentSummary(dto);
-    
+
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('考勤汇总');
-    
+
     sheet.columns = [
       { header: '工号', key: 'employeeNo', width: 15 },
       { header: '姓名', key: 'employeeName', width: 15 },
@@ -304,11 +356,60 @@ export class StatisticsService {
       { header: '早退(次)', key: 'earlyLeaveCount', width: 10 },
       { header: '早退(分)', key: 'earlyLeaveMinutes', width: 10 },
       { header: '缺勤(次)', key: 'absentCount', width: 10 },
+      { header: '缺勤(分)', key: 'absentMinutes', width: 10 },
+      { header: '缺卡(次)', key: 'missingCount', width: 10 },
+      { header: '请假(次)', key: 'leaveCount', width: 10 },
       { header: '请假(分)', key: 'leaveMinutes', width: 10 },
     ];
-    
+
     sheet.addRows(data);
-   // 设置响应头
+    return await workbook.xlsx.writeBuffer() as unknown as Buffer;
+  }
+
+  async exportDailyRecords(query: DailyRecordQuery): Promise<Buffer> {
+    // 获取所有记录 (不分页)
+    const { items } = await this.getDailyRecords({
+      ...query,
+      page: 1,
+      pageSize: 100000 // Ensure we get all records
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('每日考勤明细');
+
+    sheet.columns = [
+      { header: '日期', key: 'workDate', width: 15 },
+      { header: '工号', key: 'employeeNo', width: 15 },
+      { header: '姓名', key: 'employeeName', width: 15 },
+      { header: '部门', key: 'deptName', width: 20 },
+      { header: '班次', key: 'shiftName', width: 15 },
+      { header: '上班时间', key: 'checkInTime', width: 20 },
+      { header: '下班时间', key: 'checkOutTime', width: 20 },
+      { header: '考勤状态', key: 'status', width: 12 },
+      { header: '迟到(分)', key: 'lateMinutes', width: 10 },
+      { header: '早退(分)', key: 'earlyLeaveMinutes', width: 10 },
+      { header: '缺勤(分)', key: 'absentMinutes', width: 10 },
+    ];
+
+    const statusMap: Record<string, string> = {
+      'normal': '正常',
+      'late': '迟到',
+      'early_leave': '早退',
+      'absent': '旷工',
+      'leave': '请假',
+      'missing': '缺卡',
+      'rest': '休息',
+      'business_trip': '出差',
+    };
+
+    const rows = items.map(item => ({
+      ...item,
+      status: statusMap[item.status] || item.status,
+      checkInTime: item.checkInTime ? new Date(item.checkInTime).toLocaleTimeString('zh-CN') : '--',
+      checkOutTime: item.checkOutTime ? new Date(item.checkOutTime).toLocaleTimeString('zh-CN') : '--',
+    }));
+
+    sheet.addRows(rows);
     return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
 

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StatisticsService } from './statistics.service';
 import { prisma } from '../../common/db/prisma';
-import { GetSummaryDto, GetDeptStatsDto, GetChartStatsDto } from '@attendance/shared';
+import { GetSummaryDto, GetDeptStatsDto, GetChartStatsDto, DailyRecordQuery } from '@attendance/shared';
 
 // Mock prisma
 vi.mock('../../common/db/prisma', () => ({
@@ -64,13 +64,19 @@ describe('Statistics Integration Test (SW70)', () => {
           early_leave_minutes: 0n,
           absent_count: 1n,
           absent_minutes: 0n,
+          missing_count: 1n,
           leave_count: 1n,
           leave_minutes: 480n,
         },
       ];
+      
+      const mockDailyRecords = [
+         { employeeId: 1, workDate: new Date('2023-10-01'), status: 'normal' },
+      ];
 
       (prisma.employee.findMany as any).mockResolvedValue(mockEmployees);
       (prisma.$queryRaw as any).mockResolvedValue(mockAggregations);
+      (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockDailyRecords);
 
       const dto: GetSummaryDto = {
         startDate: '2023-10-01',
@@ -92,11 +98,39 @@ describe('Statistics Integration Test (SW70)', () => {
       expect(result[0].totalDays).toBe(20);
       expect(result[0].lateMinutes).toBe(15);
       expect(result[0].leaveMinutes).toBe(480);
+      expect(result[0].missingCount).toBe(1);
     });
+    
+    it('Should filter by employeeName and deptName', async () => {
+        // Mock Data
+        const mockEmployees = [
+          { id: 1, name: 'Bob', employeeNo: 'E002', deptId: 1, department: { name: 'Tech' } },
+        ];
+        
+        (prisma.employee.findMany as any).mockResolvedValue(mockEmployees);
+        (prisma.$queryRaw as any).mockResolvedValue([]);
+        (prisma.attDailyRecord.findMany as any).mockResolvedValue([]);
+  
+        const dto: GetSummaryDto = {
+          startDate: '2023-10-01',
+          endDate: '2023-10-31',
+          employeeName: 'Bob',
+          deptName: 'Tech'
+        };
+  
+        await service.getDepartmentSummary(dto);
+  
+        expect(prisma.employee.findMany).toHaveBeenCalledWith(expect.objectContaining({
+          where: expect.objectContaining({ 
+            name: { contains: 'Bob' },
+            department: { name: { contains: 'Tech' } }
+          }),
+        }));
+      });
   });
 
   describe('Story 3: 导出考勤汇总', () => {
-    it('AC1/AC2: Should generate Excel buffer', async () => {
+    it('AC1/AC2: Should generate Excel buffer via exportDepartmentSummary', async () => {
       // Setup mock data same as above
       const mockEmployees = [
         { id: 1, name: 'Alice', employeeNo: 'E001', deptId: 1, department: { name: 'Tech' } },
@@ -112,12 +146,14 @@ describe('Statistics Integration Test (SW70)', () => {
           early_leave_minutes: 0n,
           absent_count: 1n,
           absent_minutes: 0n,
+          missing_count: 0n,
           leave_count: 1n,
           leave_minutes: 480n,
         },
       ];
       (prisma.employee.findMany as any).mockResolvedValue(mockEmployees);
       (prisma.$queryRaw as any).mockResolvedValue(mockAggregations);
+      (prisma.attDailyRecord.findMany as any).mockResolvedValue([]);
 
       const dto: GetSummaryDto = {
         startDate: '2023-10-01',
@@ -128,7 +164,6 @@ describe('Statistics Integration Test (SW70)', () => {
       
       expect(buffer).toBeInstanceOf(Buffer);
       // Verify magic bytes for zip (PK..) which xlsx uses
-      // 'P' is 0x50, 'K' is 0x4B
       expect(buffer[0]).toBe(0x50);
       expect(buffer[1]).toBe(0x4B);
     });
@@ -136,7 +171,7 @@ describe('Statistics Integration Test (SW70)', () => {
 
   describe('Statistics Integration Test (SW71)', () => {
     describe('Story 1 & 2: 考勤明细查询', () => {
-      it('AC1/AC6: Should return paginated daily records with filters', async () => {
+      it('AC1/AC6: Should return paginated daily records with filters (deptName, employeeName)', async () => {
         // Mock data
         const mockEmployee = { 
           id: 1, 
@@ -162,14 +197,16 @@ describe('Statistics Integration Test (SW70)', () => {
         ];
 
         // Mock implementation
+        // For employeeName filter, first it finds employee
         (prisma.employee.findMany as any).mockResolvedValue([mockEmployee]);
         (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
         (prisma.attDailyRecord.count as any).mockResolvedValue(1);
 
-        const dto = {
+        const dto: DailyRecordQuery = {
           startDate: '2023-10-01',
           endDate: '2023-10-01',
-          deptId: 1,
+          employeeName: 'Alice',
+          deptName: 'Tech',
           page: 1,
           pageSize: 10
         };
@@ -177,10 +214,12 @@ describe('Statistics Integration Test (SW70)', () => {
         const result = await service.getDailyRecords(dto);
 
         // Verify prisma calls
+        // 1. Find employee by name
         expect(prisma.employee.findMany).toHaveBeenCalledWith(expect.objectContaining({
-          where: expect.objectContaining({ deptId: 1 })
+          where: expect.objectContaining({ name: { contains: 'Alice' } })
         }));
 
+        // 2. Find daily records
         expect(prisma.attDailyRecord.findMany).toHaveBeenCalledWith(expect.objectContaining({
           where: expect.objectContaining({
             employeeId: { in: [1] }
@@ -195,6 +234,44 @@ describe('Statistics Integration Test (SW70)', () => {
         expect(result.items[0].employeeName).toBe('Alice');
         expect(result.total).toBe(1);
       });
+    });
+
+    describe('Story 3: 导出每日明细', () => {
+        it('AC1: Should generate Excel buffer via exportDailyRecords', async () => {
+            // Mock data
+            const mockEmployee = { 
+              id: 1, 
+              name: 'Alice', 
+              employeeNo: 'E001', 
+              deptId: 1,
+              department: { name: 'Tech' } 
+            };
+            const mockRecords = [
+              {
+                id: 1001n,
+                employeeId: 1,
+                workDate: new Date('2023-10-01'),
+                shiftName: 'Morning',
+                status: 'normal',
+              }
+            ];
+            
+            // Re-mock getDailyRecords behavior
+            (prisma.employee.findMany as any).mockResolvedValue([mockEmployee]);
+            (prisma.attDailyRecord.count as any).mockResolvedValue(1);
+            (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
+
+            const query: DailyRecordQuery = {
+                startDate: '2023-10-01',
+                endDate: '2023-10-01'
+            };
+
+            const buffer = await service.exportDailyRecords(query);
+
+            expect(buffer).toBeInstanceOf(Buffer);
+            expect(buffer[0]).toBe(0x50);
+            expect(buffer[1]).toBe(0x4B);
+        });
     });
 
     describe('Story 3: App日历数据', () => {
@@ -320,29 +397,5 @@ describe('Statistics Integration Test (SW70)', () => {
         expect(absentDist?.count).toBe(1);
       });
     });
-    
-    describe('Story 3: 导出统计报表', () => {
-        it('AC1/AC2: Should generate Excel buffer for stats', async () => {
-          // Re-mock getDeptStats behavior indirectly via prisma mocks
-          const mockRecords = [
-            {
-              employeeId: 1,
-              status: 'normal',
-              employee: {
-                id: 1,
-                department: { id: 101, name: 'Dev' }
-              }
-            }
-          ];
-          (prisma.attDailyRecord.findMany as any).mockResolvedValue(mockRecords);
-          (prisma.employee.findMany as any).mockResolvedValue([{ id: 1, deptId: 101 }]);
-  
-          const buffer = await service.exportStats({ month: '2023-10' });
-          
-          expect(buffer).toBeInstanceOf(Buffer);
-          expect(buffer[0]).toBe(0x50);
-          expect(buffer[1]).toBe(0x4B);
-        });
-      });
   });
 });

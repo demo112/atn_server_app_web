@@ -20,6 +20,10 @@ import AttendanceDetailsPage from '@/pages/attendance/details/AttendanceDetailsP
 import GroupPage from '@/pages/attendance/group/GroupPage';
 import SummaryPage from '@/pages/statistics/SummaryPage';
 import ReportPage from '@/pages/statistics/ReportPage';
+import StatisticsDashboard from '@/pages/statistics/StatisticsDashboard';
+import DailyStatsReport from '@/pages/statistics/DailyStatsReport';
+import MonthlySummaryReport from '@/pages/statistics/MonthlySummaryReport';
+import MonthlyCardReport from '@/pages/statistics/MonthlyCardReport';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -72,6 +76,10 @@ export default function App(): React.ReactElement {
                     <Route path="details" element={<AttendanceDetailsPage />} />
                     <Route path="summary" element={<SummaryPage />} />
                     <Route path="reports" element={<ReportPage />} />
+                    <Route path="dashboard" element={<StatisticsDashboard />} />
+                    <Route path="daily-stats" element={<DailyStatsReport />} />
+                    <Route path="monthly-summary-report" element={<MonthlySummaryReport />} />
+                    <Route path="monthly-card-report" element={<MonthlyCardReport />} />
                 </Route>
               </Route>
             </Routes>
