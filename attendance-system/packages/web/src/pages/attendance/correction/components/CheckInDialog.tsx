@@ -16,7 +16,7 @@ interface CheckInDialogProps {
 
 export const CheckInDialog: React.FC<CheckInDialogProps> = ({ 
   isOpen, onClose, onSuccess, dailyRecordId, employeeName, workDate 
-}): React.ReactElement => {
+}): React.ReactElement | null => {
   const { success, error } = useToast();
   const [loading, setLoading] = useState(false);
   const [checkInTime, setCheckInTime] = useState<string>('');
@@ -55,66 +55,82 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
     }
   };
 
-  const footer = (
-    <>
-      <button
-        onClick={onClose}
-        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
-      >
-        取消
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {loading ? '提交中...' : '确定'}
-      </button>
-    </>
-  );
+  if (!isOpen) return null;
 
   return (
-    <StandardModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="补签到"
-      footer={footer}
-      width="max-w-md"
-    >
-      <div className="space-y-6">
-        {employeeName && (
-          <div className="bg-blue-50 p-4 rounded-md border border-blue-100 flex items-start text-sm text-blue-700">
-             <span className="material-icons text-blue-500 mr-2 text-base mt-0.5">info</span>
-             <div className="flex flex-col">
-               <span>员工: <span className="font-medium">{employeeName}</span></span>
-               <span>日期: <span className="font-medium">{workDate}</span></span>
-             </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in" onClick={onClose} />
+      <div className="bg-white w-full max-w-[520px] rounded-lg shadow-2xl overflow-hidden animate-in zoom-in duration-200 relative">
+        {/* Header */}
+        <div className="bg-primary text-white px-5 py-3.5 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="material-icons text-xl">edit_calendar</span>
+            <h3 className="font-semibold text-base tracking-wide">补签申请</h3>
           </div>
-        )}
+          <button className="p-1 hover:bg-white/20 rounded-full transition-colors" onClick={onClose}>
+            <span className="material-icons text-xl">close</span>
+          </button>
+        </div>
 
-        <div className="space-y-4">
-            <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">签到时间 <span className="text-red-500">*</span></label>
-                <input
-                    type="datetime-local"
-                    value={checkInTime}
-                    onChange={(e) => setCheckInTime(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
-                />
+        {/* Content */}
+        <div className="p-8 space-y-6">
+          {/* DateTime Picker */}
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-slate-700 flex items-center">
+              <span className="text-red-500 mr-1">*</span>
+              补签到时间：
+            </label>
+            <div className="relative group">
+              <input 
+                type="datetime-local"
+                className="w-full border-slate-300 rounded-md px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none bg-white border"
+                value={checkInTime}
+                onChange={(e) => setCheckInTime(e.target.value)}
+              />
             </div>
+          </div>
 
+          {/* Remark Field */}
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-slate-700">备注</label>
+            <textarea
+              rows={2}
+              className="w-full border-slate-300 rounded-md px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none bg-white border resize-none"
+              value={remark}
+              onChange={(e) => setRemark(e.target.value)}
+              placeholder="请输入补签原因..."
+            />
+          </div>
+
+          {/* Alert Box */}
+          <div className="bg-blue-50 border border-blue-100 p-4 rounded-md flex items-start space-x-3">
+            <span className="material-icons text-blue-500 text-lg mt-0.5">info</span>
             <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">备注</label>
-                <textarea
-                    rows={3}
-                    value={remark}
-                    onChange={(e) => setRemark(e.target.value)}
-                    placeholder="请输入补签原因..."
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm resize-none transition-shadow"
-                />
+              <p className="text-xs text-blue-700 font-semibold leading-relaxed">温馨提示：</p>
+              <p className="text-xs text-blue-600/80 leading-relaxed">
+                补签申请提交后，请联系部门主管及时审批。请假/补签操作不会自动计算考勤，请到“考勤明细”界面手动刷新计算。
+              </p>
             </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-4 border-t border-slate-100 bg-slate-50 flex justify-end space-x-3">
+          <button 
+            className="px-8 py-2 border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-400 rounded-md text-sm font-medium transition-all"
+            onClick={onClose}
+          >
+            取消
+          </button>
+          <button 
+            className="px-8 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium shadow-sm transition-all flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? '提交中...' : '确认提交'}
+          </button>
         </div>
       </div>
-    </StandardModal>
+    </div>
   );
 };
