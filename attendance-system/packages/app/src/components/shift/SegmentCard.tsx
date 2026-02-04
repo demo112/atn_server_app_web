@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { TimeSegment } from '../../types/shift';
+import Toggle from '../common/Toggle';
 
 interface SegmentCardProps {
   segment: TimeSegment;
@@ -8,149 +10,174 @@ interface SegmentCardProps {
   onUpdate: (updated: TimeSegment) => void;
 }
 
-export default function SegmentCard({ segment, index, onUpdate }: SegmentCardProps) {
-  if (!segment) {
-    console.warn(`[SegmentCard] Segment at index ${index} is null or undefined`);
-    return null;
-  }
-
-  // Helper to safely split range
-  const getRangeParts = (range: string) => {
-    const parts = range.split('-');
-    return parts.length === 2 ? parts : ['00:00', '00:00'];
-  };
-
-  const [signInStart, signInEnd] = getRangeParts(segment.signInRange || '08:00-10:00');
-  const [signOutStart, signOutEnd] = getRangeParts(segment.signOutRange || '17:00-19:00');
+const SegmentCard: React.FC<SegmentCardProps> = ({ segment, index, onUpdate }) => {
+  if (!segment) return null;
 
   return (
     <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={styles.badge}>
-            <Text style={styles.badgeText}>{index + 1}</Text>
-        </View>
-        <Text style={styles.headerText}>上班</Text>
-      </View>
+      <Text style={styles.headerTitle}>第{index + 1}次</Text>
 
-      {/* Check-in Row */}
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.timeInput}>
-            <Text style={styles.timeText}>{segment.startTime}</Text>
+      {/* 上班部分 */}
+      <View style={styles.section}>
+        <TouchableOpacity 
+          style={styles.timeRow}
+          onPress={() => console.log('Edit start time')}
+        >
+          <Text style={styles.label}>
+            <Text style={styles.required}>*</Text>上班时间
+          </Text>
+          <View style={styles.valueContainer}>
+            <Text style={styles.timeValue}>{segment.startTime}</Text>
+            <MaterialIcons name="chevron-right" size={20} color="#CBD5E1" />
+          </View>
         </TouchableOpacity>
-        
-        <View style={styles.rangeContainer}>
-            <Text style={styles.rangeLabel}>打卡范围:</Text>
-            <TouchableOpacity style={styles.rangeInput}>
-                <Text style={styles.rangeText}>{signInStart}</Text>
+
+        <View style={styles.subCard}>
+          <View style={styles.toggleRow}>
+            <Text style={styles.subLabel}>必须签到</Text>
+            <Toggle 
+              checked={segment.mustSignIn} 
+              onChange={(val) => onUpdate({ ...segment, mustSignIn: val })} 
+            />
+          </View>
+
+          {segment.mustSignIn && (
+            <TouchableOpacity 
+              style={styles.rangeRow}
+              onPress={() => console.log('Edit sign in range')}
+            >
+              <Text style={styles.subLabel}>
+                <Text style={styles.required}>*</Text>签到时间段
+              </Text>
+              <View style={styles.valueContainer}>
+                <Text style={styles.rangeValue}>{segment.signInRange}</Text>
+                <MaterialIcons name="chevron-right" size={20} color="#CBD5E1" />
+              </View>
             </TouchableOpacity>
-            <Text style={styles.tilde}>~</Text>
-            <TouchableOpacity style={styles.rangeInput}>
-                <Text style={styles.rangeText}>{signInEnd}</Text>
-            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* Check-out Header */}
-      <View style={[styles.headerRow, { marginTop: 16 }]}>
-         <Text style={styles.headerText}>下班</Text>
-      </View>
-
-      {/* Check-out Row */}
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.timeInput}>
-            <Text style={styles.timeText}>{segment.endTime}</Text>
+      {/* 下班部分 */}
+      <View style={[styles.section, { marginTop: 24 }]}>
+        <TouchableOpacity 
+          style={styles.timeRow}
+          onPress={() => console.log('Edit end time')}
+        >
+          <Text style={styles.label}>
+            <Text style={styles.required}>*</Text>下班时间
+          </Text>
+          <View style={styles.valueContainer}>
+            <Text style={styles.timeValue}>{segment.endTime}</Text>
+            <MaterialIcons name="chevron-right" size={20} color="#CBD5E1" />
+          </View>
         </TouchableOpacity>
-        
-        <View style={styles.rangeContainer}>
-            <Text style={styles.rangeLabel}>打卡范围:</Text>
-            <TouchableOpacity style={styles.rangeInput}>
-                <Text style={styles.rangeText}>{signOutStart}</Text>
+
+        <View style={styles.subCard}>
+          <View style={styles.toggleRow}>
+            <Text style={styles.subLabel}>必须签退</Text>
+            <Toggle 
+              checked={segment.mustSignOut} 
+              onChange={(val) => onUpdate({ ...segment, mustSignOut: val })} 
+            />
+          </View>
+
+          {segment.mustSignOut && (
+            <TouchableOpacity 
+              style={styles.rangeRow}
+              onPress={() => console.log('Edit sign out range')}
+            >
+              <Text style={styles.subLabel}>
+                <Text style={styles.required}>*</Text>签退时间段
+              </Text>
+              <View style={styles.valueContainer}>
+                <Text style={styles.rangeValue}>{segment.signOutRange}</Text>
+                <MaterialIcons name="chevron-right" size={20} color="#CBD5E1" />
+              </View>
             </TouchableOpacity>
-            <Text style={styles.tilde}>~</Text>
-            <TouchableOpacity style={styles.rangeInput}>
-                <Text style={styles.rangeText}>{signOutEnd}</Text>
-            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-    card: { 
-        backgroundColor: '#fff', 
-        borderRadius: 8, 
-        padding: 16, 
-        marginBottom: 16, 
-        borderWidth: 1, 
-        borderColor: '#E2E8F0' 
-    },
-    headerRow: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        marginBottom: 8 
-    },
-    badge: { 
-        width: 20, 
-        height: 20, 
-        borderRadius: 10, 
-        backgroundColor: '#EFF6FF', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        marginRight: 8 
-    },
-    badgeText: { 
-        color: '#3B82F6', 
-        fontSize: 12, 
-        fontWeight: 'bold' 
-    },
-    headerText: { 
-        fontSize: 14, 
-        fontWeight: '500', 
-        color: '#334155' 
-    },
-    row: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 12 
-    },
-    timeInput: { 
-        borderWidth: 1, 
-        borderColor: '#E2E8F0', 
-        borderRadius: 6, 
-        paddingHorizontal: 12, 
-        paddingVertical: 8, 
-        minWidth: 80, 
-        alignItems: 'center' 
-    },
-    timeText: { 
-        fontSize: 16, 
-        color: '#0F172A' 
-    },
-    rangeContainer: { 
-        flex: 1, 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 8 
-    },
-    rangeLabel: { 
-        fontSize: 14, 
-        color: '#64748B' 
-    },
-    rangeInput: { 
-        flex: 1, 
-        borderWidth: 1, 
-        borderColor: '#E2E8F0', 
-        borderRadius: 6, 
-        paddingVertical: 8, 
-        alignItems: 'center',
-        backgroundColor: '#F8FAFC'
-    },
-    rangeText: { 
-        fontSize: 14, 
-        color: '#334155' 
-    },
-    tilde: { 
-        color: '#94A3B8' 
-    }
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 16,
+  },
+  section: {
+    // Section spacing
+  },
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 15,
+    color: '#334155',
+  },
+  required: {
+    color: '#EF4444',
+    marginRight: 4,
+  },
+  valueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginRight: 4,
+  },
+  subCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    gap: 16,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  subLabel: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  rangeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingTop: 12,
+  },
+  rangeValue: {
+    fontSize: 14,
+    color: '#64748B',
+    marginRight: 4,
+  },
 });
+
+export default SegmentCard;

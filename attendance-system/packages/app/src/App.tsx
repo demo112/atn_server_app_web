@@ -38,8 +38,19 @@ export default function App(): React.ReactElement {
     try {
       setDebugStatus('Checking auth token...');
       console.log('[App] Starting checkAuth');
-      const token = await getToken();
-      console.log('[App] Token result:', token ? 'Present' : 'Null');
+      
+      // Add timeout to prevent hang
+      const tokenPromise = getToken();
+      const timeoutPromise = new Promise<null>((resolve) => 
+        setTimeout(() => {
+          console.warn('[App] getToken timed out');
+          resolve(null);
+        }, 5000)
+      );
+
+      const token = await Promise.race([tokenPromise, timeoutPromise]);
+      
+      console.log('[App] Token result:', token ? 'Present' : 'Null/Timeout');
       setDebugStatus(`Auth check complete. Token: ${token ? 'Yes' : 'No'}`);
       setIsAuthenticated(!!token);
     } catch (e) {

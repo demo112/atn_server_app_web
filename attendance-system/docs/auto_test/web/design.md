@@ -55,28 +55,36 @@ packages/web/src/
 #### 3.2 考勤流程 (State Machine)
 - **难点**: 多状态流转 (Pending -> Approved/Rejected)。
 - **策略**: 使用 Integration Test 模拟完整流程。
-  - **Setup**: `render(<CorrectionPage />)` with mocked API.
-  - **Action**: 点击 "补卡" -> 填写表单 -> 提交 (Mock POST 200).
-  - **Assert**: 列表刷新，显示 "Pending"。
-  - **Action**: 切换管理员视角 (Mock User Context) -> 点击 "拒绝"。
-  - **Assert**: 状态变为 "Rejected"。
+  - **Setup**: `renderWithProviders(<Page />)` with mocked API.
+  - **Action**: 模拟用户交互 (点击、输入、提交)。
+  - **Assert**: 验证 API 调用参数、UI 状态变更 (Toast, 列表刷新)。
+  - **Guard**: 验证非法状态流转 (如编辑已撤销记录) 是否被拦截。
 
 #### 3.3 统计报表 (Data Visualization)
 - **难点**: Canvas/SVG 图表难以断言具体内容。
 - **策略**:
   - **不测试** 图表像素级渲染。
   - **测试** 数据传递准确性 (Component Props)。
-  - **测试** 筛选条件变化时触发了正确的 API 请求 (MSW Spy)。
+  - **测试** 筛选条件变化时触发了正确的 API 请求 (Mock Service Spy)。
+
+#### 3.4 班次管理 (Shift Management)
+- **难点**: 动态表单、跨天时间处理、引用完整性。
+- **策略**:
+  - **动态表单**: 模拟切换打卡次数，验证输入框数量变化。
+  - **跨天逻辑**: 构造跨天时间数据 (22:00-06:00)，验证保存时不报错。
+  - **引用保护**: Mock 删除接口返回 409 Conflict，验证前端错误提示。
 
 ## 文件变更清单
 
-| 优先级 | 文件路径 | 说明 |
-|--------|----------|------|
-| P0 | `src/test/utils.tsx` | 统一 Render 工具 |
-| P0 | `src/__tests__/integration/auth/AuthGuard.test.tsx` | 路由权限守卫 |
-| P0 | `src/__tests__/integration/attendance/leave.test.tsx` | 请假流程与校验 |
-| P1 | `src/__tests__/integration/organization/department.test.tsx` | 部门管理 |
-| P1 | `src/__tests__/integration/attendance/correction.test.tsx` | 补卡流程 |
+| 优先级 | 文件路径 | 说明 | 状态 |
+|--------|----------|------|------|
+| P0 | `src/test/utils.tsx` | 统一 Render 工具 | ✅ 已完成 |
+| P0 | `src/__tests__/integration/auth/AuthGuard.test.tsx` | 路由权限守卫 | ✅ 已完成 |
+| P0 | `src/__tests__/integration/attendance/leave.test.tsx` | 请假流程与校验 | ✅ 已完成 |
+| P0 | `src/__tests__/integration/attendance/shift.test.tsx` | 班次管理 (多段/跨天) | 🟡 进行中 |
+| P1 | `src/__tests__/integration/organization/department.test.tsx` | 部门管理 | ✅ 已完成 |
+| P1 | `src/__tests__/integration/attendance/correction.test.tsx` | 补卡流程 | ✅ 已完成 |
+| P1 | `src/__tests__/integration/statistics/statistics.test.tsx` | 统计报表 | ✅ 已完成 |
 
 ## 风险与应对
 

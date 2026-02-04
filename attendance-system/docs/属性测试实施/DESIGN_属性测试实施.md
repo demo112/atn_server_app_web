@@ -1,103 +1,56 @@
-# DESIGN - 属性测试实施架构
+# DESIGN - 属性测试实施架构 (Phase 2: App Focus)
 
-## 1. 总体架构
+## 1. 架构目标
+在 Node.js 环境下构建 App 端核心逻辑的健壮性验证体系，绕过不稳定的模拟器/真机环境。
 
-属性测试将横跨 Server、Web 和 Shared 包，形成统一的质量保障层。
+## 2. 分层架构设计
 
-```mermaid
-graph TD
-    subgraph Shared [Packages/Shared]
-        Arb[Arbitraries (Generators)]
-        Types[Domain Types]
-    end
+### Layer 1: 纯函数工具层 (Utils)
+- **目标**: 验证无副作用的工具函数。
+- **对象**: 
+  - `utils/request.ts` -> `validateResponse` (API 契约验证)
+  - `utils/error-handler.ts` (从 request.ts 提取的错误逻辑)
+  - `utils/auth.ts` (已覆盖)
 
-    subgraph Server [Packages/Server]
-        S_Domain[Domain Logic]
-        S_PBT[Server PBT (*.pbt.test.ts)]
-        S_PBT -->|Use| Arb
-        S_PBT -->|Test| S_Domain
-    end
+### Layer 2: 数据契约层 (Schemas)
+- **目标**: 验证 Zod Schema 对脏数据的防御能力。
+- **对象**: 
+  - `schemas/attendance.ts` (打卡、请假、补卡数据结构)
+  - `schemas/auth.ts` (已覆盖)
+  - `schemas/user.ts`
 
-    subgraph Web [Packages/Web]
-        W_Schema[Zod Schemas]
-        W_Utils[Utils/Hooks]
-        W_PBT[Web PBT (*.property.test.ts)]
-        W_PBT -->|Use| Arb
-        W_PBT -->|Test| W_Schema
-        W_PBT -->|Test| W_Utils
-    end
+### Layer 3: 业务逻辑层 (Hooks/Services)
+- **目标**: 验证状态流转和数据转换。
+- **策略**: 将 Services 中的数据转换逻辑剥离为 Pure Functions。
+- **对象**:
+  - `services/attendance.ts` (如果包含数据转换)
 
-    CI[CI Pipeline] -->|Run| S_PBT
-    CI -->|Run| W_PBT
+## 3. 核心组件设计
+
+### 3.1 错误处理提取器
+为了测试 API 错误处理逻辑，需将 `AxiosInterceptor` 中的逻辑提取为纯函数：
+```typescript
+// utils/error-handler.ts
+export function analyzeError(status: number, data: any): ErrorAction {
+  // 返回纯对象描述应该做什么 (Alert, ClearAuth, etc.)
+  // 而不是直接调用副作用
+}
 ```
 
-## 2. 详细设计
+### 3.2 契约验证器测试
+针对 `validateResponse` 的 PBT：
+- **Property**: 对于任何符合 Schema 的数据，`validateResponse` 必须返回该数据。
+- **Property**: 对于任何不符合 Schema 的数据，`validateResponse` 必须抛出 Validation Error。
 
-### 2.1 目录与文件结构
-
-#### Server 端
+## 4. 目录结构变更
 ```
-packages/server/src/
-├── modules/attendance/domain/
-│   ├── attendance-calculator.ts       # 源码
-│   └── attendance-calculator.pbt.test.ts # 属性测试
-└── common/test/arbitraries/           # Server 特有生成器
-    └── shift.arb.ts
-```
-
-#### Web 端
-```
-packages/web/src/
+packages/app/src/
+├── utils/
+│   ├── error-handler.ts       <-- New (Extracted logic)
+│   ├── __tests__/
+│   │   ├── error-handler.prop.test.ts
+│   │   └── request.prop.test.ts
 ├── schemas/
-│   ├── attendance.ts
-│   └── __tests__/
-│       └── attendance.property.test.ts # Schema Fuzzing
-└── utils/
-    └── date-helper.property.test.ts
+│   ├── __tests__/
+│       └── attendance.prop.test.ts
 ```
-
-#### Shared (公共生成器)
-```
-packages/shared/src/test/arbitraries/
-├── time-period.arb.ts  # 通用时间段生成器
-├── user.arb.ts         # 通用用户数据生成器
-└── date.arb.ts         # 日期生成器
-```
-
-### 2.2 核心组件：生成器 (Arbitraries)
-
-为了最大化复用，采用分层生成器策略：
-
-- **L0 基础层 (Shared)**: Email, Phone, DateRange, ID 等通用类型。
-- **L1 领域层 (Server/Shared)**: 
-  - `TimePeriod`: 保证 `start < end`。
-  - `Shift`: 包含合法休息时间的班次。
-  - `AttendanceRecord`: 合法的打卡流水。
-- **L2 业务层 (Web/Server)**: 
-  - `UserWithRole`: 带权限的用户。
-  - `ValidForm`: 符合 Zod Schema 的表单数据。
-
-### 2.3 测试策略
-
-#### Server 策略
-- **核心算法**: 验证数学性质（结合律、单调性、守恒性）。
-- **状态机**: 使用 `fast-check` 的 `Model Based Testing` 功能验证复杂状态流转（如请假审批流）。
-
-#### Web 策略
-- **Schema Fuzzing**: 
-  - 生成大量随机 JSON 对象传给 `ZodSchema.safeParse`。
-  - 验证：对于非法数据是否总是返回 `success: false` 而非抛出异常。
-  - 验证：对于合法生成器生成的数据，是否总是返回 `success: true`。
-- **Utils**: 验证往返性 (Round-trip)，如 `decode(encode(x)) === x`。
-
-### 2.4 CI/CD 集成
-- **环境变量控制**:
-  - `FC_NUM_RUNS`: 控制迭代次数。
-  - `FC_SEED`: 允许注入 Seed 复现失败。
-- **流水线**:
-  - PR Check: `FC_NUM_RUNS=100` (快速)
-  - Nightly: `FC_NUM_RUNS=1000` (深度)
-
-## 3. 质量保证
-- **代码审查**: 关注 Property 的有效性，避免写成 "Re-implementation" (在测试中重写一遍逻辑)。
-- **性能熔断**: 单个测试文件超时阈值 5s。

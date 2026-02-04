@@ -43,3 +43,17 @@
   - Server: 集成到 `npm run test`。
   - Web: 集成到 `npm run test`。
   - CI: 配置独立的 PBT 检查步骤或参数。
+
+## 5. Round 2: 迭代实施 (2026-02-04)
+### 5.1 上下文更新
+- **前置状态**: Round 1 已完成 Server/Web 核心及 App Utils 的 PBT 覆盖。
+- **当前痛点**: 
+  - App 端运行环境不稳定 (Emulator/Network)，导致手动测试困难。
+  - App 业务逻辑 (Auth, Attendance Flow) 仍需增强验证。
+- **推荐方向**: 
+  - **App Logic PBT**: 将 App 业务逻辑剥离为纯函数/Hooks 进行 PBT，绕过 UI/Env 依赖。
+  - **Integration PBT**: 验证 Server 与 Client 的契约一致性。
+
+### 5.2 待确认决策点
+- **本次范围**: 是否聚焦于 App 端业务逻辑？
+- **时间预算**: 是否维持 "概念验证" 或 "局部应用" 节奏？
