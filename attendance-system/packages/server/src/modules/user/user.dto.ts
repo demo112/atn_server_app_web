@@ -17,8 +17,8 @@ export const updateUserSchema = z.object({
 });
 
 export const getUsersSchema = z.object({
-  page: z.string().transform(Number).default('1'),
-  pageSize: z.string().transform(Number).default('10'),
+  page: z.coerce.number().min(1).default(1),
+  pageSize: z.coerce.number().min(1).default(10),
   keyword: z.string().optional(),
   status: z.enum(['active', 'inactive']).optional(),
 });
