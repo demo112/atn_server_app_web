@@ -38,8 +38,8 @@ describe('LeaveService PBT', () => {
   const createLeaveDtoArb = fc.record({
     employeeId: fc.integer({ min: 1 }),
     type: fc.constantFrom('annual', 'sick', 'personal', 'business_trip') as fc.Arbitrary<LeaveType>,
-    startTime: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
-    endTime: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
+    startTime: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }).filter(d => !isNaN(d.getTime())),
+    endTime: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }).filter(d => !isNaN(d.getTime())),
     reason: fc.string(),
     operatorId: fc.integer({ min: 1 }),
   });

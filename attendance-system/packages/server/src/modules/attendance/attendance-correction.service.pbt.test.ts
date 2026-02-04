@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fc from 'fast-check';
 import { AttendanceCorrectionService } from './attendance-correction.service';
@@ -53,7 +54,7 @@ describe('AttendanceCorrectionService PBT', () => {
   });
 
   // Arbitraries
-  const dateArb = fc.date({ min: new Date('2023-01-01'), max: new Date('2025-12-31') });
+  const dateArb = fc.date({ min: new Date('2023-01-01'), max: new Date('2025-12-31') }).filter(d => !isNaN(d.getTime()));
   
   const dailyRecordIdArb = fc.bigInt({ min: 1n }).map(n => n.toString());
   

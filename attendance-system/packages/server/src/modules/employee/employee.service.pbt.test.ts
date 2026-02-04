@@ -47,7 +47,7 @@ describe('EmployeeService PBT', () => {
     employeeNo: fc.string({ minLength: 1 }),
     name: fc.string({ minLength: 1 }),
     deptId: fc.integer({ min: 1 }),
-    hireDate: fc.date().map(d => d.toISOString().split('T')[0]),
+    hireDate: fc.date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') }).map(d => d.toISOString().split('T')[0]),
     phone: fc.option(fc.string(), { nil: undefined }),
     email: fc.option(fc.emailAddress(), { nil: undefined }),
     position: fc.option(fc.string(), { nil: undefined }),

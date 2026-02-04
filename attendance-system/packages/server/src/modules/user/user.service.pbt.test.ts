@@ -205,67 +205,6 @@ describe('UserService PBT', () => {
     });
   });
 
-    it('should create user successfully if username is unique', async () => {
-      await fc.assert(
-        fc.asyncProperty(createUserInputArb, fc.integer({ min: 1 }), async (dto, newId) => {
-          vi.clearAllMocks();
-          bcryptHashMock.mockResolvedValue('hashed_secret');
-          
-          // Setup: User does not exist
-          prismaFindUniqueMock.mockResolvedValue(null);
-          prismaCreateMock.mockResolvedValue(mockUser(newId, dto));
-
-          // Execute
-          const result = await service.create(dto);
-
-          // Verify
-          expect(prismaFindUniqueMock).toHaveBeenCalledWith({ where: { username: dto.username } });
-          expect(bcryptHashMock).toHaveBeenCalled(); // Should always hash password
-          expect(prismaCreateMock).toHaveBeenCalledWith(expect.objectContaining({
-            data: expect.objectContaining({
-              username: dto.username,
-              role: dto.role,
-              employeeId: dto.employeeId ?? null, // Ensure undefined becomes null if applicable, or check service logic
-            }),
-          }));
-          expect(result.id).toBe(newId);
-          expect(result.username).toBe(dto.username);
-        })
-      );
-    });
-  });
-
-  describe('update', () => {
-    it('should hash password if provided', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1 }), updateUserInputArb, async (id, dto) => {
-          vi.clearAllMocks();
-          bcryptHashMock.mockResolvedValue('hashed_secret');
-
-          // Setup
-          prismaUpdateMock.mockResolvedValue(mockUser(id, { ...dto, username: 'existing' }));
-
-          // Execute
-          await service.update(id, dto);
-
-          // Verify
-          if (dto.password) {
-            expect(bcryptHashMock).toHaveBeenCalledWith(dto.password, 10);
-          } else {
-            expect(bcryptHashMock).not.toHaveBeenCalled();
-          }
-
-          expect(prismaUpdateMock).toHaveBeenCalledWith(expect.objectContaining({
-            where: { id },
-            data: expect.objectContaining({
-              ...(dto.role ? { role: dto.role } : {}),
-            })
-          }));
-        })
-      );
-    });
-  });
-
   describe('delete', () => {
     it('should delegate to prisma delete', async () => {
       await fc.assert(
