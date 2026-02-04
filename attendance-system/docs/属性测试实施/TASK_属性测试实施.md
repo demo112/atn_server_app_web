@@ -1,50 +1,84 @@
-# TASK - 属性测试实施 (Web端)
+# TASK - 属性测试实施任务拆分 (Integrated)
 
-## 任务依赖图
+## 1. 任务概览
+
+本计划整合了 Server 端的核心逻辑验证需求与 Web 端的数据健壮性验证需求。
 
 ```mermaid
 graph TD
-    T1[环境搭建] --> T2[Schema测试]
-    T1 --> T3[Utils测试]
-    T2 --> T4[CI集成]
-    T3 --> T4
-    T4 --> T5[文档与总结]
+    T1[T1: 基础设施搭建] --> T2[T2: Server核心生成器]
+    T1 --> T3[T3: Web环境与Schema]
+    T2 --> T4[T4: Server核心域PBT]
+    T4 --> T5[T5: Server业务逻辑PBT]
+    T3 --> T6[T6: Web工具与Hooks PBT]
+    T5 --> T7[T7: CI/CD集成]
+    T6 --> T7
+    T7 --> T8[T8: 文档与推广]
 ```
 
-## 任务列表
+## 2. 任务详细定义
 
-### T1: 环境搭建 (Environment Setup)
-- **输入**: `packages/web` 现有环境
-- **输出**: `package.json` 包含 `fast-check`，Vitest 配置确认
-- **步骤**:
-  1. 安装 `fast-check` 作为 devDependency.
-  2. 验证 `npm run test` 是否正常运行.
+### T1: 基础设施搭建 (Infrastructure)
+- **目标**: 在 Monorepo 层面配置 PBT 环境。
+- **范围**: `packages/shared`, `packages/server`, `packages/web`
+- **输出**:
+  - `package.json`: 确认 `fast-check` 依赖 (Dev)。
+  - `packages/shared/src/test/arbitraries/`: 建立公共生成器目录。
+  - `npm script`: 添加 `test:pbt` 命令。
 
-### T2: Schema 属性测试 (Schema Property Tests)
-- **输入**: `src/schemas/attendance.ts`
-- **输出**: `src/schemas/__tests__/attendance.property.test.ts`
-- **验收标准**:
-  - 针对 `TimePeriodRulesSchema` 编写属性测试.
-  - 验证数值边界 (如负数、极大值).
-  - 验证字段组合 (如 StartOffset > EndOffset 的情况).
+### T2: Server 核心生成器 (Core Generators)
+- **目标**: 构建 Server 端核心领域对象的生成器。
+- **输入**: `packages/shared/src/types`
+- **输出**:
+  - `time-period.arb.ts`: 时间段生成器。
+  - `attendance-record.arb.ts`: 打卡记录生成器。
+  - `shift.arb.ts`: 班次生成器。
+- **验收标准**: 生成器能稳定产生符合基础约束的数据。
 
-### T3: Utils 属性测试 (Utils Property Tests)
-- **输入**: `src/utils/auth.ts`
-- **输出**: `src/utils/auth.property.test.ts`
-- **验收标准**:
-  - 验证 `getToken/setToken` 的往返一致性 (Round-trip property).
-  - 验证 `getUser/setUser` 的 JSON 序列化/反序列化稳定性.
+### T3: Web 环境与 Schema 测试 (Web Foundation)
+- **目标**: Web 端引入 PBT 并覆盖 Schema。
+- **输入**: `packages/web/src/schemas`
+- **输出**:
+  - `packages/web/src/schemas/__tests__/*.property.test.ts`
+- **验收标准**: 针对核心 Zod Schema 完成 Fuzzing 测试，验证边界稳定性。
 
-### T4: CI 集成 (CI Integration)
-- **输入**: 本地测试通过
-- **输出**: 确认 CI 命令有效
-- **步骤**:
-  1. 运行 `npm run test` 确保包含新测试.
-  2. 模拟 CI 环境运行 (如设置环境变量).
+### T4: Server 核心域 PBT (Core Domain)
+- **目标**: 覆盖考勤计算核心算法。
+- **输入**: `attendance/domain/attendance-calculator.ts`
+- **输出**: `attendance-calculator.pbt.test.ts`
+- **验收标准**: 验证“总时长守恒”、“单调性”等关键属性，通过 1000 次迭代。
 
-### T5: 文档与总结 (Documentation)
-- **输入**: 执行结果
-- **输出**: `BEST_PRACTICES.md`, `FINAL_属性测试实施.md`
-- **步骤**:
-  1. 记录最佳实践示例.
-  2. 总结本次实施成果.
+### T5: Server 业务逻辑 PBT (Business Logic)
+- **目标**: 覆盖补卡、请假等状态流转。
+- **输入**: `correction.service.ts`, `leave.service.ts`
+- **输出**: 对应的 PBT 测试。
+- **验收标准**: 验证状态机转换的合法性和幂等性。
+
+### T6: Web 工具与 Hooks PBT (Web Logic)
+- **目标**: 覆盖前端复杂逻辑。
+- **输入**: `src/utils`, 复杂 `hooks`
+- **输出**: `*.property.test.ts`
+- **验收标准**: 覆盖日期处理、数据转换等纯函数。
+
+### T7: CI/CD 集成 (Integration)
+- **目标**: 将 PBT 纳入自动化流程。
+- **输出**: GitHub Actions / CI 脚本更新。
+- **验收标准**: CI 环境可配置运行次数，失败时报告 Seed。
+
+### T8: 文档与推广 (Documentation)
+- **目标**: 沉淀经验，赋能团队。
+- **输出**: `BEST_PRACTICES.md`, 示例代码库。
+- **验收标准**: 完成一篇最佳实践文档，包含 Server/Web 典型案例。
+
+## 3. 进度追踪
+
+| ID | 任务名称 | 端 | 优先级 | 状态 |
+|:---|:---|:---|:---|:---|
+| T1 | 基础设施搭建 | All | P0 | 待开始 |
+| T2 | Server核心生成器 | Server | P0 | 待开始 |
+| T3 | Web环境与Schema | Web | P1 | 待开始 |
+| T4 | Server核心域PBT | Server | P0 | 待开始 |
+| T5 | Server业务逻辑PBT | Server | P1 | 待开始 |
+| T6 | Web工具与Hooks | Web | P2 | 待开始 |
+| T7 | CI/CD集成 | All | P1 | 待开始 |
+| T8 | 文档与推广 | All | P2 | 待开始 |

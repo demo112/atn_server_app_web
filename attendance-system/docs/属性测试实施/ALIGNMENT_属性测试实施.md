@@ -1,41 +1,45 @@
-# ALIGNMENT - 属性测试实施 (Web端)
+# ALIGNMENT - 属性测试实施 (Server & Web)
 
 ## 1. 项目上下文分析
 - **项目结构**: Monorepo (pnpm workspace)
-- **目标模块**: `packages/web` (Web管理端)
-- **技术栈**: React, TypeScript, Vite, Ant Design, Vitest
+- **技术栈**: 
+  - **Server**: Node.js, Express, TypeScript, Prisma, Vitest
+  - **Web**: React, TypeScript, Vite, Ant Design, Zod, Vitest
 - **当前状态**:
-  - 基础测试框架已就绪 (`vitest`, `@testing-library/react`).
-  - 尚未安装属性测试工具 (`fast-check` 缺失).
-  - 现有测试主要为组件测试和少量单元测试.
+  - **Server**: 包含核心考勤计算、排班算法，逻辑复杂度高。依赖中已包含 `fast-check`，但缺乏系统性 PBT 覆盖。
+  - **Web**: 涉及大量表单验证、数据转换、时区处理。现有测试主要为组件测试，缺失对极端输入的验证。
 - **业务特点**: 
-  - 管理端涉及大量表单验证、数据转换、复杂筛选和报表计算.
-  - 使用 `dayjs` 处理时间，容易出现时区或边界问题.
-  - 使用 `zod` 进行 Schema 验证，天然适合属性测试生成数据.
+  - 考勤系统核心在于“时间”与“规则”，涉及大量时间段计算、状态流转、排班算法，天然适合属性测试（如验证时间不重叠、总时长守恒）。
+  - Web 端输入校验（Schema）直接决定了脏数据是否会进入系统。
 
 ## 2. 属性测试需求理解
-- **目标**: 为 Web 端核心逻辑引入属性测试覆盖.
-- **适用场景**:
-  1. **纯函数工具 (Utils)**: 格式化、数据转换、计算逻辑.
-  2. **自定义 Hooks**: 状态机逻辑、复杂交互逻辑.
-  3. **表单验证**: 验证 Zod Schema 的健壮性.
-  4. **通用组件**: 基础 UI 组件的 Props 组合测试.
+- **核心目标**: 构建端到端的属性测试防护网。
+  - **Server**: 确保核心业务规则（Invariants）在任何边缘数据下不被破坏。
+  - **Web**: 确保前端数据验证（Schema）的健壮性，防止异常数据导致 Crash。
 - **痛点**:
-  - 前端逻辑日益复杂，手动编写用例难以覆盖所有输入组合 (如特殊字符、极大数字、极端日期).
-  - "测不准"的偶发 Bug 难以复现.
+  - 传统单元测试难以覆盖所有时间边界组合（如跨天、夏令时、极短/极长班次）。
+  - 复杂的排班算法容易在边缘情况下出错。
+  - Web 端表单验证逻辑随需求频繁变更，容易引入回归 Bug。
+- **预期效果**:
+  - 发现隐藏的边界 Bug。
+  - 提高核心算法的健壮性。
+  - 建立“生成器”库（Arbitraries），复用于各个层级的测试。
 
 ## 3. 智能决策与风险评估
-- **工具选择**: `fast-check` (JavaScript/TypeScript 生态事实标准).
-- **实施策略**:
-  - **Phase 1 (原子层)**: 覆盖 `src/utils` 和纯逻辑 `hooks`.
-  - **Phase 2 (验证层)**: 结合 `zod` schema 自动生成测试数据验证表单逻辑.
-  - **Phase 3 (交互层)**: (暂缓) 组件级属性测试成本较高，初期不建议大规模通过 PBT 测试 UI 渲染.
-- **风险**:
-  - **性能影响**: 前端测试通常在 CI 运行，大量 PBT 可能拖慢构建. -> *对策: 限制默认运行次数 (numRuns: 100)*.
-  - **Dom 依赖**: 涉及 Dom 的测试不稳定. -> *对策: 剥离逻辑到纯函数测试*.
+- **工具选择**: `fast-check` (TypeScript 生态事实标准，已在 Server 端引入，需扩展至 Web)。
+- **实施策略**: **分层渐进，Server 优先**。
+  - **Phase 1 (Server Core)**: 覆盖最高风险的考勤计算与排班算法。
+  - **Phase 2 (Web Schema)**: 利用 Zod Schema 自动生成测试数据，验证边界健壮性。
+  - **Phase 3 (Business Logic)**: 覆盖 Server 端状态机（补卡、请假）与 Web 端复杂 Hooks。
+- **潜在风险**:
+  - **执行时间**: PBT 运行耗时。-> *对策: CI/Local 区分迭代次数 (1000 vs 100)*.
+  - **学习曲线**: 团队需转变思维。-> *对策: 建立最佳实践文档与代码模板*.
+  - **DOM 依赖**: Web 测试不稳定。-> *对策: 剥离逻辑到纯函数进行 PBT*.
 
-## 4. 关键决策点 (待确认)
-- **范围**: 仅限 `packages/web`.
-- **工具**: 确认引入 `fast-check`.
-- **优先级**: Utils > Hooks > Form Validation.
-- **集成**: 集成到现有的 `npm run test` 命令中.
+## 4. 关键决策点 (已确认)
+- **范围**: `packages/server` (全量核心逻辑) + `packages/web` (Utils & Schemas)。
+- **工具**: 统一使用 `fast-check` + `vitest`。
+- **集成**: 
+  - Server: 集成到 `npm run test`。
+  - Web: 集成到 `npm run test`。
+  - CI: 配置独立的 PBT 检查步骤或参数。

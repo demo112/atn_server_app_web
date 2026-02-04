@@ -1,37 +1,53 @@
-# CONSENSUS - 属性测试实施 (Web端)
+# CONSENSUS - 属性测试实施 (Server & Web)
 
 ## 1. 实施目标与验收标准
-- **核心目标**: 在 Web 端建立属性测试能力，提升核心逻辑代码健壮性.
+- **核心目标**: 建立全栈属性测试能力，Server 端保障逻辑正确性，Web 端保障输入健壮性。
 - **验收标准**:
-  - `packages/web` 成功引入 `fast-check` 依赖.
-  - 至少完成 3 个核心工具函数/Hooks 的属性测试用例.
-  - CI 流水线能正确执行属性测试并报告结果.
-  - 团队具备编写基础属性测试的能力 (通过文档/示例).
+  - **Server**: 核心 Service (考勤、排班) 关键算法实现 PBT 覆盖，验证业务不变量。
+  - **Web**: 引入 `fast-check`，对核心 Utils 和 Zod Schemas 进行 Fuzzing 测试。
+  - **Shared**: 建立可复用的生成器库 (`arbitraries`)。
+  - **CI**: 流水线包含 PBT 步骤，并能正确报告失败 Seed。
 
 ## 2. 技术方案
-- **测试框架**: Vitest (现有) + fast-check (新增).
-- **文件命名**: 保持 `*.test.ts` / `*.test.tsx` 规范，属性测试代码可与单元测试共存.
-- **配置策略**:
-  - 本地开发: `numRuns: 100` (兼顾速度).
-  - CI 环境: `numRuns: 100` (保持一致，避免 CI 超时，必要时可增加).
+- **测试框架**: Vitest (统一)
+- **属性测试库**: fast-check
+- **文件命名**: 
+  - 推荐: `*.pbt.test.ts` (独立文件，便于区分和单独运行)
+  - 允许: `*.test.ts` (简单的 PBT 可与单元测试共存)
+- **运行配置**:
+  - **Local**: `numRuns: 100` (快速反馈)
+  - **CI**: `numRuns: 1000+` (深度扫描，Nightly Build 可更高)
 
-## 3. 渐进式实施策略
-- **Stage 1: 基础建设 (T1-T2)**
-  - 安装依赖.
-  - 配置 Vitest 支持 (如有必要).
-  - 选取 1 个纯函数 (如日期处理或数据格式化) 进行 Pilot.
-- **Stage 2: 核心覆盖 (T2-T3)**
-  - 覆盖 `src/utils` 下的关键业务逻辑.
-  - 覆盖 `src/hooks` 下的复杂状态逻辑.
-- **Stage 3: 持续集成 (T4-T5)**
-  - 确保 CI 流程稳定.
-  - 建立文档和规范.
+## 3. 渐进式实施策略 (4 Phases)
 
-## 4. 风险与缓解
-- **学习成本**: PBT 思维转变困难.
-  - *缓解*: 提供详细的 "PBT vs Example-based" 对比示例.
-- **执行时间**:
-  - *缓解*: 严格控制 `numRuns`，将耗时的深层测试标记为 `slow` 或单独运行.
+### Phase 1: Server Core Domain (核心域 - P0)
+- **目标**: 覆盖最复杂的算法逻辑，建立生成器基础。
+- **模块**: 
+  - `server/src/modules/attendance/domain` (考勤计算)
+  - `shared/src/test/arbitraries` (基础生成器)
+- **价值**: 收益最高，解决核心痛点。
 
-## 5. 下一步
-- 进入 Architect 阶段，设计具体的目录结构和示例代码模式.
+### Phase 2: Web Foundation & Schemas (Web 基础 - P1)
+- **目标**: 建立 Web 端 PBT 环境，验证输入契约。
+- **模块**:
+  - `web/src/schemas` (Zod Schema Fuzzing)
+  - `web/src/utils` (纯函数)
+- **价值**: 拦截异常数据，提升前端稳定性。
+
+### Phase 3: Server Business Logic (业务逻辑 - P1)
+- **目标**: 覆盖状态流转和权限约束。
+- **模块**:
+  - `server/src/modules/attendance/correction` (补卡)
+  - `server/src/modules/attendance/leave` (请假)
+- **重点**: 状态机属性、权限模型。
+
+### Phase 4: Expansion (扩展与推广 - P2)
+- **目标**: 推广至 App 端，完善文档与培训。
+- **模块**:
+  - `packages/app` (App 端适配)
+  - 团队培训与 Code Review 规范固化。
+
+## 4. 风险缓解
+- **超时问题**: 将 PBT 标记为耗时测试，避免阻塞日常开发。
+- **Flaky Tests**: 强制要求 CI 失败时打印 Seed，本地通过 Seed 复现。
+- **学习成本**: 提供 "PBT vs Example-based" 对比示例库。
