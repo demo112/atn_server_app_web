@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDepartmentSummary, exportStats, triggerCalculation } from '../../services/statistics';
 import { AttendanceSummaryVo, ExportStatsDto } from '@attendance/shared';
+import { logger } from '../../utils/logger';
 
 const MonthlySummaryReport: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const MonthlySummaryReport: React.FC = () => {
       setData(res);
       setPage(1); // Reset page
     } catch (err) {
-      console.error('Failed to fetch monthly summary:', err);
+      logger.error('Failed to fetch monthly summary:', err);
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ const MonthlySummaryReport: React.FC = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error('Failed to export stats:', err);
+      logger.error('Failed to export stats:', err);
       alert('导出失败，请重试');
     } finally {
       setExporting(false);
@@ -96,7 +97,7 @@ const MonthlySummaryReport: React.FC = () => {
       // 可以选择稍后自动刷新
       setTimeout(fetchData, 2000);
     } catch (err) {
-      console.error('Failed to trigger calculation:', err);
+      logger.error('Failed to trigger calculation:', err);
       alert('触发计算失败');
     } finally {
       setCalculating(false);
@@ -106,6 +107,9 @@ const MonthlySummaryReport: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [currentMonth]);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const displayedData = data.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50">
@@ -162,13 +166,29 @@ const MonthlySummaryReport: React.FC = () => {
 
       <div className="mx-4 mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <button className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700">
-            <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600">download</span>
-            <span>导出报表</span>
+          <button 
+            onClick={handleExport}
+            disabled={exporting || data.length === 0}
+            className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {exporting ? (
+              <span className="material-icons-outlined text-xl animate-spin text-blue-600">sync</span>
+            ) : (
+              <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600">download</span>
+            )}
+            <span>{exporting ? '导出中...' : '导出报表'}</span>
           </button>
-          <button className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700">
-            <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600 group-hover:rotate-180 transition-transform duration-700">refresh</span>
-            <span>考勤计算</span>
+          <button 
+            onClick={handleCalculate}
+            disabled={calculating}
+            className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {calculating ? (
+              <span className="material-icons-outlined text-xl animate-spin text-blue-600">sync</span>
+            ) : (
+              <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600 group-hover:rotate-180 transition-transform duration-700">refresh</span>
+            )}
+            <span>{calculating ? '计算中...' : '考勤计算'}</span>
             <span className="material-icons-outlined text-sm text-slate-300 ml-1">help_outline</span>
           </button>
         </div>
