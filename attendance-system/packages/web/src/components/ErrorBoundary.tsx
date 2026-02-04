@@ -1,5 +1,4 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { Button, Result } from 'antd';
 import { logger } from '../utils/logger';
 
 interface Props {
@@ -38,16 +37,23 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <Result
-          status="500"
-          title="Something went wrong"
-          subTitle={this.state.error?.message || 'Sorry, something went wrong.'}
-          extra={
-            <Button type="primary" onClick={this.handleReset}>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mb-6">
+              <span className="material-icons text-6xl text-red-500">error_outline</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+            <p className="text-gray-600 mb-6">
+              {this.state.error?.message || 'Sorry, something went wrong.'}
+            </p>
+            <button
+              onClick={this.handleReset}
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
               Refresh Page
-            </Button>
-          }
-        />
+            </button>
+          </div>
+        </div>
       );
     }
 

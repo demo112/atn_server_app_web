@@ -24,7 +24,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     server: {
       deps: {
-        inline: [/antd/, /rc-.*/, /@ant-design/],
+        inline: [],
       },
     },
     coverage: {

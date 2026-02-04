@@ -1,10 +1,8 @@
 
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, TreeSelect, message } from 'antd';
-import type { DefaultOptionType } from 'antd/es/select';
+import React, { useEffect, useState } from 'react';
+import { useToast } from '@/components/common/ToastProvider';
 import { DepartmentVO, CreateDepartmentDto, UpdateDepartmentDto } from '@attendance/shared';
-import { departmentService } from '../../../services/department';
-import { logger } from '../../../utils/logger';
+import StandardModal from '@/components/common/StandardModal';
 
 interface DepartmentFormProps {
   visible: boolean;
@@ -12,7 +10,7 @@ interface DepartmentFormProps {
   initialValues?: Partial<DepartmentVO>; // For edit or create with parentId
   treeData: DepartmentVO[]; // For parent selection
   onCancel: () => void;
-  onSuccess: () => void;
+  onSuccess: (values: CreateDepartmentDto | UpdateDepartmentDto) => Promise<void>;
 }
 
 export const DepartmentForm: React.FC<DepartmentFormProps> = ({
@@ -23,113 +21,142 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({
   onCancel,
   onSuccess,
 }) => {
-  const [form] = Form.useForm();
-  const [submitting, setSubmitting] = React.useState(false);
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    parentId: '',
+    sortOrder: 0,
+  });
 
   useEffect(() => {
     if (visible) {
       if (mode === 'edit' && initialValues) {
-        form.setFieldsValue({
-          name: initialValues.name,
-          parentId: initialValues.parentId,
-          sortOrder: initialValues.sortOrder,
+        setFormData({
+          name: initialValues.name || '',
+          parentId: initialValues.parentId ? String(initialValues.parentId) : '',
+          sortOrder: initialValues.sortOrder || 0,
         });
       } else {
-        form.resetFields();
-        if (initialValues?.parentId) {
-          form.setFieldsValue({ parentId: initialValues.parentId });
-        }
+        setFormData({
+          name: '',
+          parentId: initialValues?.parentId ? String(initialValues.parentId) : '',
+          sortOrder: 0,
+        });
       }
     }
-  }, [visible, mode, initialValues, form]);
+  }, [visible, mode, initialValues]);
 
-  const handleSubmit = async (): Promise<void> => {
+  const handleSubmit = async () => {
+    if (!formData.name) {
+      toast.error('请输入部门名称');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const values = await form.validateFields();
-      setSubmitting(true);
-
-      if (mode === 'create') {
-        const dto: CreateDepartmentDto = {
-          name: values.name,
-          parentId: values.parentId || null,
-          sortOrder: values.sortOrder || 0,
-        };
-        await departmentService.createDepartment(dto);
-        message.success('创建成功');
-        onSuccess();
+      const data: any = {
+        name: formData.name,
+        sortOrder: Number(formData.sortOrder),
+      };
+      
+      if (formData.parentId) {
+        data.parentId = Number(formData.parentId);
       } else {
-        if (!initialValues?.id) return;
-        const dto: UpdateDepartmentDto = {
-          name: values.name,
-          parentId: values.parentId || null,
-          sortOrder: values.sortOrder,
-        };
-        await departmentService.updateDepartment(initialValues.id, dto);
-        message.success('更新成功');
-        onSuccess();
+        data.parentId = null;
       }
+
+      await onSuccess(data);
+      // onSuccess handles closing usually, but let's make sure
     } catch (error) {
-      logger.error('Operation failed', error);
-      // message.error('操作失败'); // Service layer or request util might handle generic errors
+      console.error(error);
+      toast.error('操作失败');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  // 转换 TreeData 供 TreeSelect 使用
-  const renderTreeSelectData = (nodes: DepartmentVO[]): DefaultOptionType[] => {
-    return nodes.map(node => ({
-      label: node.name,
-      value: node.id,
-      children: node.children ? renderTreeSelectData(node.children) : [],
-      disabled: mode === 'edit' && node.id === initialValues?.id, // 编辑时不能选自己（后端还会校验子孙）
-    }));
+  // Helper to flatten tree for select options
+  const renderOptions = (nodes: DepartmentVO[], level = 0): React.ReactNode[] => {
+    let options: React.ReactNode[] = [];
+    nodes.forEach(node => {
+        // Disable selecting self or children as parent in edit mode (simplified check: just self for now)
+        const disabled = mode === 'edit' && node.id === initialValues?.id;
+        
+        options.push(
+            <option key={node.id} value={node.id} disabled={disabled}>
+                {'\u00A0'.repeat(level * 4)}{node.name}
+            </option>
+        );
+        if (node.children) {
+            options = [...options, ...renderOptions(node.children, level + 1)];
+        }
+    });
+    return options;
   };
+
+  const footer = (
+    <>
+      <button
+        onClick={onCancel}
+        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {loading ? '提交中...' : '确定'}
+      </button>
+    </>
+  );
 
   return (
-    <Modal
+    <StandardModal
+      isOpen={visible}
+      onClose={onCancel}
       title={mode === 'create' ? '新建部门' : '编辑部门'}
-      open={visible}
-      onOk={handleSubmit}
-      onCancel={onCancel}
-      confirmLoading={submitting}
-      destroyOnHidden
+      footer={footer}
+      width="max-w-md"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ sortOrder: 0 }}
-      >
-        <Form.Item
-          name="name"
-          label="部门名称"
-          rules={[{ required: true, message: '请输入部门名称' }]}
-        >
-          <Input placeholder="请输入部门名称" />
-        </Form.Item>
-
-        <Form.Item
-          name="parentId"
-          label="上级部门"
-          extra="不选则作为根部门"
-        >
-          <TreeSelect
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            treeData={renderTreeSelectData(treeData) as any}
-            placeholder="请选择上级部门"
-            allowClear
-            treeDefaultExpandAll
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">部门名称 <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            placeholder="请输入部门名称"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
           />
-        </Form.Item>
+        </div>
 
-        <Form.Item
-          name="sortOrder"
-          label="排序值"
-          extra="数值越小越靠前"
-        >
-          <InputNumber style={{ width: '100%' }} />
-        </Form.Item>
-      </Form>
-    </Modal>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">上级部门</label>
+          <select
+            value={formData.parentId}
+            onChange={(e) => setFormData({...formData, parentId: e.target.value})}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          >
+            <option value="">-- 无 (根部门) --</option>
+            {renderOptions(treeData)}
+          </select>
+          <p className="text-xs text-gray-500">不选则作为根部门</p>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">排序值</label>
+          <input
+            type="number"
+            value={formData.sortOrder}
+            onChange={(e) => setFormData({...formData, sortOrder: Number(e.target.value)})}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          />
+          <p className="text-xs text-gray-500">数值越小越靠前</p>
+        </div>
+      </div>
+    </StandardModal>
   );
 };

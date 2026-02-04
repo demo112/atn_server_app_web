@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, message } from 'antd';
 import { userService } from '../../../services/user';
+import StandardModal from '@/components/common/StandardModal';
+import { useToast } from '@/components/common/ToastProvider';
 
 interface BindUserModalProps {
   open: boolean;
@@ -15,14 +16,16 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
   onOk,
   confirmLoading,
 }) => {
+  const { toast } = useToast();
   const [users, setUsers] = useState<{ label: string; value: number }[]>([]);
   const [value, setValue] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [keyword, setKeyword] = useState('');
 
-  const fetchUsers = async (keyword = ''): Promise<void> => {
+  const fetchUsers = async (searchKeyword = '') => {
     setLoading(true);
     try {
-      const res = await userService.getUsers({ page: 1, pageSize: 20, keyword });
+      const res = await userService.getUsers({ page: 1, pageSize: 20, keyword: searchKeyword });
       const options = res.items
         .filter((u: any) => !u.employeeName) // Only show unbound users
         .map((u: any) => ({
@@ -30,8 +33,8 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
           value: u.id,
         }));
       setUsers(options);
-    } catch {
-      message.error('Failed to load users');
+    } catch (error) {
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -41,38 +44,91 @@ export const BindUserModal: React.FC<BindUserModalProps> = ({
     if (open) {
       fetchUsers();
       setValue(null);
+      setKeyword('');
     }
   }, [open]);
 
-  const handleOk = (): void => {
-    onOk(value);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (open) {
+        fetchUsers(keyword);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [keyword, open]);
+
+  const handleOk = async () => {
+    if (value === null) {
+        // Allow unbinding if that's the intention? 
+        // The original code passed `value` directly. 
+        // If it's nullable in props, it's fine.
+    }
+    await onOk(value);
   };
 
+  const footer = (
+    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+      <button
+        onClick={onCancel}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleOk}
+        disabled={loading || confirmLoading}
+        className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading || confirmLoading ? '提交中...' : '确定'}
+      </button>
+    </div>
+  );
+
   return (
-    <Modal
+    <StandardModal
+      isOpen={open}
+      onClose={onCancel}
       title="Bind User Account"
-      open={open}
-      onOk={handleOk}
-      onCancel={onCancel}
-      confirmLoading={confirmLoading}
-      destroyOnHidden
+      footer={footer}
+      width="max-w-md"
     >
-      <p>Select a user account to bind to this employee:</p>
-      <Select
-        showSearch
-        style={{ width: '100%' }}
-        placeholder="Select a user"
-        filterOption={false}
-        onSearch={(val) => fetchUsers(val)}
-        onChange={setValue}
-        value={value}
-        loading={loading}
-        options={users}
-        allowClear
-      />
-      <div style={{ marginTop: 8, color: '#888', fontSize: '12px' }}>
-        * Only users not bound to other employees are shown.
+      <div className="space-y-4">
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+                Search User
+            </label>
+            <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Type to search..."
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow mb-2"
+            />
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select User
+            </label>
+            <select
+                value={value || ''}
+                onChange={(e) => setValue(e.target.value ? Number(e.target.value) : null)}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+            >
+                <option value="">-- Select a user --</option>
+                {users.map((user) => (
+                    <option key={user.value} value={user.value}>
+                    {user.label}
+                    </option>
+                ))}
+            </select>
+            {loading && <p className="text-xs text-gray-500 mt-1">Loading users...</p>}
+        </div>
+        
+        <div className="text-xs text-gray-500">
+          * Only users not bound to other employees are shown.
+        </div>
       </div>
-    </Modal>
+    </StandardModal>
   );
 };

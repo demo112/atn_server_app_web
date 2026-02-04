@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { LoginDto } from '@attendance/shared';
 import { getToken, getUser, setToken, setUser as setStorageUser, clearAuth, AuthUser } from '../utils/auth';
 import { login as loginService } from '../services/auth';
-import { message } from 'antd';
+import { useToast } from '../components/common/ToastProvider';
 import { logger } from '../utils/logger';
 
 interface AuthContextType {
@@ -17,6 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { toast } = useToast();
   const [user, setUserState] = useState<AuthUser | null>(() => getUser());
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [isLoading] = useState(false);
@@ -29,12 +30,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setStorageUser(user);
       setTokenState(token);
       setUserState(user);
-      message.success('登录成功');
+      toast.success('登录成功');
     } catch (error: unknown) {
       logger.error('Login failed', error);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const err = error as any;
-      message.error(err.response?.data?.error?.message || '登录失败');
+      toast.error(err.response?.data?.error?.message || '登录失败');
       throw error;
     }
   };

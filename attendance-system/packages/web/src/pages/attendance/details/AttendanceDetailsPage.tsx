@@ -1,38 +1,24 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  Table, Card, Form, Input, Select, DatePicker, 
-  Button, Space, Tag, message, Row, Col, Typography 
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { SearchOutlined, ReloadOutlined, ExportOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as correctionService from '../../../services/correction';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
 import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
+import { useToast } from '@/components/common/ToastProvider';
 
-import { logger } from '../../../utils/logger';
-
-// Force update
-
-
-const { Title } = Typography;
-const { RangePicker } = DatePicker;
-const { Option } = Select;
-
-const statusMap: Record<AttendanceStatus, { text: string; color: string }> = {
-  normal: { text: '正常', color: 'success' },
-  late: { text: '迟到', color: 'error' },
-  early_leave: { text: '早退', color: 'warning' },
-  absent: { text: '缺勤', color: 'default' },
-  leave: { text: '请假', color: 'processing' },
-  business_trip: { text: '出差', color: 'purple' },
+const statusMap: Record<AttendanceStatus, { text: string; color: string; bg: string }> = {
+  normal: { text: '正常', color: 'text-green-800', bg: 'bg-green-100' },
+  late: { text: '迟到', color: 'text-red-800', bg: 'bg-red-100' },
+  early_leave: { text: '早退', color: 'text-yellow-800', bg: 'bg-yellow-100' },
+  absent: { text: '缺勤', color: 'text-gray-800', bg: 'bg-gray-100' },
+  leave: { text: '请假', color: 'text-blue-800', bg: 'bg-blue-100' },
+  business_trip: { text: '出差', color: 'text-purple-800', bg: 'bg-purple-100' },
 };
 
 const AttendanceDetailsPage: React.FC = () => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DailyRecordVo[]>([]);
   const [total, setTotal] = useState(0);
-  const [form] = Form.useForm();
   
   const [params, setParams] = useState({
     page: 1,
@@ -40,50 +26,45 @@ const AttendanceDetailsPage: React.FC = () => {
     startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
     deptId: undefined as number | undefined,
-    employeeName: undefined as string | undefined,
-    status: undefined as AttendanceStatus | undefined,
+    employeeName: '',
+    status: '' as AttendanceStatus | '',
   });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await correctionService.getDailyRecords(params);
+      const res = await correctionService.getDailyRecords({
+        ...params,
+        status: params.status || undefined,
+        employeeName: params.employeeName || undefined,
+      });
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {
-      logger.error('Failed to fetch attendance details', error);
-      message.error('获取考勤明细失败');
+      toast.error('获取考勤明细失败');
     } finally {
       setLoading(false);
     }
-  }, [params]);
+  }, [params, toast]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const handleSearch = (values: { dateRange?: [dayjs.Dayjs, dayjs.Dayjs], deptId?: number, employeeName?: string, status?: AttendanceStatus }): void => {
-    setParams({
-      ...params,
-      page: 1,
-      startDate: values.dateRange?.[0]?.format('YYYY-MM-DD') || params.startDate,
-      endDate: values.dateRange?.[1]?.format('YYYY-MM-DD') || params.endDate,
-      deptId: values.deptId,
-      employeeName: values.employeeName,
-      status: values.status,
-    });
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setParams({ ...params, page: 1 });
   };
 
-  const handleReset = (): void => {
-    form.resetFields();
+  const handleReset = () => {
     setParams({
       page: 1,
       pageSize: 10,
       startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
       endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
       deptId: undefined,
-      employeeName: undefined,
-      status: undefined,
+      employeeName: '',
+      status: '',
     });
   };
 
@@ -94,150 +75,214 @@ const AttendanceDetailsPage: React.FC = () => {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  const columns: ColumnsType<DailyRecordVo> = [
-    {
-      title: '日期',
-      dataIndex: 'workDate',
-      key: 'workDate',
-      width: 120,
-    },
-    {
-      title: '姓名',
-      dataIndex: 'employeeName',
-      key: 'employeeName',
-      width: 100,
-    },
-    {
-      title: '部门',
-      dataIndex: 'deptName',
-      key: 'deptName',
-      width: 120,
-    },
-    {
-      title: '班次',
-      dataIndex: 'shiftName',
-      key: 'shiftName',
-      width: 120,
-    },
-    {
-      title: '规定时间',
-      key: 'planTime',
-      width: 150,
-      render: (_, record) => (
-        <span>{record.startTime} - {record.endTime}</span>
-      ),
-    },
-    {
-      title: '签到',
-      dataIndex: 'checkInTime',
-      key: 'checkInTime',
-      width: 100,
-      render: (text) => text ? dayjs(text).format('HH:mm:ss') : '-',
-    },
-    {
-      title: '签退',
-      dataIndex: 'checkOutTime',
-      key: 'checkOutTime',
-      width: 100,
-      render: (text) => text ? dayjs(text).format('HH:mm:ss') : '-',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (status: AttendanceStatus) => {
-        const config = statusMap[status] || { text: status, color: 'default' };
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: '出勤',
-      dataIndex: 'workMinutes',
-      key: 'workMinutes',
-      width: 80,
-      render: formatMinutes,
-    },
-    {
-      title: '缺勤',
-      dataIndex: 'absentMinutes',
-      key: 'absentMinutes',
-      width: 80,
-      render: formatMinutes,
-    },
-    {
-      title: '备注',
-      dataIndex: 'remark',
-      key: 'remark',
-      ellipsis: true,
-    },
-  ];
+  const totalPages = Math.ceil(total / params.pageSize);
 
   return (
-    <Card>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Col>
-          <Title level={4}>每日考勤明细</Title>
-        </Col>
-        <Col>
-          <Space>
-            <Button icon={<ExportOutlined />}>导出</Button>
-          </Space>
-        </Col>
-      </Row>
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-bold text-gray-900">每日考勤明细</h1>
+        <button className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+          <span className="material-icons text-sm mr-2">download</span>
+          导出
+        </button>
+      </div>
 
-      <Form
-        form={form}
-        layout="inline"
-        onFinish={handleSearch}
-        initialValues={{
-          dateRange: [dayjs().startOf('month'), dayjs().endOf('month')],
-        }}
-        style={{ marginBottom: 24 }}
-      >
-        <Form.Item name="dateRange" label="日期">
-          <RangePicker />
-        </Form.Item>
-        <Form.Item name="deptId" label="部门" style={{ minWidth: 200 }}>
-          <DepartmentSelect placeholder="选择部门" />
-        </Form.Item>
-        <Form.Item name="employeeName" label="姓名">
-          <Input placeholder="姓名/工号" allowClear />
-        </Form.Item>
-        <Form.Item name="status" label="状态" style={{ minWidth: 120 }}>
-          <Select placeholder="状态" allowClear>
+      <form onSubmit={handleSearch} className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+          <input
+            type="date"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={params.startDate}
+            onChange={(e) => setParams({ ...params, startDate: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+          <input
+            type="date"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={params.endDate}
+            onChange={(e) => setParams({ ...params, endDate: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">部门</label>
+          <DepartmentSelect
+            value={params.deptId}
+            onChange={(e) => setParams({ ...params, deptId: e.target.value ? Number(e.target.value) : undefined })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">姓名/工号</label>
+          <input
+            type="text"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            placeholder="请输入"
+            value={params.employeeName}
+            onChange={(e) => setParams({ ...params, employeeName: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">状态</label>
+          <select
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={params.status}
+            onChange={(e) => setParams({ ...params, status: e.target.value as AttendanceStatus })}
+          >
+            <option value="">全部</option>
             {Object.entries(statusMap).map(([key, { text }]) => (
-              <Option key={key} value={key}>{text}</Option>
+              <option key={key} value={key}>{text}</option>
             ))}
-          </Select>
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-              查询
-            </Button>
-            <Button icon={<ReloadOutlined />} onClick={handleReset}>
-              重置
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+          </select>
+        </div>
+        <div className="lg:col-span-5 flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            重置
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            查询
+          </button>
+        </div>
+      </form>
 
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          current: params.page,
-          pageSize: params.pageSize,
-          total: total,
-          showTotal: (t) => `共 ${t} 条`,
-          onChange: (page, pageSize) => setParams({ ...params, page, pageSize }),
-        }}
-        scroll={{ x: 1300 }}
-      />
-    </Card>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部门</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">班次</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">规定时间</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">签到</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">签退</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">出勤</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">缺勤</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">备注</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={11} className="px-6 py-4 text-center text-sm text-gray-500">加载中...</td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={11} className="px-6 py-4 text-center text-sm text-gray-500">暂无数据</td>
+              </tr>
+            ) : (
+              data.map((record) => (
+                <tr key={record.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.workDate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.employeeName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.deptName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.shiftName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.startTime} - {record.endTime}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.checkInTime ? dayjs(record.checkInTime).format('HH:mm:ss') : '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.checkOutTime ? dayjs(record.checkOutTime).format('HH:mm:ss') : '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {(() => {
+                      const config = statusMap[record.status] || { text: record.status, color: 'text-gray-800', bg: 'bg-gray-100' };
+                      return (
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${config.bg} ${config.color}`}>
+                          {config.text}
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatMinutes(record.workMinutes)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatMinutes(record.absentMinutes)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs" title={record.remark}>{record.remark}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+        <div className="flex flex-1 justify-between sm:hidden">
+          <button
+            onClick={() => setParams({ ...params, page: Math.max(1, params.page - 1) })}
+            disabled={params.page === 1}
+            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            上一页
+          </button>
+          <button
+            onClick={() => setParams({ ...params, page: Math.min(totalPages, params.page + 1) })}
+            disabled={params.page >= totalPages}
+            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            下一页
+          </button>
+        </div>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              显示 <span className="font-medium">{(params.page - 1) * params.pageSize + 1}</span> 到 <span className="font-medium">{Math.min(params.page * params.pageSize, total)}</span> 条，
+              共 <span className="font-medium">{total}</span> 条
+            </p>
+          </div>
+          <div>
+            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <button
+                onClick={() => setParams({ ...params, page: Math.max(1, params.page - 1) })}
+                disabled={params.page === 1}
+                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:bg-gray-100"
+              >
+                <span className="sr-only">上一页</span>
+                <span className="material-icons text-sm">chevron_left</span>
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum = params.page;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (params.page <= 3) {
+                  pageNum = i + 1;
+                } else if (params.page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = params.page - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setParams({ ...params, page: pageNum })}
+                    aria-current={params.page === pageNum ? 'page' : undefined}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                      params.page === pageNum
+                        ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setParams({ ...params, page: Math.min(totalPages, params.page + 1) })}
+                disabled={params.page >= totalPages}
+                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:bg-gray-100"
+              >
+                <span className="sr-only">下一页</span>
+                <span className="material-icons text-sm">chevron_right</span>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

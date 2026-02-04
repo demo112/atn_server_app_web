@@ -8,3 +8,4 @@ coverage/
 .trae/documents/
 *.log
 .expo/
+tools/

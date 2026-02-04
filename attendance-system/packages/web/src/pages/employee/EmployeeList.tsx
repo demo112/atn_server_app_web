@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Button, Space, Input, Modal, message, Form, Tag } from 'antd';
 import { EmployeeVo, CreateEmployeeDto, UpdateEmployeeDto } from '@attendance/shared';
 import { employeeService } from '../../services/employee';
 import { EmployeeModal } from './components/EmployeeModal';
 import { BindUserModal } from './components/BindUserModal';
+import StandardModal from '@/components/common/StandardModal';
+import { useToast } from '@/components/common/ToastProvider';
 
 const EmployeeList: React.FC = () => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<EmployeeVo[]>([]);
   const [total, setTotal] = useState(0);
   const [params, setParams] = useState({ page: 1, pageSize: 10, keyword: '' });
-  const [form] = Form.useForm();
-
+  
   // Modal States
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [employeeModalMode, setEmployeeModalMode] = useState<'create' | 'edit'>('create');
@@ -20,15 +21,23 @@ const EmployeeList: React.FC = () => {
   const [isBindModalOpen, setIsBindModalOpen] = useState(false);
   const [bindEmployeeId, setBindEmployeeId] = useState<number | null>(null);
 
+  // Confirm Modal State
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    content: string;
+    onConfirm: () => Promise<void>;
+  }>({ title: '', content: '', onConfirm: async () => {} });
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   const fetchEmployees = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await employeeService.getEmployees(params);
       setData(res.items || []);
       setTotal(res.total);
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.error('Fetch employees failed:', error);
-        message.error('Failed to load employees');
+    } catch (error: any) {
+        toast.error('Fetch employees failed');
     } finally {
       setLoading(false);
     }
@@ -51,39 +60,40 @@ const EmployeeList: React.FC = () => {
     setIsEmployeeModalOpen(true);
   };
 
+  const showConfirm = (title: string, content: string, onConfirm: () => Promise<void>) => {
+    setConfirmConfig({ title, content, onConfirm });
+    setConfirmModalOpen(true);
+  };
+
   const handleDelete = (id: number): void => {
-    Modal.confirm({
-      title: 'Are you sure to delete this employee?',
-      content: 'This action will soft delete the employee.',
-      onOk: async () => {
+    showConfirm(
+      'Are you sure to delete this employee?',
+      'This action will soft delete the employee.',
+      async () => {
         try {
           await employeeService.deleteEmployee(id);
-          message.success('Deleted successfully');
+          toast.success('Deleted successfully');
           fetchEmployees();
-        } catch {
-          message.error('Failed to delete');
+        } catch (error) {
+          toast.error('Failed to delete');
         }
-      },
-    });
+      }
+    );
   };
 
   const handleEmployeeModalOk = async (values: CreateEmployeeDto | UpdateEmployeeDto): Promise<void> => {
     try {
       if (employeeModalMode === 'create') {
         await employeeService.createEmployee(values as CreateEmployeeDto);
-        message.success('Employee created successfully');
       } else {
         if (!currentEmployee) return;
         await employeeService.updateEmployee(currentEmployee.id, values as UpdateEmployeeDto);
-        message.success('Employee updated successfully');
       }
+      toast.success(employeeModalMode === 'create' ? 'Created successfully' : 'Updated successfully');
       setIsEmployeeModalOpen(false);
       fetchEmployees();
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        // Error handling (e.g. duplication)
-        // Note: api interceptor returns error.response.data directly
-        const errorMsg = error.error?.message || error.message || 'Operation failed';
-        message.error(errorMsg);
+    } catch (error: any) {
+        toast.error('Operation failed');
     }
   };
 
@@ -93,113 +103,254 @@ const EmployeeList: React.FC = () => {
   };
 
   const handleUnbindClick = (record: EmployeeVo): void => {
-    Modal.confirm({
-      title: 'Unbind User',
-      content: `Unbind user ${record.username}?`,
-      onOk: async () => {
+    showConfirm(
+      'Unbind User',
+      `Unbind user ${record.username}?`,
+      async () => {
         try {
           await employeeService.bindUser(record.id, { userId: null });
-          message.success('Unbound successfully');
+          toast.success('Unbound successfully');
           fetchEmployees();
-        } catch {
-          message.error('Failed to unbind');
+        } catch (error) {
+          toast.error('Failed to unbind');
         }
-      },
-    });
+      }
+    );
   };
 
   const handleBindModalOk = async (userId: number | null): Promise<void> => {
     if (!bindEmployeeId) return;
     try {
       await employeeService.bindUser(bindEmployeeId, { userId });
-      message.success('Bound successfully');
+      toast.success('Bound successfully');
       setIsBindModalOpen(false);
       fetchEmployees();
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      message.error(error.response?.data?.error?.message || 'Failed to bind');
+    } catch (error: any) {
+      toast.error('Failed to bind');
     }
   };
 
-  const columns = [
-    { title: 'Employee No', dataIndex: 'employeeNo', key: 'employeeNo' },
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
-    { title: 'Department', dataIndex: 'deptName', key: 'deptName' },
-    { 
-      title: 'Status', 
-      dataIndex: 'status', 
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>{status}</Tag>
-      )
-    },
-    {
-      title: 'Linked User',
-      key: 'user',
-      render: (_: unknown, record: EmployeeVo) => (
-        record.username ? (
-          <Space>
-            <Tag color="blue">{record.username}</Tag>
-            <Button type="link" size="small" onClick={() => handleUnbindClick(record)}>Unbind</Button>
-          </Space>
-        ) : (
-          <Button type="link" size="small" onClick={() => handleBindClick(record)}>Bind User</Button>
-        )
-      )
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_: unknown, record: EmployeeVo) => (
-        <Space size="middle">
-          <Button type="link" onClick={() => handleEdit(record)}>Edit</Button>
-          <Button type="link" danger onClick={() => handleDelete(record.id)}>Delete</Button>
-        </Space>
-      ),
-    },
-  ];
-
-  const handleSearch = (values: { keyword?: string }): void => {
-    setParams({ ...params, page: 1, keyword: values.keyword || '' });
+  const handleConfirmOk = async () => {
+    setConfirmLoading(true);
+    try {
+      await confirmConfig.onConfirm();
+      setConfirmModalOpen(false);
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
+  const confirmFooter = (
+    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+      <button
+        onClick={() => setConfirmModalOpen(false)}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleConfirmOk}
+        disabled={confirmLoading}
+        className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {confirmLoading ? '处理中...' : '确定'}
+      </button>
+    </div>
+  );
+
   return (
-    <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <Form form={form} layout="inline" onFinish={handleSearch}>
-          <Form.Item name="keyword">
-            <Input.Search placeholder="Search by name/no" onSearch={() => form.submit()} />
-          </Form.Item>
-        </Form>
-        <Button type="primary" onClick={handleAdd}>Add Employee</Button>
+    <div className="p-6">
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by name/no"
+                value={params.keyword}
+                onChange={(e) => setParams({ ...params, page: 1, keyword: e.target.value })}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm"
+              />
+              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
+            </div>
+          </div>
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            <span className="material-icons mr-2 text-sm">add</span>
+            Add Employee
+          </button>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 h-[48px]">
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee No</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Linked User</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : data.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400 italic">
+                      <span className="material-icons text-4xl block mb-2 mx-auto text-gray-300">folder_open</span>
+                      No employees found
+                    </td>
+                  </tr>
+                ) : (
+                  data.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-50 transition-colors h-[56px]">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-700">{record.employeeNo}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{record.name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{record.phone}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{record.deptName}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          record.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {record.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {record.username ? (
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              {record.username}
+                            </span>
+                            <button
+                              onClick={() => handleUnbindClick(record)}
+                              className="text-primary hover:text-primary/80 text-xs font-medium"
+                            >
+                              Unbind
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleBindClick(record)}
+                            className="text-primary hover:text-primary/80 text-xs font-medium"
+                          >
+                            Bind User
+                          </button>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleEdit(record)}
+                            className="text-primary hover:text-primary/80"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(record.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div className="flex justify-between flex-1 sm:hidden">
+              <button
+                onClick={() => setParams({ ...params, page: Math.max(1, params.page - 1) })}
+                disabled={params.page === 1}
+                className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setParams({ ...params, page: params.page + 1 })}
+                disabled={params.page * params.pageSize >= total}
+                className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{(params.page - 1) * params.pageSize + 1}</span> to <span className="font-medium">{Math.min(params.page * params.pageSize, total)}</span> of <span className="font-medium">{total}</span> results
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button
+                    onClick={() => setParams({ ...params, page: Math.max(1, params.page - 1) })}
+                    disabled={params.page === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <span className="material-icons text-sm">chevron_left</span>
+                  </button>
+                  <button
+                    onClick={() => setParams({ ...params, page: params.page + 1 })}
+                    disabled={params.page * params.pageSize >= total}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <span className="material-icons text-sm">chevron_right</span>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <EmployeeModal
+          open={isEmployeeModalOpen}
+          mode={employeeModalMode}
+          initialValues={currentEmployee}
+          onCancel={() => setIsEmployeeModalOpen(false)}
+          onOk={handleEmployeeModalOk}
+        />
+
+        <BindUserModal
+          open={isBindModalOpen}
+          onCancel={() => setIsBindModalOpen(false)}
+          onOk={handleBindModalOk}
+        />
+
+        <StandardModal
+          isOpen={confirmModalOpen}
+          onClose={() => setConfirmModalOpen(false)}
+          title={confirmConfig.title}
+          footer={confirmFooter}
+          width="max-w-sm"
+        >
+          <div className="flex items-start">
+            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+              <span className="material-icons text-red-600">warning</span>
+            </div>
+            <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">{confirmConfig.content}</p>
+              </div>
+            </div>
+          </div>
+        </StandardModal>
       </div>
-      
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          current: params.page,
-          pageSize: params.pageSize,
-          total: total,
-          onChange: (page, pageSize) => setParams({ ...params, page, pageSize }),
-        }}
-      />
-
-      <EmployeeModal
-        open={isEmployeeModalOpen}
-        mode={employeeModalMode}
-        initialValues={currentEmployee}
-        onCancel={() => setIsEmployeeModalOpen(false)}
-        onOk={handleEmployeeModalOk}
-      />
-
-      <BindUserModal
-        open={isBindModalOpen}
-        onCancel={() => setIsBindModalOpen(false)}
-        onOk={handleBindModalOk}
-      />
     </div>
   );
 };

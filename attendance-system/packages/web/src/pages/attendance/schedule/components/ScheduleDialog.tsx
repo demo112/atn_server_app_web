@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { attendanceService } from '@/services/attendance';
 import { employeeService } from '@/services/employee';
 import { EmployeeVo, Shift } from '@attendance/shared';
-import { logger } from '../../../../utils/logger';
-import { message } from 'antd';
+import { logger } from '@/utils/logger';
+import { useToast } from '@/components/common/ToastProvider';
+import StandardModal from '@/components/common/StandardModal';
 
 interface ScheduleDialogProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ScheduleDialogProps {
 }
 
 export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose, onSuccess }): React.ReactElement | null => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<EmployeeVo[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -26,16 +28,11 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
 
   const loadData = async (): Promise<void> => {
     try {
-        // 并行加载员工和班次
         const [empRes, shiftRes] = await Promise.all([
-            employeeService.getEmployees({ pageSize: 100 }), // 简单起见取前100
+            employeeService.getEmployees({ pageSize: 100 }), 
             attendanceService.getShifts()
         ]);
-        
-        // PaginatedResponse
         setEmployees(empRes.items || []);
-        
-        // Shift[]
         setShifts(shiftRes as Shift[]);
     } catch (e) {
         logger.error('Failed to load data', e);
@@ -48,8 +45,8 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
     }
   }, [isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent): Promise<void> => {
+    if (e) e.preventDefault();
     setLoading(true);
     try {
       await attendanceService.createSchedule({
@@ -59,36 +56,51 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
         endDate: formData.endDate,
         force: formData.force
       });
-      message.success('排班创建成功');
+      toast.success('排班创建成功');
       onSuccess();
       onClose();
     } catch (err) {
       logger.error('Schedule creation failed', err);
-      message.error('创建失败');
+      toast.error('创建失败');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  const footer = (
+    <>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+      >
+        取消
+      </button>
+      <button
+        onClick={() => handleSubmit()}
+        disabled={loading}
+        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {loading ? '提交中...' : '提交'}
+      </button>
+    </>
+  );
 
   return (
-    <div style={{ 
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-      backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
-      display: 'flex', justifyContent: 'center', alignItems: 'center' 
-    }}>
-      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '4px', width: '400px' }}>
-        <h3 style={{ marginTop: 0 }}>新建排班</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label>选择员工:</label>
+    <StandardModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="新建排班"
+      footer={footer}
+      width="max-w-md"
+    >
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">选择员工</label>
             <select 
                 value={formData.employeeId} 
                 onChange={e => setFormData({...formData, employeeId: e.target.value})}
                 required
-                style={{ padding: '8px' }}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
             >
                 <option value="">-- 请选择 --</option>
                 {employees.map(emp => (
@@ -99,13 +111,13 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
             </select>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label>选择班次:</label>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">选择班次</label>
             <select 
                 value={formData.shiftId} 
                 onChange={e => setFormData({...formData, shiftId: e.target.value})}
                 required
-                style={{ padding: '8px' }}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
             >
                 <option value="">-- 请选择 --</option>
                 {shifts.map(shift => (
@@ -116,67 +128,49 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <label>开始日期:</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">开始日期</label>
                 <input 
                     type="date" 
                     value={formData.startDate} 
                     onChange={e => setFormData({...formData, startDate: e.target.value})} 
                     required 
-                    style={{ padding: '8px' }}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
                 />
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <label>结束日期:</label>
+            <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">结束日期</label>
                 <input 
                     type="date" 
                     value={formData.endDate} 
                     onChange={e => setFormData({...formData, endDate: e.target.value})} 
                     required 
-                    style={{ padding: '8px' }}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
                 />
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
                 <input 
                     type="checkbox" 
                     id="force"
                     checked={formData.force}
                     onChange={e => setFormData({...formData, force: e.target.checked})}
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
-                <label htmlFor="force" style={{ cursor: 'pointer' }}>
+                <label htmlFor="force" className="text-sm font-medium text-gray-700 cursor-pointer">
                     强制覆盖 (忽略冲突)
                 </label>
             </div>
             {formData.force && (
-                <div style={{ fontSize: '12px', color: '#faad14', marginLeft: '20px' }}>
+                <div className="text-xs text-amber-500 ml-6">
                     注意：存在跨天重叠时，新排班将优先，自动覆盖旧排班的重叠部分。
                 </div>
             )}
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={onClose} style={{ padding: '8px 16px', cursor: 'pointer' }}>取消</button>
-            <button 
-                type="submit" 
-                disabled={loading}
-                style={{ 
-                    padding: '8px 16px', 
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    backgroundColor: '#1890ff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px'
-                }}
-            >
-                {loading ? '提交中...' : '提交'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+    </StandardModal>
   );
 };

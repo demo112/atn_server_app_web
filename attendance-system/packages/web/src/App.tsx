@@ -18,37 +18,24 @@ import AttendanceSettingsPage from '@/pages/attendance/settings/AttendanceSettin
 import LeavePage from '@/pages/attendance/leave/LeavePage';
 import DailyRecords from '@/pages/attendance/DailyRecords';
 import AttendanceDetailsPage from '@/pages/attendance/details/AttendanceDetailsPage';
+import GroupPage from '@/pages/attendance/group/GroupPage';
 import SummaryPage from '@/pages/statistics/SummaryPage';
 import ReportPage from '@/pages/statistics/ReportPage';
 
+import Header from './components/layout/Header';
+import Sidebar from './components/layout/Sidebar';
+
 // 临时占位组件，后续会移动到 components/layouts
 const MainLayout = (): React.ReactElement => (
-  <div style={{ display: 'flex', height: '100vh' }}>
-    <div style={{ width: '250px', borderRight: '1px solid #ccc', padding: '20px' }}>
-      <h3>Sidebar</h3>
-      <nav>
-        <ul>
-          <li><Link to="/attendance/time-periods">时间段设置</Link></li>
-          <li><Link to="/attendance/shifts">班次管理</Link></li>
-          <li><Link to="/attendance/schedule">排班管理</Link></li>
-          <li><Link to="/attendance/clock-records">原始打卡记录</Link></li>
-          <li><Link to="/attendance/leave">请假管理</Link></li>
-          <li><Link to="/attendance/correction">异常考勤处理</Link></li>
-          <li><Link to="/attendance/settings">考勤制度设置</Link></li>
-          <li><Link to="/departments">部门管理</Link></li>
-          <li><Link to="/employees">人员管理</Link></li>
-          <li><Link to="/users">用户管理</Link></li>
-          <li><Link to="/attendance/daily-records">每日考勤</Link></li>
-          <li><Link to="/statistics/details">考勤明细</Link></li>
-          <li><Link to="/statistics/summary">个人考勤汇总</Link></li>
-          <li><Link to="/statistics/reports">统计报表</Link></li>
-        </ul>
-      </nav>
-    </div>
-    <div style={{ flex: 1, padding: '20px' }}>
-      <ErrorBoundary>
-        <Outlet />
-      </ErrorBoundary>
+  <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+    <Header />
+    <div className="flex flex-1 overflow-hidden">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto p-6">
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
+      </main>
     </div>
   </div>
 );
@@ -80,6 +67,7 @@ export default function App(): React.ReactElement {
                    <Route path="leave" element={<LeavePage />} />
                    <Route path="correction" element={<CorrectionPage />} />
                    <Route path="settings" element={<AttendanceSettingsPage />} />
+                   <Route path="groups" element={<GroupPage />} />
                    <Route path="daily-records" element={<DailyRecords />} />
                 </Route>
                 <Route path="statistics">

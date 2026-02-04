@@ -3,10 +3,10 @@ import { DepartmentTree } from '@/components/common/DepartmentTree';
 import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleDialog } from './components/ScheduleDialog';
 import { BatchScheduleDialog } from './components/BatchScheduleDialog';
-
-import { message } from 'antd';
+import { useToast } from '@/components/common/ToastProvider';
 
 const SchedulePage: React.FC = (): React.ReactElement => {
+  const { toast } = useToast();
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
@@ -17,36 +17,32 @@ const SchedulePage: React.FC = (): React.ReactElement => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100%', gap: '20px', padding: '10px' }}>
+    <div className="flex h-full gap-5 p-2.5 bg-white">
       {/* 左侧部门树 */}
-      <div style={{ width: '250px', flexShrink: 0 }}>
+      <div className="w-[250px] flex-shrink-0 border-r border-gray-100 pr-5">
         <DepartmentTree onSelect={setSelectedDeptId} />
       </div>
 
       {/* 右侧内容区 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header style={{ 
-          marginBottom: '20px', 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingBottom: '10px',
-          borderBottom: '1px solid #eee'
-        }}>
-          <h2 style={{ margin: 0 }}>排班管理 {selectedDeptId ? <span style={{fontSize: '0.8em', color: '#666'}}>(部门ID: {selectedDeptId})</span> : ''}</h2>
-          <div>
+      <div className="flex-1 flex flex-col">
+        <header className="mb-5 flex justify-between items-center pb-2.5 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-800 m-0 flex items-center gap-2">
+            排班管理 
+            {selectedDeptId && <span className="text-sm text-gray-500 font-normal">(部门ID: {selectedDeptId})</span>}
+          </h2>
+          <div className="flex gap-2.5">
             <button 
               onClick={() => setIsCreateOpen(true)}
-              style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px' }}
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition-colors shadow-sm text-sm font-medium"
             >
               + 新建排班
             </button>
             <button 
               onClick={() => {
-                if (!selectedDeptId) return message.error('请先选择部门');
+                if (!selectedDeptId) return toast.error('请先选择部门');
                 setIsBatchOpen(true);
               }}
-              style={{ marginLeft: '10px', padding: '8px 16px', cursor: 'pointer', backgroundColor: 'white', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors text-sm font-medium"
             >
               批量排班
             </button>
@@ -54,24 +50,11 @@ const SchedulePage: React.FC = (): React.ReactElement => {
         </header>
 
         {/* 日历视图区域 */}
-        <div style={{ 
-          flex: 1, 
-          border: '1px solid #eee', 
-          borderRadius: '4px',
-          padding: '20px',
-          backgroundColor: 'white',
-          overflow: 'auto'
-        }}>
+        <div className="flex-1 border border-gray-200 rounded-lg p-5 bg-white overflow-auto shadow-sm">
            {selectedDeptId ? (
              <ScheduleCalendar key={refreshKey} deptId={selectedDeptId} />
            ) : (
-             <div style={{ 
-               height: '100%', 
-               display: 'flex', 
-               justifyContent: 'center', 
-               alignItems: 'center',
-               color: '#ccc' 
-             }}>
+             <div className="h-full flex justify-center items-center text-gray-400 text-lg">
                请选择左侧部门查看排班
              </div>
            )}

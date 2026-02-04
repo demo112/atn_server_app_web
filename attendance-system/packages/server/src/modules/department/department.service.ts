@@ -216,6 +216,7 @@ export class DepartmentService {
   }
 
   async getById(id: number): Promise<DepartmentVO> {
+    logger.info({ id }, 'Fetching department details');
     const dept = await prisma.department.findUnique({ where: { id } });
     if (!dept) {
       throw AppError.notFound('Department');
@@ -227,6 +228,7 @@ export class DepartmentService {
       sortOrder: dept.sortOrder,
       createdAt: dept.createdAt.toISOString(),
       updatedAt: dept.updatedAt.toISOString(),
+      children: [],
     };
   }
 }

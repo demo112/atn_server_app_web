@@ -2,14 +2,20 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { TimePeriod } from '@attendance/shared';
 import { getTimePeriods, deleteTimePeriod } from '@/services/time-period';
 import { TimePeriodDialog } from './components/TimePeriodDialog';
-import { message } from 'antd';
+import { useToast } from '@/components/common/ToastProvider';
 import { logger } from '@/utils/logger';
+import StandardModal from '@/components/common/StandardModal';
 
 const TimePeriodPage: React.FC = (): React.ReactElement => {
+  const { toast } = useToast();
   const [periods, setPeriods] = useState<TimePeriod[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | undefined>(undefined);
+  
+  // Delete confirmation
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const fetchPeriods = useCallback(async (): Promise<void> => {
     try {
@@ -18,28 +24,32 @@ const TimePeriodPage: React.FC = (): React.ReactElement => {
       setPeriods(data);
     } catch (error) {
       logger.error('Failed to fetch time periods:', error);
-      message.error('加载时间段列表失败');
+      toast.error('加载时间段列表失败');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchPeriods();
   }, [fetchPeriods]);
 
-  const handleDelete = async (id: number): Promise<void> => {
-    if (!window.confirm('确定要删除这个时间段吗？如果已被班次引用将无法删除。')) {
-      return;
-    }
+  const handleDeleteClick = (id: number) => {
+    setDeleteId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async (): Promise<void> => {
+    if (!deleteId) return;
 
     try {
-      await deleteTimePeriod(id);
-      message.success('删除成功');
+      await deleteTimePeriod(deleteId);
+      toast.success('删除成功');
+      setDeleteConfirmOpen(false);
       fetchPeriods();
     } catch (error) {
       logger.error('Failed to delete:', error);
-      message.error('删除失败');
+      toast.error('删除失败');
     }
   };
 
@@ -64,95 +74,116 @@ const TimePeriodPage: React.FC = (): React.ReactElement => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '20px',
-        borderBottom: '1px solid #eee',
-        paddingBottom: '10px'
-      }}>
-        <h2 style={{ margin: 0 }}>时间段设置</h2>
-        <button 
-          onClick={handleCreate}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#1890ff', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          + 新建时间段
-        </button>
-      </header>
+    <div className="p-6 bg-gray-50 h-full flex flex-col">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col h-full">
+        {/* Header */}
+        <div className="flex justify-between items-center p-4 border-b border-gray-100">
+          <h2 className="text-lg font-medium text-gray-900">时间段设置</h2>
+          <button 
+            onClick={handleCreate}
+            className="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            <span className="material-icons text-lg mr-1">add</span>
+            新建时间段
+          </button>
+        </div>
 
-      {loading ? (
-        <div>加载中...</div>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #eee' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f5f5f5', textAlign: 'left' }}>
-              <th style={{ padding: '12px', borderBottom: '1px solid #eee' }}>ID</th>
-              <th style={{ padding: '12px', borderBottom: '1px solid #eee' }}>名称</th>
-              <th style={{ padding: '12px', borderBottom: '1px solid #eee' }}>类型</th>
-              <th style={{ padding: '12px', borderBottom: '1px solid #eee' }}>工作时间</th>
-              <th style={{ padding: '12px', borderBottom: '1px solid #eee' }}>休息时间</th>
-              <th style={{ padding: '12px', borderBottom: '1px solid #eee' }}>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {periods.map(period => (
-              <tr key={period.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '12px' }}>{period.id}</td>
-                <td style={{ padding: '12px' }}>{period.name}</td>
-                <td style={{ padding: '12px' }}>
-                  {period.type === 0 ? '固定班制' : '弹性班制'}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  {formatTime(period.startTime, period.endTime)}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  {formatTime(period.restStartTime, period.restEndTime)}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <button 
-                    onClick={() => handleEdit(period)}
-                    style={{ marginRight: '8px', cursor: 'pointer', border: 'none', background: 'none', color: '#1890ff' }}
-                  >
-                    编辑
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(period.id)}
-                    style={{ cursor: 'pointer', border: 'none', background: 'none', color: '#ff4d4f' }}
-                  >
-                    删除
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {periods.length === 0 && (
-              <tr>
-                <td colSpan={6} style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                  暂无数据
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      )}
+        {/* Table */}
+        <div className="flex-1 overflow-auto p-4">
+          <div className="overflow-hidden border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">工作时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">休息时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">加载中...</td>
+                  </tr>
+                ) : periods.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
+                      <span className="material-icons text-4xl block mb-2 mx-auto text-gray-300">event_busy</span>
+                      暂无时间段数据
+                    </td>
+                  </tr>
+                ) : (
+                  periods.map((period) => (
+                    <tr key={period.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{period.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{period.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {period.type === 0 ? '固定班制' : '弹性班制'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatTime(period.startTime, period.endTime)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatTime(period.restStartTime, period.restEndTime)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button 
+                          onClick={() => handleEdit(period)}
+                          className="text-primary hover:text-primary/80 transition-colors inline-flex items-center"
+                        >
+                          <span className="material-icons text-sm mr-1">edit</span>
+                          编辑
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(period.id)}
+                          className="text-red-600 hover:text-red-900 transition-colors inline-flex items-center"
+                        >
+                          <span className="material-icons text-sm mr-1">delete</span>
+                          删除
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-      {/* 弹窗组件将在 Task 9 实现，这里先占位或暂时注释，以免报错 */}
-      {isDialogOpen && (
-        <TimePeriodDialog
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          onSuccess={handleSuccess}
-          initialData={selectedPeriod}
-        />
-      )}
+      <TimePeriodDialog 
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSuccess={handleSuccess}
+        initialData={selectedPeriod}
+      />
+
+      <StandardModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title="确认删除"
+        width="max-w-sm"
+        footer={
+          <>
+            <button
+              onClick={() => setDeleteConfirmOpen(false)}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              取消
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+            >
+              确认删除
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-600">确定要删除这个时间段吗？如果已被班次引用将无法删除。</p>
+      </StandardModal>
     </div>
   );
 };

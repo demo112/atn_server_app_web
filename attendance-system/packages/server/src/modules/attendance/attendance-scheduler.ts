@@ -9,7 +9,7 @@ const logger = createLogger('AttendanceScheduler');
 
 // Parse Redis config
 const redisConfig = process.env.REDIS_URL || {
-  host: process.env.REDIS_HOST || 'localhost',
+  host: process.env.REDIS_HOST || '127.0.0.1',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
   db: parseInt(process.env.REDIS_DB || '0'),
@@ -206,7 +206,7 @@ export class AttendanceScheduler {
       logger.warn({ error }, 'Failed to connect to primary Redis, trying local fallback');
       
       const localConfig = {
-        host: 'localhost',
+        host: '127.0.0.1',
         port: 6379,
         maxRetriesPerRequest: null,
       };

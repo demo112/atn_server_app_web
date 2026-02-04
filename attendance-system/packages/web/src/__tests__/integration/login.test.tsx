@@ -6,7 +6,7 @@ import { server } from '../../test/mocks/server';
 import Login from '../../pages/Login';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../../context/AuthContext';
-import { message } from 'antd';
+import { ToastProvider } from '../../components/common/ToastProvider';
 
 // Mock child components to simplify integration test
 const mockedNavigate = vi.fn();
@@ -36,26 +36,27 @@ describe('Login Integration', () => {
   it('should render login form', () => {
     render(
       <AuthProvider>
-        <MemoryRouter>
-          <Login />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     );
 
     expect(screen.getByPlaceholderText('手机号/邮箱')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('请输入密码')).toBeInTheDocument();
-    // Antd button might have spaces "登 录"
     expect(screen.getByRole('button', { name: /^登录$/ })).toBeInTheDocument();
   });
 
   it('should prevent login if terms not agreed', async () => {
-    const messageSpy = vi.spyOn(message, 'warning');
-    
     render(
       <AuthProvider>
-        <MemoryRouter>
-          <Login />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     );
 
@@ -67,7 +68,7 @@ describe('Login Integration', () => {
     await userEvent.click(screen.getByRole('button', { name: '登录' }));
 
     // Verify warning
-    expect(messageSpy).toHaveBeenCalledWith('请先阅读并同意服务协议和隐私协议');
+    expect(await screen.findByText('请先阅读并同意服务协议和隐私协议')).toBeInTheDocument();
     
     // Verify API was NOT called
     expect(mockedNavigate).not.toHaveBeenCalled();
@@ -88,9 +89,11 @@ describe('Login Integration', () => {
 
     render(
       <AuthProvider>
-        <MemoryRouter>
-          <Login />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     );
 
@@ -106,9 +109,6 @@ describe('Login Integration', () => {
   });
 
   it('should show error on login failure', async () => {
-    // Spy on message.error
-    const messageSpy = vi.spyOn(message, 'error');
-
     server.use(
       http.post('*/auth/login', () => {
         return HttpResponse.json(
@@ -125,11 +125,13 @@ describe('Login Integration', () => {
     );
 
     render(
-      <MemoryRouter>
-        <AuthProvider>
-          <Login />
-        </AuthProvider>
-      </MemoryRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </ToastProvider>
+      </AuthProvider>
     );
 
     const user = userEvent.setup();
@@ -144,9 +146,7 @@ describe('Login Integration', () => {
     const submitBtn = screen.getByRole('button', { name: /^登录$/ }); // Login button
     await user.click(submitBtn);
 
-    // Verify error message (Antd message)
-    await waitFor(() => {
-      expect(messageSpy).toHaveBeenCalledWith(expect.stringMatching(/用户名或密码错误/));
-    });
+    // Verify error message (Toast message)
+    expect(await screen.findByText(/用户名或密码错误/)).toBeInTheDocument();
   });
 });

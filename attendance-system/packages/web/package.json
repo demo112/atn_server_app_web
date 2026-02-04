@@ -13,9 +13,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@attendance/shared": "workspace:*",
-    "antd": "^5.14.0",
     "axios": "^1.6.0",
     "dayjs": "^1.11.10",
     "react": "^19.1.0",

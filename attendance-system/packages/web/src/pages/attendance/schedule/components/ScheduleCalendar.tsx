@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Schedule } from '@attendance/shared';
 import { attendanceService } from '@/services/attendance';
+import { logger } from '@/utils/logger';
 
 interface ScheduleCalendarProps {
   deptId: number;
@@ -42,7 +43,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
         
         setSchedules(res);
       } catch (error) {
-        console.error('Failed to fetch schedules', error);
+        logger.error('Failed to fetch schedules', error);
       } finally {
         setLoading(false);
       }
@@ -62,52 +63,45 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="h-full flex flex-col">
       {/* 日历头部 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-         <div style={{ display: 'flex', gap: '10px' }}>
-             <button onClick={handlePrevMonth}>&lt; 上个月</button>
-             <span style={{ fontSize: '1.2em', fontWeight: 'bold' }}>{year}年 {month + 1}月</span>
-             <button onClick={handleNextMonth}>下个月 &gt;</button>
+      <div className="flex justify-between items-center mb-2.5">
+         <div className="flex gap-2.5">
+             <button onClick={handlePrevMonth} className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">&lt; 上个月</button>
+             <span className="text-lg font-bold text-gray-800">{year}年 {month + 1}月</span>
+             <button onClick={handleNextMonth} className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">下个月 &gt;</button>
          </div>
          <div>
-             <span style={{ fontSize: '0.9em', color: '#666' }}>当前部门: {deptId}</span>
-             {loading && <span style={{ marginLeft: '10px' }}>Loading...</span>}
+             <span className="text-sm text-gray-500">当前部门: {deptId}</span>
+             {loading && <span className="ml-2.5 text-sm text-primary">Loading...</span>}
          </div>
       </div>
 
       {/* 日历主体 */}
-      <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(7, 1fr)', 
-          gap: '1px', 
-          backgroundColor: '#ddd',
-          border: '1px solid #ddd',
-          flex: 1
-      }}>
+      <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 flex-1">
         {/* 星期表头 */}
         {['日', '一', '二', '三', '四', '五', '六'].map(d => (
-            <div key={d} style={{ backgroundColor: '#f5f5f5', padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>
+            <div key={d} className="bg-gray-50 p-2.5 text-center font-bold text-gray-700">
                 {d}
             </div>
         ))}
 
         {/* 空白填充 */}
         {blanks.map(i => (
-            <div key={`blank-${i}`} style={{ backgroundColor: 'white' }}></div>
+            <div key={`blank-${i}`} className="bg-white"></div>
         ))}
 
         {/* 日期格子 */}
         {days.map(d => {
             const daySchedules = getSchedulesForDay(d);
             return (
-            <div key={d} style={{ backgroundColor: 'white', padding: '5px', minHeight: '80px', position: 'relative' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{d}</div>
+            <div key={d} className="bg-white p-1.5 min-h-[80px] relative hover:bg-gray-50 transition-colors">
+                <div className="font-bold mb-1.5 text-gray-700">{d}</div>
                 
                 {/* 排班数据展示 */}
-                <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div className="text-xs flex flex-col gap-0.5">
                     {daySchedules.map(s => (
-                        <div key={s.id} style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff', padding: '2px', borderRadius: '2px' }}>
+                        <div key={s.id} className="bg-blue-50 border border-blue-200 px-1 py-0.5 rounded text-blue-800 truncate" title={`${s.employee?.name}: ${s.shift?.name}`}>
                             {s.employee?.name || s.employeeId}: {s.shift?.name || s.shiftId}
                         </div>
                     ))}

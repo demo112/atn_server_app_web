@@ -1,14 +1,23 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { TreeSelect, TreeSelectProps } from 'antd';
-import type { DataNode } from 'antd/es/tree';
 import { departmentService } from '../../services/department';
 import { DepartmentVO } from '@attendance/shared';
-import { logger } from '../../utils/logger';
+import { useToast } from '@/components/common/ToastProvider';
 
-export type DepartmentSelectProps = Omit<TreeSelectProps, 'treeData' | 'loadData'>;
+export interface DepartmentSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  value?: number;
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onSelect?: (value: number) => void;
+}
 
-export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
+export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({ 
+  value, 
+  onChange, 
+  onSelect,
+  className = '', 
+  ...props 
+}) => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [treeData, setTreeData] = useState<DepartmentVO[]>([]);
 
@@ -19,7 +28,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
         const data = await departmentService.getTree();
         setTreeData(data || []);
       } catch (error) {
-        logger.error('Fetch department tree failed', error);
+        toast.error('Fetch department tree failed');
       } finally {
         setLoading(false);
       }
@@ -27,29 +36,46 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
     fetchTree();
   }, []);
 
-  // 转换 TreeData 供 TreeSelect 使用
-  const renderTreeSelectData = useMemo(() => {
-    const transform = (nodes: DepartmentVO[]): DataNode[] => {
-      return nodes.map(node => ({
-        title: node.name,
-        value: node.id,
-        key: node.id,
-        children: node.children ? transform(node.children) : [],
-      }));
+  const flattenedOptions = useMemo(() => {
+    const options: { id: number; name: string; level: number }[] = [];
+    
+    const traverse = (nodes: DepartmentVO[], level: number) => {
+      nodes.forEach(node => {
+        options.push({ id: node.id, name: node.name, level });
+        if (node.children) {
+          traverse(node.children, level + 1);
+        }
+      });
     };
-    return transform(treeData);
+    
+    traverse(treeData, 0);
+    return options;
   }, [treeData]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (onChange) {
+      onChange(e);
+    }
+    if (onSelect) {
+      const val = e.target.value ? Number(e.target.value) : undefined;
+      if (val !== undefined) onSelect(val);
+    }
+  };
+
   return (
-    <TreeSelect
-      treeData={renderTreeSelectData}
-      loading={loading}
-      placeholder="请选择部门"
-      allowClear
-      treeDefaultExpandAll
-      showSearch
-      treeNodeFilterProp="title"
+    <select
+      className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${className}`}
+      value={value || ''}
+      onChange={handleChange}
+      disabled={loading}
       {...props}
-    />
+    >
+      <option value="">请选择部门</option>
+      {flattenedOptions.map(opt => (
+        <option key={opt.id} value={opt.id}>
+          {'\u00A0\u00A0'.repeat(opt.level)}{opt.name}
+        </option>
+      ))}
+    </select>
   );
 };

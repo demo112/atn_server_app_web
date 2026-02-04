@@ -74,7 +74,6 @@ describe('DepartmentSelect', () => {
     });
 
     // Expand 研发部 node if needed or select directly. 
-    // Antd TreeSelect behaves like a tree.
     // Let's try selecting '研发部'
     const option = screen.getByTitle('研发部');
     await userEvent.click(option);

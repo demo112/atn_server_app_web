@@ -42,6 +42,9 @@ export class DepartmentController {
 
   async getById(req: Request, res: Response) {
     const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      throw AppError.badRequest('Invalid department ID');
+    }
     const department = await departmentService.getById(id);
     res.json({
       success: true,

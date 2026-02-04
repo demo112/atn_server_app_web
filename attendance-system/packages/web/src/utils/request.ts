@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { message } from 'antd';
+import { toast } from '@/components/common/ToastProvider';
 import { getToken, clearAuth } from './auth';
 
 const request = axios.create({
@@ -33,31 +33,31 @@ request.interceptors.response.use(
 
       switch (status) {
         case 400:
-          message.error(errorMessage);
+          toast.error(errorMessage);
           break;
         case 401:
-          message.error('Session expired, please login again');
+          toast.error('Session expired, please login again');
           clearAuth();
           window.location.href = '/login';
           break;
         case 403:
-          message.error('Permission denied');
+          toast.error('Permission denied');
           break;
         case 404:
-          message.error('Resource not found');
+          toast.error('Resource not found');
           break;
         case 500:
-          message.error('Server error, please try again later');
+          toast.error('Server error, please try again later');
           break;
         default:
-          message.error(errorMessage);
+          toast.error(errorMessage);
       }
     } else if (error.request) {
       // The request was made but no response was received
-      message.error('Network error, please check your connection');
+      toast.error('Network error, please check your connection');
     } else {
       // Something happened in setting up the request that triggered an Error
-      message.error('Request configuration error');
+      toast.error('Request configuration error');
     }
     return Promise.reject(error);
   }

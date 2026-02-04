@@ -136,7 +136,7 @@ describe('AttendanceDetailsPage Integration', () => {
       expect(screen.getByText('张三')).toBeInTheDocument();
     });
 
-    // Expand search form if needed (Antd table search usually in toolbar or separate form)
+    // Expand search form if needed
     // The component has a Form with input name="employeeName"
     const nameInput = screen.getByPlaceholderText('姓名/工号');
     await user.type(nameInput, '张三');

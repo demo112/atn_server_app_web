@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, DatePicker } from 'antd';
+import React, { useState, useEffect } from 'react';
 import { CreateEmployeeDto, UpdateEmployeeDto, EmployeeVo } from '@attendance/shared';
 import dayjs from 'dayjs';
-import { logger } from '../../../utils/logger';
+import { useToast } from '@/components/common/ToastProvider';
+import StandardModal from '@/components/common/StandardModal';
 
 interface EmployeeModalProps {
   open: boolean;
@@ -21,110 +21,212 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   onOk,
   confirmLoading,
 }) => {
-  const [form] = Form.useForm();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<{
+    employeeNo: string;
+    name: string;
+    deptId: number | '';
+    phone: string;
+    email: string;
+    hireDate: string;
+  }>({
+    employeeNo: '',
+    name: '',
+    deptId: '',
+    phone: '',
+    email: '',
+    hireDate: '',
+  });
 
   useEffect(() => {
-    if (open && mode === 'edit' && initialValues) {
-      form.setFieldsValue({
-        ...initialValues,
-        hireDate: initialValues.hireDate ? dayjs(initialValues.hireDate) : undefined,
-      });
-    } else if (open && mode === 'create') {
-      form.resetFields();
+    if (open) {
+      if (mode === 'edit' && initialValues) {
+        setFormData({
+          employeeNo: initialValues.employeeNo || '',
+          name: initialValues.name || '',
+          deptId: initialValues.deptId || '',
+          phone: initialValues.phone || '',
+          email: initialValues.email || '',
+          hireDate: initialValues.hireDate ? dayjs(initialValues.hireDate).format('YYYY-MM-DD') : '',
+        });
+      } else {
+        setFormData({
+          employeeNo: '',
+          name: '',
+          deptId: '',
+          phone: '',
+          email: '',
+          hireDate: '',
+        });
+      }
     }
-  }, [open, mode, initialValues, form]);
+  }, [open, mode, initialValues]);
 
-  const handleOk = async (): Promise<void> => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'deptId' ? (value ? Number(value) : '') : value
+    }));
+  };
+
+  const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
-      
-      // Format date
-      const formattedValues = {
-        ...values,
-        hireDate: values.hireDate ? values.hireDate.format('YYYY-MM-DD') : undefined,
-      };
-
-      // Double check for employeeNo in create mode
-      if (mode === 'create' && !formattedValues.employeeNo) {
-        logger.error('Critical Error: employeeNo is missing in create mode!', formattedValues);
-        // Fallback: try to get from getFieldValue directly (though validateFields should have covered it)
-        const rawEmployeeNo = form.getFieldValue('employeeNo');
-        if (rawEmployeeNo) {
-             formattedValues.employeeNo = rawEmployeeNo;
-        }
+      // Basic validation
+      if (mode === 'create' && !formData.employeeNo) {
+        toast.error('Please input employee no!');
+        return;
+      }
+      if (!formData.name) {
+        toast.error('Please input name!');
+        return;
+      }
+      if (!formData.deptId) {
+        toast.error('Please select department!');
+        return;
+      }
+      if (!formData.hireDate) {
+        toast.error('Please select hire date!');
+        return;
       }
 
-      await onOk(formattedValues);
+      setLoading(true);
+
+      const values: any = {
+        ...formData,
+        hireDate: formData.hireDate,
+      };
+
+      if (mode === 'edit') {
+        // Remove employeeNo for edit mode as it might not be editable or needed
+        delete values.employeeNo;
+      }
+
+      await onOk(values);
     } catch (error) {
-      logger.error('Validate Failed', error);
+      toast.error('Submit Failed');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const footer = (
+    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+      <button
+        onClick={onCancel}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={loading || confirmLoading}
+        className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading || confirmLoading ? '提交中...' : '确定'}
+      </button>
+    </div>
+  );
+
   return (
-    <Modal
+    <StandardModal
+      isOpen={open}
+      onClose={onCancel}
       title={mode === 'create' ? 'Add Employee' : 'Edit Employee'}
-      open={open}
-      onOk={handleOk}
-      onCancel={onCancel}
-      confirmLoading={confirmLoading}
-      destroyOnHidden
+      footer={footer}
+      width="max-w-md"
     >
-      <Form form={form} layout="vertical">
+      <div className="space-y-4">
         {mode === 'create' && (
-          <Form.Item
-            name="employeeNo"
-            label="Employee No"
-            rules={[{ required: true, message: 'Please input employee no!' }]}
-          >
-            <Input placeholder="E.g. E001" />
-          </Form.Item>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Employee No <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="employeeNo"
+              value={formData.employeeNo}
+              onChange={handleInputChange}
+              placeholder="E.g. E001"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+            />
+          </div>
         )}
-        
-        <Form.Item
-          name="name"
-          label="Name"
-          rules={[{ required: true, message: 'Please input name!' }]}
-        >
-          <Input placeholder="Employee Name" />
-        </Form.Item>
 
-        <Form.Item
-          name="deptId"
-          label="Department"
-          rules={[{ required: true, message: 'Please select department!' }]}
-        >
-          <Select placeholder="Select Department">
-            <Select.Option value={1}>总经办</Select.Option>
-            <Select.Option value={3}>研发部-后端组</Select.Option>
-            <Select.Option value={4}>研发部-前端组</Select.Option>
-            <Select.Option value={5}>人事部</Select.Option>
-          </Select>
-        </Form.Item>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="Employee Name"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          />
+        </div>
 
-        <Form.Item
-          name="phone"
-          label="Phone"
-          rules={[{ pattern: /^\d+$/, message: 'Valid phone number required' }]}
-        >
-          <Input placeholder="Phone Number" />
-        </Form.Item>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Department <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="deptId"
+            value={formData.deptId}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          >
+            <option value="">Select Department</option>
+            <option value={1}>总经办</option>
+            <option value={3}>研发部-后端组</option>
+            <option value={4}>研发部-前端组</option>
+            <option value={5}>人事部</option>
+          </select>
+        </div>
 
-        <Form.Item
-          name="email"
-          label="Email"
-          rules={[{ type: 'email', message: 'Valid email required' }]}
-        >
-          <Input placeholder="Email Address" />
-        </Form.Item>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone
+          </label>
+          <input
+            type="text"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="Phone Number"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          />
+        </div>
 
-        <Form.Item
-          name="hireDate"
-          label="Hire Date"
-          rules={[{ required: true, message: 'Please select hire date!' }]}
-        >
-          <DatePicker style={{ width: '100%' }} />
-        </Form.Item>
-      </Form>
-    </Modal>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="Email Address"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Hire Date <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            name="hireDate"
+            value={formData.hireDate}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          />
+        </div>
+      </div>
+    </StandardModal>
   );
 };

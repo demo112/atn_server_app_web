@@ -23,21 +23,6 @@ global.ResizeObserver = class ResizeObserver {
   disconnect(): void {}
 };
 
-// Mock window.matchMedia for Ant Design
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: (query: unknown) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {}, // deprecated
-    removeListener: () => {}, // deprecated
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => {},
-  }),
-});
-
 // Mock LocalStorage
 const localStorageMock = (function () {
   let store: Record<string, string> = {};

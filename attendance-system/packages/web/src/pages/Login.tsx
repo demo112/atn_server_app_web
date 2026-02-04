@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LoginDto } from '@attendance/shared';
-import { message } from 'antd';
+import { useToast } from '@/components/common/ToastProvider';
 
 const Login: React.FC = (): React.ReactElement => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const [username, setUsername] = useState('18660845170');
-  const [password, setPassword] = useState('password123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
 
   const [isDark, setIsDark] = useState(false);
@@ -17,7 +18,7 @@ const Login: React.FC = (): React.ReactElement => {
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!agreed) {
-      message.warning('请先阅读并同意服务协议和隐私协议');
+      toast.warning('请先阅读并同意服务协议和隐私协议');
       return;
     }
     try {

@@ -9,7 +9,7 @@
 | `.trae/` | Trae 配置和规则文件 |
 | `.kiro/` | Kiro 配置和 steering 文件 |
 | `attendance-system/docs/*.md` | docs 根目录下的核心文档 |
-
+| `attendance-system/.env` | 环境变量配置文件 |
 ## docs 根目录保护说明
 
 `attendance-system/docs/` 根目录下的以下文档禁止 AI 直接修改：

@@ -18,6 +18,8 @@ import { EmployeeListScreen } from './screens/organization/employee/EmployeeList
 import { EmployeeEditScreen } from './screens/organization/employee/EmployeeEditScreen';
 import { UserListScreen } from './screens/organization/user/UserListScreen';
 import { UserEditScreen } from './screens/organization/user/UserEditScreen';
+import ShiftListScreen from './screens/shift/ShiftListScreen';
+import ShiftEditScreen from './screens/shift/ShiftEditScreen';
 import { getToken } from './utils/auth';
 import { logger } from './utils/logger';
 
@@ -129,6 +131,16 @@ export default function App(): React.ReactElement {
           name="UserEdit" 
           component={UserEditScreen} 
           options={{ title: '编辑用户' }}
+        />
+        <Stack.Screen 
+          name="ShiftList" 
+          component={ShiftListScreen} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="ShiftEdit" 
+          component={ShiftEditScreen} 
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

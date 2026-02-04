@@ -1,76 +1,69 @@
-
-import React, { useState, useEffect } from 'react';
-import { Table, Card, Form, DatePicker, Button, message, Space } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 import { getDepartmentSummary, triggerCalculation } from '../../services/statistics';
 import { AttendanceSummaryVo, GetSummaryDto } from '@attendance/shared';
 import { DepartmentSelect } from '../../components/DepartmentSelect';
-import { logger } from '../../utils/logger';
-
-const { RangePicker } = DatePicker;
+import { useToast } from '@/components/common/ToastProvider';
 
 const SummaryPage: React.FC = (): React.ReactElement => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<AttendanceSummaryVo[]>([]);
-  const [form] = Form.useForm();
+  
+  // Form State
+  const [startDate, setStartDate] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));
+  const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [deptId, setDeptId] = useState<number | undefined>(undefined);
 
-  const handleSearch = async (values: { dateRange: [dayjs.Dayjs, dayjs.Dayjs]; deptId?: number }): Promise<void> => {
+  const fetchData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const { dateRange, deptId } = values;
-      if (!dateRange || dateRange.length !== 2) {
-          message.error('请选择日期范围');
+      if (!startDate || !endDate) {
+          toast.error('请选择日期范围');
           return;
       }
 
       const params: GetSummaryDto = {
-        startDate: dateRange[0].format('YYYY-MM-DD'),
-        endDate: dateRange[1].format('YYYY-MM-DD'),
-        deptId: deptId,
+        startDate,
+        endDate,
+        deptId,
       };
 
       const res = await getDepartmentSummary(params);
       setData(res || []);
     } catch (error) {
-      logger.error('Summary query failed', error);
-      message.error('查询失败');
+      toast.error('查询失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, deptId, toast]);
 
   const handleRecalculate = async (): Promise<void> => {
     try {
-      const values = form.getFieldsValue();
-      const { dateRange } = values;
-      if (!dateRange || dateRange.length !== 2) {
-          message.error('请选择日期范围');
+      if (!startDate || !endDate) {
+          toast.error('请选择日期范围');
           return;
       }
 
       setLoading(true);
       await triggerCalculation({
-        startDate: dateRange[0].format('YYYY-MM-DD'),
-        endDate: dateRange[1].format('YYYY-MM-DD'),
+        startDate,
+        endDate,
       });
       
-      message.success('已触发重新计算，请稍后刷新查看结果');
+      toast.success('已触发重新计算，请稍后刷新查看结果');
       // 延迟刷新
-      setTimeout(() => handleSearch(values), 2000);
+      setTimeout(() => fetchData(), 2000);
     } catch (error) {
-      logger.error('Calculation trigger failed', error);
-      message.error('触发计算失败');
-    } finally {
+      toast.error('触发计算失败');
       setLoading(false);
     }
   };
 
   const handleExport = (): void => {
     if (data.length === 0) {
-      message.warning('暂无数据可导出');
+      toast.warning('暂无数据可导出');
       return;
     }
 
@@ -99,85 +92,143 @@ const SummaryPage: React.FC = (): React.ReactElement => {
   };
 
   useEffect(() => {
-     // 默认查询当月
-     const start = dayjs().startOf('month');
-     const end = dayjs(); 
-     form.setFieldsValue({
-         dateRange: [start, end]
-     });
-     handleSearch({ dateRange: [start, end] });
-  }, [form]);
-
-  const columns: ColumnsType<AttendanceSummaryVo> = [
-    { title: '工号', dataIndex: 'employeeNo', key: 'employeeNo', fixed: 'left', width: 100 },
-    { title: '姓名', dataIndex: 'employeeName', key: 'employeeName', fixed: 'left', width: 100 },
-    { title: '部门', dataIndex: 'deptName', key: 'deptName', width: 120 },
-    { title: '应出勤(天)', dataIndex: 'totalDays', key: 'totalDays', width: 100 },
-    { title: '实出勤(天)', dataIndex: 'actualDays', key: 'actualDays', width: 100 },
-    {
-        title: '迟到',
-        children: [
-            { title: '次数', dataIndex: 'lateCount', key: 'lateCount', width: 80 },
-            { title: '时长(分)', dataIndex: 'lateMinutes', key: 'lateMinutes', width: 100 },
-        ]
-    },
-    {
-        title: '早退',
-        children: [
-            { title: '次数', dataIndex: 'earlyLeaveCount', key: 'earlyLeaveCount', width: 80 },
-            { title: '时长(分)', dataIndex: 'earlyLeaveMinutes', key: 'earlyLeaveMinutes', width: 100 },
-        ]
-    },
-    {
-        title: '缺勤',
-        children: [
-            { title: '次数', dataIndex: 'absentCount', key: 'absentCount', width: 80 },
-            { title: '时长(分)', dataIndex: 'absentMinutes', key: 'absentMinutes', width: 100 },
-        ]
-    },
-    {
-        title: '请假',
-        children: [
-            { title: '次数', dataIndex: 'leaveCount', key: 'leaveCount', width: 80 },
-            { title: '时长(分)', dataIndex: 'leaveMinutes', key: 'leaveMinutes', width: 100 },
-        ]
-    },
-    { title: '有效工时(分)', dataIndex: 'effectiveMinutes', key: 'effectiveMinutes', width: 120 },
-  ];
+     fetchData();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <Card title="考勤汇总">
-      <Form form={form} layout="inline" onFinish={handleSearch} style={{ marginBottom: 16 }}>
-        <Form.Item name="dateRange" label="日期范围" rules={[{ required: true }]}>
-          <RangePicker />
-        </Form.Item>
-        <Form.Item name="deptId" label="部门">
-          <DepartmentSelect />
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" icon={<SearchOutlined />} loading={loading}>
-                查询
-            </Button>
-            <Button icon={<DownloadOutlined />} onClick={handleExport}>
-                导出
-            </Button>
-            <Button icon={<SyncOutlined />} onClick={handleRecalculate}>
-                重新计算
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+    <div className="p-6">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Header & Filter */}
+        <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h3 className="text-lg font-medium text-gray-900">考勤汇总</h3>
+            <div className="flex flex-wrap gap-4 items-end">
+                {/* Date Range */}
+                <div>
+                    <div className="flex items-center gap-2">
+                    <input 
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="block w-36 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px] border px-3"
+                    />
+                    <span className="text-gray-500">-</span>
+                    <input 
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="block w-36 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px] border px-3"
+                    />
+                    </div>
+                </div>
 
-      <Table 
-        columns={columns} 
-        dataSource={data} 
-        rowKey="employeeId"
-        loading={loading}
-        scroll={{ x: 1500 }}
-        pagination={{ pageSize: 20 }}
-      />
-    </Card>
+                {/* Dept Select */}
+                <div className="w-48">
+                    <DepartmentSelect 
+                    value={deptId}
+                    onChange={(e) => setDeptId(Number(e.target.value) || undefined)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px]"
+                    />
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={fetchData}
+                        disabled={loading}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 cursor-pointer"
+                    >
+                        <span className="material-icons text-sm mr-2">search</span>
+                        查询
+                    </button>
+                    <button
+                        onClick={handleExport}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary cursor-pointer"
+                    >
+                        <span className="material-icons text-sm mr-2">download</span>
+                        导出
+                    </button>
+                    <button
+                        onClick={handleRecalculate}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary cursor-pointer"
+                    >
+                        <span className="material-icons text-sm mr-2">sync</span>
+                        重新计算
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th rowSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">工号</th>
+                <th rowSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">姓名</th>
+                <th rowSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">部门</th>
+                <th rowSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">应出勤(天)</th>
+                <th rowSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">实出勤(天)</th>
+                <th colSpan={2} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-l border-r">迟到</th>
+                <th colSpan={2} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">早退</th>
+                <th colSpan={2} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">缺勤</th>
+                <th colSpan={2} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">请假</th>
+                <th rowSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">有效工时(分)</th>
+              </tr>
+              <tr>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-l">次数</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">时长</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">次数</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">时长</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">次数</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">时长</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">次数</th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r">时长</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                    <tr>
+                        <td colSpan={15} className="px-6 py-12 text-center text-gray-500">
+                            加载中...
+                        </td>
+                    </tr>
+                ) : data.length === 0 ? (
+                    <tr>
+                        <td colSpan={15} className="px-6 py-12 text-center text-gray-500">
+                            暂无数据
+                        </td>
+                    </tr>
+                ) : (
+                    data.map((item) => (
+                        <tr key={item.employeeId} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.employeeNo}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.employeeName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.deptName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.totalDays}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.actualDays}</td>
+                            
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center border-l border-gray-100">{item.lateCount || '-'}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-100">{item.lateMinutes || '-'}</td>
+                            
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center">{item.earlyLeaveCount || '-'}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-100">{item.earlyLeaveMinutes || '-'}</td>
+                            
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center text-red-500">{item.absentCount || '-'}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-100 text-red-500">{item.absentMinutes || '-'}</td>
+                            
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center">{item.leaveCount || '-'}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-100">{item.leaveMinutes || '-'}</td>
+                            
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.effectiveMinutes}</td>
+                        </tr>
+                    ))
+                )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 

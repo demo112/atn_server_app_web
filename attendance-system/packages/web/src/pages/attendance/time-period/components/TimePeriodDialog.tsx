@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { TimePeriod } from '@attendance/shared';
 import { createTimePeriod, updateTimePeriod } from '@/services/time-period';
+import { useToast } from '@/components/common/ToastProvider';
+import { logger } from '@/utils/logger';
+import StandardModal from '@/components/common/StandardModal';
 
 interface TimePeriodDialogProps {
   isOpen: boolean;
@@ -15,6 +18,7 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
   onSuccess,
   initialData 
 }): React.ReactElement | null => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -47,161 +51,131 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
     }
   }, [isOpen, initialData]);
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    
-    // Validation
-    if (!formData.name.trim()) {
-      alert('请输入名称');
-      return;
-    }
-    if (formData.type === 0) {
-      if (!formData.startTime || !formData.endTime) {
-        alert('固定班制必须设置上班和下班时间');
-        return;
-      }
-    }
-
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoading(true);
+
     try {
-      const payload = {
-        ...formData,
-        startTime: formData.startTime || undefined,
-        endTime: formData.endTime || undefined,
+      const data = {
+        name: formData.name,
+        type: formData.type,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
         restStartTime: formData.restStartTime || undefined,
         restEndTime: formData.restEndTime || undefined,
       };
 
       if (initialData) {
-        await updateTimePeriod(initialData.id, payload);
+        await updateTimePeriod(initialData.id, data);
+        toast.success('更新成功');
       } else {
-        await createTimePeriod(payload);
+        await createTimePeriod(data);
+        toast.success('创建成功');
       }
-      
-      alert(initialData ? '更新成功' : '创建成功');
       onSuccess();
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error(err);
-      const msg = err.response?.data?.error?.message || err.message || '操作失败';
-      alert(`操作失败: ${msg}`);
+      onClose();
+    } catch (error) {
+      logger.error('Failed to save time period', error);
+      toast.error('保存失败');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  const footer = (
+    <>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+      >
+        取消
+      </button>
+      <button
+        onClick={() => handleSubmit()}
+        disabled={loading}
+        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {loading ? '提交中...' : '确定'}
+      </button>
+    </>
+  );
 
   return (
-    <div style={{ 
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-      backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
-      display: 'flex', justifyContent: 'center', alignItems: 'center' 
-    }}>
-      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '4px', width: '400px' }}>
-        <h3 style={{ marginTop: 0 }}>{initialData ? '编辑时间段' : '新建时间段'}</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label>名称 <span style={{color: 'red'}}>*</span></label>
+    <StandardModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={initialData ? '编辑时间段' : '新建时间段'}
+      footer={footer}
+      width="max-w-md"
+    >
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">名称 <span className="text-red-500">*</span></label>
+          <input 
+            type="text" 
+            value={formData.name} 
+            onChange={e => setFormData({...formData, name: e.target.value})}
+            required
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">类型 <span className="text-red-500">*</span></label>
+          <select 
+            value={formData.type} 
+            onChange={e => setFormData({...formData, type: Number(e.target.value)})}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+          >
+            <option value={0}>固定班制</option>
+            <option value={1}>弹性班制</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">上班时间 {formData.type === 0 && <span className="text-red-500">*</span>}</label>
             <input 
-              type="text" 
-              value={formData.name} 
-              onChange={e => setFormData({...formData, name: e.target.value})}
-              required
-              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              type="time" 
+              value={formData.startTime} 
+              onChange={e => setFormData({...formData, startTime: e.target.value})}
+              required={formData.type === 0}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
             />
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label>类型 <span style={{color: 'red'}}>*</span></label>
-            <select 
-              value={formData.type} 
-              onChange={e => setFormData({...formData, type: Number(e.target.value)})}
-              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-            >
-              <option value={0}>固定班制</option>
-              <option value={1}>弹性班制</option>
-            </select>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">下班时间 {formData.type === 0 && <span className="text-red-500">*</span>}</label>
+            <input 
+              type="time" 
+              value={formData.endTime} 
+              onChange={e => setFormData({...formData, endTime: e.target.value})}
+              required={formData.type === 0}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+            />
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <label>上班时间 {formData.type === 0 && <span style={{color: 'red'}}>*</span>}</label>
-              <input 
-                type="time" 
-                value={formData.startTime} 
-                onChange={e => setFormData({...formData, startTime: e.target.value})}
-                required={formData.type === 0}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <label>下班时间 {formData.type === 0 && <span style={{color: 'red'}}>*</span>}</label>
-              <input 
-                type="time" 
-                value={formData.endTime} 
-                onChange={e => setFormData({...formData, endTime: e.target.value})}
-                required={formData.type === 0}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">午休开始</label>
+            <input 
+              type="time" 
+              value={formData.restStartTime} 
+              onChange={e => setFormData({...formData, restStartTime: e.target.value})}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+            />
           </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <label>午休开始</label>
-              <input 
-                type="time" 
-                value={formData.restStartTime} 
-                onChange={e => setFormData({...formData, restStartTime: e.target.value})}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <label>午休结束</label>
-              <input 
-                type="time" 
-                value={formData.restEndTime} 
-                onChange={e => setFormData({...formData, restEndTime: e.target.value})}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              />
-            </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">午休结束</label>
+            <input 
+              type="time" 
+              value={formData.restEndTime} 
+              onChange={e => setFormData({...formData, restEndTime: e.target.value})}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
+            />
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-            <button 
-              type="button" 
-              onClick={onClose}
-              disabled={loading}
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: 'white', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px',
-                cursor: 'pointer' 
-              }}
-            >
-              取消
-            </button>
-            <button 
-              type="submit" 
-              disabled={loading}
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: '#1890ff', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1
-              }}
-            >
-              {loading ? '提交中...' : '确定'}
-            </button>
-          </div>
-
-        </form>
+        </div>
       </div>
-    </div>
+    </StandardModal>
   );
 };

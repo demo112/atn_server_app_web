@@ -1,65 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, DatePicker, Button, Select, message, Space, Card } from 'antd';
-import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getDeptStats, getChartStats, exportStats } from '@/services/statistics';
 import { DeptStatsVo, ChartStatsVo } from '@attendance/shared';
 import DeptStatsTable from './components/DeptStatsTable';
 import AttendanceCharts from './components/AttendanceCharts';
-import { logger } from '@/utils/logger';
-
-const { RangePicker } = DatePicker;
-
-// Mock Department Select (Reuse from SummaryPage or create shared component later)
-interface DepartmentSelectProps {
-    value?: number;
-    onChange?: (value: number) => void;
-}
-
-const DepartmentSelect: React.FC<DepartmentSelectProps> = ({ value, onChange }): React.ReactElement => {
-    return (
-        <Select 
-            value={value} 
-            onChange={onChange} 
-            placeholder="选择部门" 
-            allowClear
-            style={{ width: 200 }}
-            options={[
-                { value: 1, label: '总经办' },
-                { value: 2, label: '人事部' },
-                { value: 3, label: '研发部' },
-                { value: 4, label: '市场部' },
-            ]}
-        />
-    );
-};
+import { useToast } from '@/components/common/ToastProvider';
+import { DepartmentSelect } from '@/components/DepartmentSelect';
 
 const ReportPage: React.FC = (): React.ReactElement => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [deptStats, setDeptStats] = useState<DeptStatsVo[]>([]);
   const [chartStats, setChartStats] = useState<ChartStatsVo>({ dailyTrend: [], statusDistribution: [] });
-  // Removed unused activeTab
-  
-  const [form] = Form.useForm();
 
-  const initialValues = {
-    month: dayjs(),
-    dateRange: [dayjs().startOf('month'), dayjs()],
-    deptId: undefined
-  };
+  // Form State
+  const [month, setMonth] = useState(dayjs().format('YYYY-MM'));
+  const [startDate, setStartDate] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));
+  const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [deptId, setDeptId] = useState<number | undefined>(undefined);
 
   const fetchData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const values = form.getFieldsValue();
-      const { month, dateRange, deptId } = values;
       
-      const monthStr = month ? month.format('YYYY-MM') : dayjs().format('YYYY-MM');
-      const startDate = dateRange ? dateRange[0].format('YYYY-MM-DD') : dayjs().startOf('month').format('YYYY-MM-DD');
-      const endDate = dateRange ? dateRange[1].format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD');
-
       // Fetch Dept Stats (Monthly)
-      const deptRes = await getDeptStats({ month: monthStr, deptId });
+      const deptRes = await getDeptStats({ month, deptId });
       setDeptStats(deptRes);
 
       // Fetch Chart Stats (Date Range)
@@ -67,66 +32,105 @@ const ReportPage: React.FC = (): React.ReactElement => {
       setChartStats(chartRes);
 
     } catch (error) {
-      logger.error('Failed to fetch statistics', error);
-      message.error('获取统计数据失败');
+      toast.error('获取统计数据失败');
     } finally {
       setLoading(false);
     }
-  }, [form]);
+  }, [month, startDate, endDate, deptId, toast]);
 
+  // Initial fetch
   useEffect(() => {
-    // Initial fetch
-    // form.setFieldsValue(initialValues); // initialValues is already set via Form prop
     fetchData();
-  }, [fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  const handleSearch = () => {
+    fetchData();
+  };
 
   const handleExport = async (): Promise<void> => {
     try {
-      const values = form.getFieldsValue();
-      const { month, deptId } = values;
-      const monthStr = month ? month.format('YYYY-MM') : dayjs().format('YYYY-MM');
-      
-      const response = await exportStats({ month: monthStr, deptId });
+      const response = await exportStats({ month, deptId });
       
       // Create blob link to download
       const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `attendance_stats_${monthStr}.xlsx`);
+      link.setAttribute('download', `attendance_stats_${month}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (error) {
-      logger.error('Failed to export statistics', error);
-      message.error('导出失败');
+      toast.error('导出失败');
     }
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card variant="borderless" style={{ marginBottom: 24 }}>
-        <Form form={form} layout="inline" onFinish={fetchData} initialValues={initialValues}>
-          <Form.Item name="month" label="统计月份" rules={[{ required: true }]}>
-            <DatePicker picker="month" />
-          </Form.Item>
-          <Form.Item name="dateRange" label="图表日期范围">
-            <RangePicker />
-          </Form.Item>
-          <Form.Item name="deptId" label="部门">
-            <DepartmentSelect />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" icon={<SearchOutlined />} loading={loading}>
-                查询
-              </Button>
-              <Button icon={<DownloadOutlined />} onClick={handleExport}>
-                导出报表
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Card>
+    <div className="p-6">
+       {/* Filter Card */}
+       <div className="bg-white rounded-lg shadow p-6 mb-6">
+         <div className="flex flex-wrap gap-4 items-end">
+           {/* Month Picker */}
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-1">统计月份</label>
+             <input 
+               type="month"
+               value={month}
+               onChange={(e) => setMonth(e.target.value)}
+               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px] border px-3"
+             />
+           </div>
+           
+           {/* Date Range */}
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-1">图表日期范围</label>
+             <div className="flex items-center gap-2">
+               <input 
+                 type="date"
+                 value={startDate}
+                 onChange={(e) => setStartDate(e.target.value)}
+                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px] border px-3"
+               />
+               <span className="text-gray-500">-</span>
+               <input 
+                 type="date"
+                 value={endDate}
+                 onChange={(e) => setEndDate(e.target.value)}
+                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px] border px-3"
+               />
+             </div>
+           </div>
+
+           {/* Department Select */}
+           <div className="w-64">
+             <label className="block text-sm font-medium text-gray-700 mb-1">部门</label>
+             <DepartmentSelect 
+               value={deptId}
+               onChange={(e) => setDeptId(Number(e.target.value) || undefined)}
+               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-[38px]"
+             />
+           </div>
+
+           {/* Buttons */}
+           <div className="flex gap-2">
+             <button
+               onClick={handleSearch}
+               disabled={loading}
+               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 cursor-pointer"
+             >
+               <span className="material-icons text-sm mr-2">search</span>
+               查询
+             </button>
+             <button
+               onClick={handleExport}
+               className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary cursor-pointer"
+             >
+               <span className="material-icons text-sm mr-2">download</span>
+               导出报表
+             </button>
+           </div>
+         </div>
+       </div>
 
       <AttendanceCharts data={chartStats} loading={loading} />
       <DeptStatsTable data={deptStats} loading={loading} />
