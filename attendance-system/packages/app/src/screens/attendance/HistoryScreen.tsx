@@ -19,8 +19,11 @@ const HistoryScreen = () => {
       // Get first and last day of current month
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+      // Format manually to avoid timezone issues with toISOString()
+      const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+      
+      const lastDay = new Date(year, month + 1, 0);
+      const endDate = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
 
       const res = await getDailyRecords({ startDate, endDate });
       setRecords(res.items || []);

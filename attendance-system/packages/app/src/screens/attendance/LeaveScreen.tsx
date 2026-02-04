@@ -43,6 +43,11 @@ const LeaveScreen = () => {
       return;
     }
 
+    if (new Date(formData.startTime) > new Date(formData.endTime)) {
+      Alert.alert('提示', '结束时间不能早于开始时间');
+      return;
+    }
+
     try {
       await createLeave({
         employeeId: 0, // Server will override
@@ -53,7 +58,7 @@ const LeaveScreen = () => {
       });
       Alert.alert('成功', '申请提交成功');
       setModalVisible(false);
-      fetchLeaves();
+      await fetchLeaves();
     } catch (error) {
       Alert.alert('失败', getErrorMessage(error));
     }
@@ -72,7 +77,7 @@ const LeaveScreen = () => {
             try {
               await cancelLeave(id);
               Alert.alert('成功', '撤销成功');
-              fetchLeaves();
+              await fetchLeaves();
             } catch (error) {
               Alert.alert('失败', getErrorMessage(error));
             }
@@ -118,7 +123,7 @@ const LeaveScreen = () => {
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+        <ActivityIndicator testID="loading" size="large" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
           data={leaves}
@@ -139,6 +144,7 @@ const LeaveScreen = () => {
             
             <Text style={styles.label}>类型 (annual/sick/personal/business_trip)</Text>
             <TextInput
+              testID="input-type"
               style={styles.input}
               value={formData.type}
               onChangeText={text => setFormData({...formData, type: text as LeaveType})}
@@ -147,6 +153,7 @@ const LeaveScreen = () => {
 
             <Text style={styles.label}>开始时间 (YYYY-MM-DD HH:mm)</Text>
             <TextInput
+              testID="input-startTime"
               style={styles.input}
               value={formData.startTime}
               onChangeText={text => setFormData({...formData, startTime: text})}
@@ -155,6 +162,7 @@ const LeaveScreen = () => {
 
             <Text style={styles.label}>结束时间 (YYYY-MM-DD HH:mm)</Text>
             <TextInput
+              testID="input-endTime"
               style={styles.input}
               value={formData.endTime}
               onChangeText={text => setFormData({...formData, endTime: text})}
@@ -163,6 +171,7 @@ const LeaveScreen = () => {
 
             <Text style={styles.label}>原因</Text>
             <TextInput
+              testID="input-reason"
               style={[styles.input, styles.textArea]}
               value={formData.reason}
               onChangeText={text => setFormData({...formData, reason: text})}

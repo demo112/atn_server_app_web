@@ -71,7 +71,7 @@ describe('AttendanceCalendar', () => {
     ];
     (getCalendar as jest.Mock).mockResolvedValue(mockData);
 
-    const { getByText, getByTestId } = render(<AttendanceCalendar />);
+    const { getByText, getByTestId, getAllByText } = render(<AttendanceCalendar />);
 
     expect(getByTestId('calendar')).toBeTruthy();
     
@@ -84,9 +84,9 @@ describe('AttendanceCalendar', () => {
     expect(getAllByText('1')).toHaveLength(3);
     
     // Check specific stats labels to ensure context
-    expect(getByText('正常')).toBeTruthy();
-    expect(getByText('异常')).toBeTruthy();
-    expect(getByText('请假/出差')).toBeTruthy();
+    expect(getAllByText('正常').length).toBeGreaterThan(0);
+    expect(getAllByText('异常').length).toBeGreaterThan(0);
+    expect(getAllByText('请假/出差').length).toBeGreaterThan(0);
   });
 
   it('handles month change', async () => {

@@ -105,6 +105,7 @@ const CorrectionScreen = () => {
             
             <Text style={styles.label}>考勤记录ID (DailyRecordId)</Text>
             <TextInput
+              testID="input-dailyRecordId"
               style={styles.input}
               value={formData.dailyRecordId}
               onChangeText={text => setFormData({...formData, dailyRecordId: text})}
@@ -114,6 +115,7 @@ const CorrectionScreen = () => {
 
             <Text style={styles.label}>类型 (check_in/check_out)</Text>
             <TextInput
+              testID="input-type"
               style={styles.input}
               value={formData.type}
               onChangeText={text => setFormData({...formData, type: text as CorrectionType})}
@@ -122,6 +124,7 @@ const CorrectionScreen = () => {
 
             <Text style={styles.label}>补卡时间 (YYYY-MM-DD HH:mm)</Text>
             <TextInput
+              testID="input-clockTime"
               style={styles.input}
               value={formData.clockTime}
               onChangeText={text => setFormData({...formData, clockTime: text})}
@@ -130,6 +133,7 @@ const CorrectionScreen = () => {
 
             <Text style={styles.label}>原因/备注</Text>
             <TextInput
+              testID="input-remark"
               style={[styles.input, styles.textArea]}
               value={formData.remark}
               onChangeText={text => setFormData({...formData, remark: text})}
