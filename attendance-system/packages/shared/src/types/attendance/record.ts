@@ -114,6 +114,7 @@ export interface DailyRecordQuery extends QueryParams {
   startDate?: string;
   endDate?: string;
   deptId?: number;
+  deptName?: string;
   employeeId?: number;
   employeeName?: string;
   status?: AttendanceStatus;
@@ -136,6 +137,8 @@ export interface DailyRecordVo {
   earlyLeaveMinutes: number;
   absentMinutes: number;
   leaveMinutes: number;
+  workMinutes?: number;
+  remark?: string;
 }
 
 export interface CalendarDailyVo {
