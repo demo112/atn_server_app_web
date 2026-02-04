@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **[UA2] 人员与部门管理**
+  - Server: 修复部门删除操作超时问题 (由 Redis 连接失败导致)
+  - Server: 修复人员创建接口字段校验问题
+  - Server: 解决 Server 端口冲突与启动问题
+  - Infra: 修复 `AttendanceScheduler` Redis 连接配置，支持密码认证
+
 ### Added
 - **[ENG01] 前端容错与工程化 (Track C)**
   - Web/App: 集成 ErrorBoundary 全局错误捕获
