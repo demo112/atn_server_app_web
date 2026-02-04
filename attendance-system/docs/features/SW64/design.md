@@ -4,145 +4,74 @@
 
 | Story | 实现方式 |
 |-------|---------|
-| Story 1: 创建班次 | API: `POST /api/v1/attendance/shifts` |
-| Story 2: 班次列表 | API: `GET /api/v1/attendance/shifts` |
-| Story 3: 班次详情 | API: `GET /api/v1/attendance/shifts/:id` |
-| Story 4: 更新班次 | API: `PUT /api/v1/attendance/shifts/:id` |
-| Story 5: 删除班次 | API: `DELETE /api/v1/attendance/shifts/:id` |
+| Story 1: 查看班次列表 | `ShiftListScreen` (FlatList) |
+| Story 2: 搜索班次 | `ShiftListScreen` (Local Filter) |
+| Story 3: 添加班次 | `AddShiftModal` (React Native Modal) |
 
 ## 数据模型
 
-复用已有的 `AttShift` 和 `AttShiftPeriod` 模型 (无需修改 Schema)。
+数据暂时仅在前端状态中维护（模拟 `incoming` 的行为）。
 
-```prisma
-/// 班次表
-model AttShift {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(100)
-  cycleDays Int      @default(7) @map("cycle_days")
-  
-  periods   AttShiftPeriod[]
-  // ...
-}
-
-/// 班次时间段关联表
-model AttShiftPeriod {
-  id         Int @id @default(autoincrement())
-  shiftId    Int @map("shift_id")
-  periodId   Int @map("period_id")
-  dayOfCycle Int @map("day_of_cycle") // 1-7
-  sortOrder  Int @default(0) @map("sort_order")
-  // ...
-}
-```
-
-## API定义
-
-### 1. 创建班次
-
-**POST** `/api/v1/attendance/shifts`
-
-**Request:**
 ```typescript
-interface CreateShiftDto {
+// packages/app/src/types/shift.ts
+
+export interface Shift {
+  id: string;
   name: string;
-  cycleDays?: number; // default 7
-  days: {
-    dayOfCycle: number; // 1-7
-    periodIds: number[]; // 按顺序排列的时间段ID
-  }[];
+  startTime: string; // Format: "HH:mm"
+  endTime: string;   // Format: "HH:mm"
 }
 ```
 
-**Response:**
-```typescript
-{
-  success: true,
-  data: {
-    id: 1,
-    name: "标准早班",
-    cycleDays: 7,
-    periods: [ ... ]
-  }
-}
-```
+## UI 组件设计
 
-### 2. 获取班次列表
+### 1. ShiftListScreen (`packages/app/src/screens/shift/ShiftListScreen.tsx`)
 
-**GET** `/api/v1/attendance/shifts`
+- **功能**: 展示班次列表，提供搜索和添加入口。
+- **状态**:
+  - `shifts`: `Shift[]` (初始包含默认数据)
+  - `searchTerm`: `string`
+  - `isModalVisible`: `boolean` (控制 Modal 显示)
+- **UI**:
+  - 头部搜索框
+  - 列表区域 (`FlatList`)
+  - 底部/悬浮添加按钮 (或顶部按钮，参考 `incoming` 是列表上方的大按钮)
 
-**Query:**
-- `name`: string (optional, search)
+### 2. AddShiftModal (`packages/app/src/components/shift/AddShiftModal.tsx`)
 
-**Response:**
-```typescript
-{
-  success: true,
-  data: [
-    { id: 1, name: "标准早班", cycleDays: 7 }
-  ]
-}
-```
+- **功能**: 添加班次表单。
+- **Props**:
+  - `visible`: `boolean`
+  - `onClose`: `() => void`
+  - `onAdd`: `(shift: Omit<Shift, 'id'>) => void`
+- **UI**:
+  - Modal 容器 (半透明背景 + 底部弹出内容)
+  - 输入框: 名称, 开始时间, 结束时间
+  - 按钮: "取消", "保存"
 
-### 3. 获取班次详情
+## API / AI 集成
 
-**GET** `/api/v1/attendance/shifts/:id`
-
-**Response:**
-```typescript
-{
-  success: true,
-  data: {
-    id: 1,
-    name: "标准早班",
-    cycleDays: 7,
-    days: [ // 聚合后的结构，方便前端展示
-      { dayOfCycle: 1, periods: [ { id: 1, name: "09:00-18:00", ... } ] },
-      // ...
-    ]
-  }
-}
-```
-
-### 4. 更新班次
-
-**PUT** `/api/v1/attendance/shifts/:id`
-
-**Request:**
-```typescript
-interface UpdateShiftDto {
-  name?: string;
-  days?: {
-    dayOfCycle: number;
-    periodIds: number[];
-  }[];
-}
-```
-
-### 5. 删除班次
-
-**DELETE** `/api/v1/attendance/shifts/:id`
-
-- 检查是否被排班 (`AttSchedule`) 引用，若引用则禁止删除。
+*AI 智能建议功能已移除。*
 
 ## 文件变更清单
 
 | 文件 | 操作 | 内容 |
 |------|------|------|
-| `packages/server/src/modules/attendance/attendance-shift.dto.ts` | 新增 | DTO 定义 |
-| `packages/server/src/modules/attendance/attendance-shift.service.ts` | 新增 | 班次 CRUD 逻辑 |
-| `packages/server/src/modules/attendance/attendance-shift.controller.ts` | 新增 | 班次 API 控制器 |
-| `packages/server/src/modules/attendance/attendance.routes.ts` | 修改 | 注册 `/shifts` 路由 |
-| `packages/web/src/pages/attendance/shift/ShiftPage.tsx` | 新增 | Web端班次管理页 |
-| `packages/web/src/services/shift.ts` | 新增 | Web端班次服务 |
+| `packages/app/src/types/shift.ts` | 修改 | 确保包含 `Shift` 接口 |
+| `packages/app/src/screens/shift/ShiftListScreen.tsx` | 修改 | 集成 `AddShiftModal`，更新 UI 匹配仿制目标 |
+| `packages/app/src/components/shift/AddShiftModal.tsx` | 新增 | 仿制 `incoming` 的 Modal 组件 |
 
-## 影响分析
+## 技术决策
 
-| 已有功能 | 影响 | 风险等级 |
-|---------|------|---------|
-| 数据库Schema | 无 (使用已有表) | 低 |
-| 现有API | 无 | 低 |
+1.  **Modal 实现**: 使用 React Native 原生 `Modal` 组件，配合 `transparent={true}` 实现半透明遮罩效果，模拟 Web 端的 Dialog 体验。
+2.  **样式**: 使用 `StyleSheet` 或 `nativewind` (如果项目已配置)。考虑到现有代码使用 `StyleSheet`，保持一致性优先，或者如果项目有 Tailwind 配置则使用 Tailwind。
+3.  **时间选择**: `incoming` 使用的是文本输入 (Default values '09:00')。App 端可以先用 `TextInput` 保持一致，或者升级为 `@react-native-community/datetimepicker`。为了“仿制”，先保持 `TextInput` 但限制格式，或提供简单的选择器。为了体验，建议使用 `DateTimePicker` 但为了快速仿制先用 Input。
+    *   *决策*: 使用 `TextInput` 配合默认值，简化实现。
+
+## 风险点
+
+- 无重大技术风险。
 
 ## 需要人决策
 
-- 无
+- 无。遵循仿制原则。

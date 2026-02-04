@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { Text, Card, FAB, useTheme, ActivityIndicator, Searchbar, Avatar, Chip } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { UserRole, UserStatus } from '@attendance/shared';
 import { getUsers, deleteUser } from '../../../services/user';
@@ -15,6 +16,7 @@ interface UserItem {
 }
 
 export const UserListScreen = () => {
+  const theme = useTheme();
   const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -92,8 +94,9 @@ export const UserListScreen = () => {
   };
 
   const renderItem = ({ item }: { item: UserItem }) => (
-    <TouchableOpacity
-      style={styles.item}
+    <Card 
+      style={styles.card} 
+      mode="elevated"
       onPress={() => navigation.navigate('UserEdit', { id: item.id })}
       onLongPress={() => {
         Alert.alert('操作', item.username, [
@@ -103,115 +106,105 @@ export const UserListScreen = () => {
         ]);
       }}
     >
-      <View style={styles.itemContent}>
+      <Card.Content style={styles.cardContent}>
+        <Avatar.Icon 
+          size={40} 
+          icon="account" 
+          style={{ backgroundColor: theme.colors.secondaryContainer }}
+          color={theme.colors.onSecondaryContainer}
+        />
         <View style={styles.info}>
-          <Text style={styles.name}>{item.username}</Text>
-          <Text style={styles.subInfo}>
-            {item.role === 'admin' ? '管理员' : '普通用户'} | {item.status === 'active' ? '正常' : '禁用'}
+          <View style={styles.headerRow}>
+            <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.username}</Text>
+            <Chip compact textStyle={{ fontSize: 10, lineHeight: 10, height: 10 }}>{item.role}</Chip>
+          </View>
+          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+            {item.employeeName ? `绑定: ${item.employeeName}` : '未绑定员工'}
           </Text>
         </View>
-        <Text style={styles.arrow}>›</Text>
-      </View>
-    </TouchableOpacity>
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.searchContainer}>
+        <Searchbar
           placeholder="搜索用户名"
-          value={keyword}
           onChangeText={setKeyword}
+          value={keyword}
+          style={styles.searchbar}
+          elevation={1}
         />
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => navigation.navigate('UserEdit')}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
       </View>
 
       <FlatList
         data={users}
-        keyExtractor={item => item.id.toString()}
         renderItem={renderItem}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
+        keyExtractor={item => item.id.toString()}
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={loading && !refreshing ? <ActivityIndicator style={styles.loading} /> : null}
-        ListEmptyComponent={!loading ? <Text style={styles.emptyText}>无数据</Text> : null}
+        onEndReachedThreshold={0.5}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        contentContainerStyle={styles.list}
+        ListFooterComponent={loading ? <ActivityIndicator style={{ margin: 10 }} /> : null}
+        ListEmptyComponent={
+          !loading ? (
+            <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+              暂无用户数据
+            </Text>
+          ) : null
+        }
+      />
+      
+      <FAB
+        icon="plus"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="white"
+        onPress={() => navigation.navigate('UserEdit')}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  searchBar: {
-    flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  searchInput: {
+  container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
-    padding: 8,
-    borderRadius: 8,
-    marginRight: 10,
-    fontSize: 14,
   },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    lineHeight: 26,
-  },
-  item: {
-    backgroundColor: '#fff',
+  searchContainer: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingBottom: 8,
   },
-  itemContent: {
+  searchbar: {
+    backgroundColor: 'white',
+  },
+  list: {
+    padding: 16,
+    paddingTop: 8,
+    paddingBottom: 80,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  cardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   info: {
     flex: 1,
+    marginLeft: 16,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 4,
   },
-  subInfo: {
-    fontSize: 14,
-    color: '#666',
-  },
-  arrow: {
-    fontSize: 20,
-    color: '#999',
-  },
-  loading: {
-    padding: 10,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#999',
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });

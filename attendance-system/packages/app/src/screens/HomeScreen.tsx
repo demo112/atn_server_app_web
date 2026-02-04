@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { Text, Card, Avatar, useTheme, IconButton, Surface } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { clearAuth, getUser } from '../utils/auth';
 import { logger } from '../utils/logger';
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
+  const theme = useTheme();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -31,155 +33,111 @@ const HomeScreen = () => {
 
   const isAdmin = user?.role === 'ADMIN';
 
+  const MenuItem = ({ title, icon, route, color }: { title: string; icon: string; route: string; color?: string }) => (
+    <Card 
+      style={styles.card} 
+      onPress={() => navigation.navigate(route)}
+      mode="elevated"
+    >
+      <Card.Content style={styles.cardContent}>
+        <Avatar.Icon 
+          size={48} 
+          icon={icon} 
+          style={{ backgroundColor: color || theme.colors.secondaryContainer }} 
+          color={theme.colors.onSecondaryContainer}
+        />
+        <Text variant="titleMedium" style={styles.cardTitle}>{title}</Text>
+      </Card.Content>
+    </Card>
+  );
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Header */}
+      <Surface style={[styles.header, { backgroundColor: theme.colors.primary }]} elevation={4}>
         <View>
-          <Text style={styles.title}>考勤助手</Text>
-          {user && <Text style={styles.subtitle}>你好, {user.name}</Text>}
+          <Text variant="headlineMedium" style={styles.headerTitle}>考勤助手</Text>
+          {user && <Text variant="bodyLarge" style={styles.headerSubtitle}>你好, {user.name}</Text>}
         </View>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={styles.logoutText}>退出</Text>
-        </TouchableOpacity>
-      </View>
+        <IconButton 
+          icon="logout" 
+          iconColor={theme.colors.onPrimary} 
+          onPress={handleLogout} 
+        />
+      </Surface>
 
-      <Text style={styles.sectionTitle}>常用功能</Text>
-      <View style={styles.grid}>
-        <TouchableOpacity 
-          style={styles.card} 
-          onPress={() => navigation.navigate('ClockIn')}
-        >
-          <Text style={styles.cardIcon}>🕒</Text>
-          <Text style={styles.cardTitle}>考勤打卡</Text>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text variant="titleLarge" style={styles.sectionTitle}>常用功能</Text>
+        <View style={styles.grid}>
+          <MenuItem title="考勤打卡" icon="map-marker-radius" route="ClockIn" />
+          <MenuItem title="请假/出差" icon="airplane-takeoff" route="Leave" />
+          <MenuItem title="补卡申请" icon="file-document-edit" route="Correction" />
+          <MenuItem title="考勤记录" icon="chart-bar" route="History" />
+          <MenuItem title="我的排班" icon="calendar-clock" route="Schedule" />
+        </View>
 
-        <TouchableOpacity 
-          style={styles.card} 
-          onPress={() => navigation.navigate('Leave')}
-        >
-          <Text style={styles.cardIcon}>✈️</Text>
-          <Text style={styles.cardTitle}>请假/出差</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.card} 
-          onPress={() => navigation.navigate('Correction')}
-        >
-          <Text style={styles.cardIcon}>📝</Text>
-          <Text style={styles.cardTitle}>补卡申请</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.card} 
-          onPress={() => navigation.navigate('History')}
-        >
-          <Text style={styles.cardIcon}>📊</Text>
-          <Text style={styles.cardTitle}>考勤记录</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.card} 
-          onPress={() => navigation.navigate('Schedule')}
-        >
-          <Text style={styles.cardIcon}>📅</Text>
-          <Text style={styles.cardTitle}>我的排班</Text>
-        </TouchableOpacity>
-      </View>
-
-      {isAdmin && (
-        <>
-          <Text style={styles.sectionTitle}>管理中心</Text>
-          <View style={styles.grid}>
-            <TouchableOpacity 
-              style={styles.card} 
-              onPress={() => navigation.navigate('DepartmentList')}
-            >
-              <Text style={styles.cardIcon}>🏢</Text>
-              <Text style={styles.cardTitle}>部门管理</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.card} 
-              onPress={() => navigation.navigate('EmployeeList')}
-            >
-              <Text style={styles.cardIcon}>👥</Text>
-              <Text style={styles.cardTitle}>人员管理</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.card} 
-              onPress={() => navigation.navigate('UserList')}
-            >
-              <Text style={styles.cardIcon}>👤</Text>
-              <Text style={styles.cardTitle}>用户管理</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      )}
-    </ScrollView>
+        {isAdmin && (
+          <>
+            <Text variant="titleLarge" style={[styles.sectionTitle, { marginTop: 24 }]}>管理中心</Text>
+            <View style={styles.grid}>
+              <MenuItem title="部门管理" icon="domain" route="DepartmentList" color="#E0F2F1" />
+              <MenuItem title="人员管理" icon="account-group" route="EmployeeList" color="#E0F2F1" />
+              <MenuItem title="排班管理" icon="calendar-edit" route="ShiftList" color="#E0F2F1" />
+              <MenuItem title="用户管理" icon="account-cog" route="UserList" color="#E0F2F1" />
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
   },
   header: {
+    padding: 20,
+    paddingTop: 60, // Status bar space
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 40,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  title: {
-    fontSize: 24,
+  headerTitle: {
+    color: '#fff',
     fontWeight: 'bold',
-    color: '#333',
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
     marginTop: 4,
   },
-  logoutText: {
-    color: '#ff4d4f',
-    fontSize: 16,
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
   },
   sectionTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 16,
-    marginTop: 10,
+    marginLeft: 4,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 12,
   },
   card: {
-    width: '48%',
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: '48%', // Approx half width minus gap
+    marginBottom: 4,
   },
-  cardIcon: {
-    fontSize: 32,
-    marginBottom: 10,
+  cardContent: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 12,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    textAlign: 'center',
   },
 });
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode } from 'react';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -77,10 +77,19 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const info = useCallback((message: string) => showToast(message, 'info'), [showToast]);
   const warning = useCallback((message: string) => showToast(message, 'warning'), [showToast]);
 
-  const toastObject = { success, error, info, warning };
+  const toastObject = useMemo(() => ({ success, error, info, warning }), [success, error, info, warning]);
+
+  const contextValue = useMemo(() => ({
+    showToast,
+    success,
+    error,
+    info,
+    warning,
+    toast: toastObject
+  }), [showToast, success, error, info, warning, toastObject]);
 
   return (
-    <ToastContext.Provider value={{ showToast, success, error, info, warning, toast: toastObject }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => (

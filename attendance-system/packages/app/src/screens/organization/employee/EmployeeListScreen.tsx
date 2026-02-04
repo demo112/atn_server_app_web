@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { Text, Card, FAB, useTheme, ActivityIndicator, Searchbar, Avatar } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { EmployeeVo } from '@attendance/shared';
 import { getEmployees, deleteEmployee } from '../../../services/employee';
 import { logger } from '../../../utils/logger';
 
 export const EmployeeListScreen = () => {
+  const theme = useTheme();
   const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<EmployeeVo[]>([]);
@@ -85,8 +87,9 @@ export const EmployeeListScreen = () => {
   };
 
   const renderItem = ({ item }: { item: EmployeeVo }) => (
-    <TouchableOpacity
-      style={styles.item}
+    <Card 
+      style={styles.card} 
+      mode="elevated"
       onPress={() => navigation.navigate('EmployeeEdit', { id: item.id })}
       onLongPress={() => {
         Alert.alert('操作', item.name, [
@@ -96,113 +99,96 @@ export const EmployeeListScreen = () => {
         ]);
       }}
     >
-      <View style={styles.itemContent}>
+      <Card.Content style={styles.cardContent}>
+        <Avatar.Text 
+          size={40} 
+          label={item.name.substring(0, 1)} 
+          style={{ backgroundColor: theme.colors.secondaryContainer }}
+          color={theme.colors.onSecondaryContainer}
+        />
         <View style={styles.info}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.subInfo}>{item.deptName || '无部门'} | {item.employeeNo}</Text>
+          <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.name}</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+            工号: {item.employeeNumber} | {item.departmentName || '无部门'}
+          </Text>
         </View>
-        <Text style={styles.arrow}>›</Text>
-      </View>
-    </TouchableOpacity>
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜索姓名、工号、手机号"
-          value={keyword}
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.searchContainer}>
+        <Searchbar
+          placeholder="搜索员工"
           onChangeText={setKeyword}
+          value={keyword}
+          style={styles.searchbar}
+          elevation={1}
         />
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => navigation.navigate('EmployeeEdit')}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
       </View>
 
       <FlatList
         data={employees}
-        keyExtractor={item => item.id.toString()}
         renderItem={renderItem}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
+        keyExtractor={item => item.id.toString()}
         onEndReached={onLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={loading && !refreshing ? <ActivityIndicator style={styles.loading} /> : null}
-        ListEmptyComponent={!loading ? <Text style={styles.emptyText}>无数据</Text> : null}
+        onEndReachedThreshold={0.5}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        contentContainerStyle={styles.list}
+        ListFooterComponent={loading ? <ActivityIndicator style={{ margin: 10 }} /> : null}
+        ListEmptyComponent={
+          !loading ? (
+            <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+              暂无员工数据
+            </Text>
+          ) : null
+        }
+      />
+      
+      <FAB
+        icon="plus"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="white"
+        onPress={() => navigation.navigate('EmployeeEdit')}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  searchBar: {
-    flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  searchInput: {
+  container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
-    padding: 8,
-    borderRadius: 8,
-    marginRight: 10,
-    fontSize: 14,
   },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    lineHeight: 26,
-  },
-  item: {
-    backgroundColor: '#fff',
+  searchContainer: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingBottom: 8,
   },
-  itemContent: {
+  searchbar: {
+    backgroundColor: 'white',
+  },
+  list: {
+    padding: 16,
+    paddingTop: 8,
+    paddingBottom: 80,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  cardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   info: {
     flex: 1,
+    marginLeft: 16,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  subInfo: {
-    fontSize: 14,
-    color: '#666',
-  },
-  arrow: {
-    fontSize: 20,
-    color: '#999',
-  },
-  loading: {
-    padding: 10,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#999',
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });

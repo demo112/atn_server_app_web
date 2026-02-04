@@ -4,69 +4,74 @@
 
 | 指标 | 值 |
 |------|-----|
-| 总任务数 | 6 |
-| 涉及模块 | attendance |
-| 涉及端 | Server, Web |
-| 预计总时间 | 90 分钟 |
+| 总任务数 | 4 |
+| 涉及模块 | attendance (app) |
+| 涉及端 | App |
+| 预计总时间 | 40 分钟 |
 
 ## 任务清单
 
-### 阶段1：数据层 (已完成)
+### 阶段1：依赖与基础
 
-#### Task 1: 验证数据模型 ✅
-- **文件**: `packages/server/prisma/schema.prisma`
-- **状态**: 已完成
+#### Task 1: 安装依赖与类型定义
 
-### 阶段2：服务层 (已完成)
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/package.json`, `packages/app/src/types/shift.ts` |
+| 操作 | 修改 |
+| 内容 | 1. 安装 `@google/genai` (若不兼容则回退到 `fetch` 方案)。<br>2. 确保 `Shift` 接口定义正确。 |
+| 验证 | `npm install` 无报错, `tsc` 类型检查通过 |
+| 预计 | 5 分钟 |
+| 依赖 | 无 |
 
-#### Task 2: 实现Service与DTO ✅
-- **文件**: `packages/server/src/modules/attendance/attendance-shift.dto.ts`<br>`packages/server/src/modules/attendance/attendance-shift.service.ts`
-- **状态**: 已完成
+### 阶段2：组件实现
 
-### 阶段3：接口层 (已完成)
+#### Task 2: 实现 AddShiftModal 组件
 
-#### Task 3: 实现Controller与路由 ✅
-- **文件**: `packages/server/src/modules/attendance/attendance-shift.controller.ts`<br>`packages/server/src/modules/attendance/attendance.routes.ts`
-- **状态**: 已完成
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/components/shift/AddShiftModal.tsx` |
+| 操作 | 新增 |
+| 内容 | 1. 仿制 `incoming` 的 Modal UI。<br>2. 实现 AI 智能建议逻辑。<br>3. 处理 API Key 环境变量。 |
+| 验证 | 单元测试或集成到 Screen 后手动验证 |
+| 预计 | 20 分钟 |
+| 依赖 | Task 1 |
 
-### 阶段4：Web端实现 (已完成)
+### 阶段3：页面集成
 
-#### Task 4: 班次列表页 ✅
-- **文件**: `packages/web/src/pages/attendance/shift/ShiftPage.tsx`
-- **状态**: 已完成
-- **内容**: 
-  - 创建 `ShiftPage` 组件
-  - 调用 `GET /api/v1/attendance/shifts` 获取列表
-  - 展示班次表格 (ID, 名称, 创建时间, 操作)
-  - 实现删除功能
-- **验证**: 页面正常显示列表，删除有效
-- **依赖**: Task 3
+#### Task 3: 改造 ShiftListScreen
 
-#### Task 5: 班次创建/编辑弹窗 ✅
-- **文件**: `packages/web/src/pages/attendance/shift/ShiftPage.tsx` (集成在Page中)
-- **状态**: 已完成
-- **内容**:
-  - 创建表单：班次名称
-  - 周期配置：周一到周日
-  - 每天支持添加/移除时间段 (下拉选择 TimePeriod)
-  - 调用 `GET /api/v1/attendance/time-periods` 获取选项
-  - 调用 `POST/PUT` 接口保存
-- **验证**: 能创建包含复杂时间段组合的班次
-- **依赖**: Task 4, SW63(TimePeriod API)
+| 属性 | 值 |
+|------|-----|
+| 文件 | `packages/app/src/screens/shift/ShiftListScreen.tsx` |
+| 操作 | 修改 |
+| 内容 | 1. 引入 `AddShiftModal`。<br>2. 修改添加按钮点击事件。<br>3. 确保搜索功能正常。<br>4. 更新 UI 样式匹配 `incoming`。 |
+| 验证 | 启动 App，完整测试添加流程 |
+| 预计 | 15 分钟 |
+| 依赖 | Task 2 |
 
-### 阶段5：验证与交付
+### 阶段4：验证与交付
 
-#### Task 6: 集成验证与文档同步
-- **文件**: `docs/api-contract.md`<br>`docs/changelog.md`
-- **操作**: 修改
-- **内容**: 更新API文档，记录变更，执行手动测试
-- **验证**: 手动调用API验证功能
-- **预计**: 10 分钟
-- **依赖**: Task 5
+#### Task 4: 完整验证与文档同步
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | 无 |
+| 操作 | 验证 |
+| 内容 | 1. 手动验证所有 AC。<br>2. 运行 Lint。<br>3. 同步文档。 |
+| 验证 | 功能符合预期 |
+| 预计 | 5 分钟 |
+| 依赖 | Task 3 |
 
 ## 检查点策略
 
 | 时机 | 操作 |
 |------|------|
 | 每个任务完成后 | 验证 → git commit |
-| 全部完成后 | 集成测试 → git push |
+| 全部完成后 | 集成测试 |
+
+## 风险提醒
+
+| 任务 | 风险 | 应对 |
+|------|------|------|
+| Task 2 | `@google/genai` 在 RN 中可能不兼容 | 准备好使用 `fetch` 直接调用 REST API 的备选方案 |

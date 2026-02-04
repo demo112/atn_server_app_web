@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, ActivityIndicator } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { appTheme } from './theme';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ClockInScreen from './screens/attendance/ClockInScreen';
@@ -75,10 +77,11 @@ export default function App(): React.ReactElement {
   }
 
   return (
-    <ErrorBoundary>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName={isAuthenticated ? 'Home' : 'Login'}>
-          <Stack.Screen 
+    <PaperProvider theme={appTheme}>
+      <ErrorBoundary>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName={isAuthenticated ? 'Home' : 'Login'}>
+            <Stack.Screen 
             name="Login" 
             component={LoginScreen} 
             options={{ headerShown: false }}
@@ -154,7 +157,8 @@ export default function App(): React.ReactElement {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
-    </ErrorBoundary>
+        </NavigationContainer>
+      </ErrorBoundary>
+    </PaperProvider>
   );
 }

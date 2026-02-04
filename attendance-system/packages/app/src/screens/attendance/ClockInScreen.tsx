@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, Alert } from 'react-native';
+import { Text, Button, Surface, useTheme, ActivityIndicator, Avatar } from 'react-native-paper';
 import { clockIn, getClockRecords, ClockRecord, CreateClockDto } from '../../services/attendance';
 import { getUser } from '../../utils/auth';
 import { logger } from '../../utils/logger';
 import { getErrorMessage } from '../../utils/error';
 
 const ClockInScreen = () => {
+  const theme = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<ClockRecord[]>([]);
@@ -52,11 +54,11 @@ const ClockInScreen = () => {
     setLoading(true);
     try {
       const dto: CreateClockDto = {
-        employeeId: employeeId, // Will be overridden by server but required by DTO
+        employeeId: employeeId,
         clockTime: new Date().toISOString(),
         type,
         source: 'app',
-        location: { address: 'Mock Location: Office', latitude: 0, longitude: 0 }, // In real app, use Expo Location
+        location: { address: 'Mock Location: Office', latitude: 0, longitude: 0 },
         deviceInfo: { deviceId: 'mock-device', model: 'App' },
       };
       await clockIn(dto);
@@ -71,61 +73,77 @@ const ClockInScreen = () => {
   };
 
   const renderRecord = ({ item }: { item: ClockRecord }) => (
-    <View style={styles.recordItem}>
-      <Text style={styles.recordTime}>
-        {new Date(item.clockTime).toLocaleTimeString()}
-      </Text>
-      <Text style={[styles.recordType, item.type === 'sign_in' ? styles.typeIn : styles.typeOut]}>
-        {item.type === 'sign_in' ? '上班' : '下班'}
-      </Text>
-      <Text style={styles.recordLocation}>{item.location?.address || '未知位置'}</Text>
-    </View>
+    <Surface style={styles.recordItem} elevation={1}>
+      <View style={styles.recordRow}>
+        <Avatar.Icon 
+          size={32} 
+          icon={item.type === 'sign_in' ? 'login' : 'logout'} 
+          style={{ backgroundColor: item.type === 'sign_in' ? theme.colors.primary : theme.colors.error }}
+        />
+        <View style={styles.recordInfo}>
+          <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+            {item.type === 'sign_in' ? '上班打卡' : '下班打卡'}
+          </Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+            {new Date(item.clockTime).toLocaleTimeString()}
+          </Text>
+        </View>
+        <Text variant="bodySmall" style={styles.recordLocation}>
+          {item.location?.address || '未知位置'}
+        </Text>
+      </View>
+    </Surface>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.timeText}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={[styles.header, { backgroundColor: theme.colors.primary }]} elevation={4}>
+        <Text variant="displayMedium" style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
           {currentTime.toLocaleTimeString()}
         </Text>
-        <Text style={styles.dateText}>
+        <Text variant="titleMedium" style={{ color: theme.colors.onPrimary, opacity: 0.9 }}>
           {currentTime.toLocaleDateString()}
         </Text>
-      </View>
+      </Surface>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.clockButton, styles.buttonIn]}
+        <Button
+          mode="contained"
           onPress={() => handleClockIn('sign_in')}
+          loading={loading}
           disabled={loading}
+          style={[styles.clockButton, { backgroundColor: theme.colors.primary }]}
+          contentStyle={styles.buttonContent}
+          icon="login"
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>上班打卡</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.clockButton, styles.buttonOut]}
+          上班打卡
+        </Button>
+        <Button
+          mode="contained"
           onPress={() => handleClockIn('sign_out')}
+          loading={loading}
           disabled={loading}
+          style={[styles.clockButton, { backgroundColor: theme.colors.secondary }]}
+          contentStyle={styles.buttonContent}
+          icon="logout"
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>下班打卡</Text>
-          )}
-        </TouchableOpacity>
+          下班打卡
+        </Button>
       </View>
 
       <View style={styles.listContainer}>
-        <Text style={styles.listTitle}>今日记录</Text>
+        <Text variant="titleMedium" style={styles.sectionTitle}>今日打卡记录</Text>
+        {loading && <ActivityIndicator style={{ margin: 20 }} />}
         <FlatList
           data={records}
           renderItem={renderRecord}
           keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={<Text style={styles.emptyText}>暂无打卡记录</Text>}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+              暂无打卡记录
+            </Text>
+          }
         />
       </View>
     </View>
@@ -135,99 +153,57 @@ const ClockInScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
   },
   header: {
+    padding: 30,
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 40,
-  },
-  timeText: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  dateText: {
-    fontSize: 18,
-    color: '#666',
-    marginTop: 5,
+    justifyContent: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 20,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 40,
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   clockButton: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    flex: 1,
+    marginHorizontal: 10,
+    borderRadius: 8,
   },
-  buttonIn: {
-    backgroundColor: '#4caf50',
-  },
-  buttonOut: {
-    backgroundColor: '#ff9800',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
+  buttonContent: {
+    height: 56,
   },
   listContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
+    paddingHorizontal: 16,
   },
-  listTitle: {
-    fontSize: 16,
+  sectionTitle: {
+    marginBottom: 12,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
+  },
+  list: {
+    paddingBottom: 20,
   },
   recordItem: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  recordRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
-  recordTime: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  recordType: {
-    fontSize: 14,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  typeIn: {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
-  },
-  typeOut: {
-    backgroundColor: '#fff3e0',
-    color: '#ef6c00',
+  recordInfo: {
+    marginLeft: 12,
+    flex: 1,
   },
   recordLocation: {
-    fontSize: 12,
-    color: '#999',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    marginTop: 20,
+    marginLeft: 8,
+    opacity: 0.7,
   },
 });
 

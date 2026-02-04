@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, FlatList, TouchableOpacity, 
-  Modal, TextInput, ScrollView, Alert, ActivityIndicator 
-} from 'react-native';
+import { View, StyleSheet, FlatList, ScrollView, Alert, Modal } from 'react-native';
+import { Text, FAB, Surface, useTheme, Card, Chip, TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import { getLeaves, createLeave, cancelLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
 import { LeaveType } from '@attendance/shared';
 import { logger } from '../../utils/logger';
 import { getErrorMessage } from '../../utils/error';
 
 const LeaveScreen = () => {
+  const theme = useTheme();
   const [leaves, setLeaves] = useState<LeaveVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -50,7 +49,7 @@ const LeaveScreen = () => {
 
     try {
       await createLeave({
-        employeeId: 0, // Server will override
+        employeeId: 0,
         type: formData.type,
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
@@ -87,112 +86,113 @@ const LeaveScreen = () => {
     );
   };
 
-  const renderItem = ({ item }: { item: LeaveVo }) => (
-    <View style={styles.item}>
-      <View style={styles.itemHeader}>
-        <Text style={styles.itemType}>{item.type}</Text>
-        <Text style={[styles.itemStatus, 
-          item.status === 'approved' ? styles.statusGreen : 
-          item.status === 'rejected' ? styles.statusRed : styles.statusGray
-        ]}>
-          {item.status}
-        </Text>
-      </View>
-      <Text style={styles.itemTime}>
-        {new Date(item.startTime).toLocaleDateString()} - {new Date(item.endTime).toLocaleDateString()}
-      </Text>
-      <Text style={styles.itemReason}>{item.reason}</Text>
-      {item.status === 'pending' && (
-        <TouchableOpacity 
-          style={styles.revokeButton}
-          onPress={() => handleCancel(item.id)}
-        >
-          <Text style={styles.revokeButtonText}>撤销</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  const renderItem = ({ item }: { item: LeaveVo }) => {
+    const statusColor = 
+      item.status === 'approved' ? theme.colors.primary :
+      item.status === 'rejected' ? theme.colors.error :
+      theme.colors.secondary;
+
+    return (
+      <Card style={styles.card} mode="elevated">
+        <Card.Content>
+          <View style={styles.cardHeader}>
+            <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.type}</Text>
+            <Chip 
+              mode="flat" 
+              style={{ backgroundColor: statusColor + '20' }} 
+              textStyle={{ color: statusColor }}
+            >
+              {item.status}
+            </Chip>
+          </View>
+          <Text variant="bodyMedium" style={{ marginTop: 8 }}>
+            {new Date(item.startTime).toLocaleString()} - {new Date(item.endTime).toLocaleString()}
+          </Text>
+          <Text variant="bodyMedium" style={{ marginTop: 4, color: theme.colors.secondary }}>
+            原因: {item.reason}
+          </Text>
+        </Card.Content>
+        {item.status === 'pending' && (
+          <Card.Actions>
+            <Button onPress={() => handleCancel(item.id)} textColor={theme.colors.error}>撤销</Button>
+          </Card.Actions>
+        )}
+      </Card>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.addButtonText}>+ 新申请</Text>
-      </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {loading && <ActivityIndicator style={{ margin: 20 }} />}
+      <FlatList
+        data={leaves}
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+            暂无申请记录
+          </Text>
+        }
+      />
 
-      {loading ? (
-        <ActivityIndicator testID="loading" size="large" style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={leaves}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      <FAB
+        icon="plus"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="white"
+        onPress={() => setModalVisible(true)}
+      />
 
       <Modal
         visible={modalVisible}
         animationType="slide"
         transparent={true}
+        onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>申请请假/出差</Text>
+        <View style={styles.modalOverlay}>
+          <Surface style={styles.modalContent}>
+            <Text variant="titleLarge" style={styles.modalTitle}>新建申请</Text>
             
-            <Text style={styles.label}>类型 (annual/sick/personal/business_trip)</Text>
-            <TextInput
-              testID="input-type"
-              style={styles.input}
-              value={formData.type}
-              onChangeText={text => setFormData({...formData, type: text as LeaveType})}
-              placeholder="e.g. annual"
-            />
+            <ScrollView contentContainerStyle={styles.form}>
+              <TextInput
+                mode="outlined"
+                label="类型 (annual, sick, etc.)"
+                value={formData.type}
+                onChangeText={(text) => setFormData({...formData, type: text as LeaveType})}
+                style={styles.input}
+              />
+              <TextInput
+                mode="outlined"
+                label="开始时间 (YYYY-MM-DD HH:mm)"
+                value={formData.startTime}
+                onChangeText={(text) => setFormData({...formData, startTime: text})}
+                placeholder="2024-01-01 09:00"
+                style={styles.input}
+              />
+              <TextInput
+                mode="outlined"
+                label="结束时间 (YYYY-MM-DD HH:mm)"
+                value={formData.endTime}
+                onChangeText={(text) => setFormData({...formData, endTime: text})}
+                placeholder="2024-01-01 18:00"
+                style={styles.input}
+              />
+              <TextInput
+                mode="outlined"
+                label="原因"
+                value={formData.reason}
+                onChangeText={(text) => setFormData({...formData, reason: text})}
+                multiline
+                numberOfLines={3}
+                style={styles.input}
+              />
+            </ScrollView>
 
-            <Text style={styles.label}>开始时间 (YYYY-MM-DD HH:mm)</Text>
-            <TextInput
-              testID="input-startTime"
-              style={styles.input}
-              value={formData.startTime}
-              onChangeText={text => setFormData({...formData, startTime: text})}
-              placeholder="2024-01-01 09:00"
-            />
-
-            <Text style={styles.label}>结束时间 (YYYY-MM-DD HH:mm)</Text>
-            <TextInput
-              testID="input-endTime"
-              style={styles.input}
-              value={formData.endTime}
-              onChangeText={text => setFormData({...formData, endTime: text})}
-              placeholder="2024-01-01 18:00"
-            />
-
-            <Text style={styles.label}>原因</Text>
-            <TextInput
-              testID="input-reason"
-              style={[styles.input, styles.textArea]}
-              value={formData.reason}
-              onChangeText={text => setFormData({...formData, reason: text})}
-              multiline
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelButtonText}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.submitButton]}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.submitButtonText}>提交</Text>
-              </TouchableOpacity>
+            <View style={styles.modalActions}>
+              <Button onPress={() => setModalVisible(false)} style={styles.modalButton}>取消</Button>
+              <Button mode="contained" onPress={handleSubmit} style={styles.modalButton}>提交</Button>
             </View>
-          </View>
+          </Surface>
         </View>
       </Modal>
     </View>
@@ -202,119 +202,57 @@ const LeaveScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   list: {
     padding: 16,
+    paddingBottom: 80, // Space for FAB
   },
-  addButton: {
-    margin: 16,
-    backgroundColor: '#1890ff',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  item: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
+  card: {
     marginBottom: 12,
+    backgroundColor: 'white',
   },
-  itemHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
   },
-  itemType: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
-  itemStatus: {
-    fontSize: 14,
-  },
-  statusGreen: { color: 'green' },
-  statusRed: { color: 'red' },
-  statusGray: { color: 'gray' },
-  itemTime: {
-    color: '#666',
-    marginBottom: 4,
-  },
-  itemReason: {
-    color: '#333',
-  },
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
     padding: 20,
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
+    maxHeight: '80%',
   },
   modalTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
     textAlign: 'center',
   },
-  label: {
-    marginBottom: 4,
-    color: '#666',
+  form: {
+    gap: 12,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 8,
-    marginBottom: 12,
+    backgroundColor: 'white',
   },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  modalButtons: {
+  modalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
+    justifyContent: 'flex-end',
+    marginTop: 20,
+    gap: 12,
   },
   modalButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  cancelButton: {
-    backgroundColor: '#f5f5f5',
-  },
-  submitButton: {
-    backgroundColor: '#1890ff',
-  },
-  revokeButton: {
-    marginTop: 8,
-    alignSelf: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#ff4d4f',
-    borderRadius: 4,
-  },
-  revokeButtonText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  cancelButtonText: {
-    color: '#666',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontWeight: '600',
+    minWidth: 80,
   },
 });
 

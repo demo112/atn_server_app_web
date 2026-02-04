@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { Text, Surface, useTheme, Card, Avatar } from 'react-native-paper';
 import { getSchedules, ScheduleVo } from '../../services/attendance';
 import { authService } from '../../services/auth';
 import { getUser, setUser } from '../../utils/auth';
 import { logger } from '../../utils/logger';
 
 const ScheduleScreen = () => {
+  const theme = useTheme();
   const [schedules, setSchedules] = useState<{date: string, shift?: any}[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -19,7 +21,6 @@ const ScheduleScreen = () => {
     try {
       let user = await getUser();
       
-      // 2. Load current user info
       const meRes = await authService.getMe();
       if (meRes) {
         user = { ...user, ...meRes };
@@ -27,21 +28,16 @@ const ScheduleScreen = () => {
       }
 
       if (!user || !user.employeeId) {
-        // Fallback or error handling if employeeId is missing
         logger.warn('No employeeId found for user');
         setLoading(false);
         return; 
       }
 
-      // Get first and last day of current month
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      // Adjust to local time or keep ISO date part
-      // Note: new Date(year, month, 1) creates local date
       const start = new Date(year, month, 1);
       const end = new Date(year, month + 1, 0);
       
-      // Format as YYYY-MM-DD manually to avoid timezone issues with toISOString()
       const formatDate = (d: Date) => {
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -58,14 +54,12 @@ const ScheduleScreen = () => {
         endDate
       });
       
-      // Expand schedule ranges into daily items
       const expandedSchedules: {date: string, shift?: any}[] = [];
       const current = new Date(start);
       const last = new Date(end);
       
       while (current <= last) {
         const dateStr = formatDate(current);
-        // Find matching schedule for this day
         const match = (res || []).find(s => 
           dateStr >= s.startDate && dateStr <= s.endDate
         );
@@ -86,49 +80,54 @@ const ScheduleScreen = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: {date: string, shift?: any} }) => (
-    <View style={styles.item}>
-      <Text style={styles.date}>{item.date}</Text>
-      <View style={styles.shiftInfo}>
-        <Text style={styles.shiftName}>{item.shift?.name || '休息'}</Text>
-        {item.shift && (
-          <Text style={styles.time}>
-            {item.shift.startTime} - {item.shift.endTime}
-          </Text>
-        )}
-      </View>
-    </View>
-  );
+  const renderItem = ({ item }: { item: {date: string, shift?: any} }) => {
+    const isRest = !item.shift;
+    const dateObj = new Date(item.date);
+    const dayOfWeek = ['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()];
+    
+    return (
+      <Card style={styles.card} mode="elevated">
+        <Card.Content style={styles.cardContent}>
+          <View style={styles.dateInfo}>
+            <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.date.split('-')[2]}</Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>周{dayOfWeek}</Text>
+          </View>
+          
+          <View style={styles.shiftInfo}>
+            <Text variant="titleMedium" style={{ 
+              color: isRest ? theme.colors.secondary : theme.colors.primary,
+              fontWeight: 'bold'
+            }}>
+              {item.shift?.name || '休息'}
+            </Text>
+            {item.shift && (
+              <Text variant="bodyMedium" style={{ marginTop: 4 }}>
+                {item.shift.startTime} - {item.shift.endTime}
+              </Text>
+            )}
+          </View>
 
-  const changeMonth = (delta: number) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() + delta);
-    setCurrentDate(newDate);
+          <Avatar.Icon 
+            size={40} 
+            icon={isRest ? "coffee" : "briefcase-clock"} 
+            style={{ backgroundColor: isRest ? theme.colors.surfaceVariant : theme.colors.secondaryContainer }}
+            color={isRest ? theme.colors.secondary : theme.colors.onSecondaryContainer}
+          />
+        </Card.Content>
+      </Card>
+    );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.monthButton}>
-          <Text style={styles.monthButtonText}>{'<'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月
-        </Text>
-        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.monthButton}>
-          <Text style={styles.monthButtonText}>{'>'}</Text>
-        </TouchableOpacity>
-      </View>
-
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {loading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+        <ActivityIndicator style={{ margin: 20 }} />
       ) : (
         <FlatList
           data={schedules}
           renderItem={renderItem}
-          keyExtractor={(item) => item.date}
+          keyExtractor={item => item.date}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.emptyText}>本月无排班</Text>}
         />
       )}
     </View>
@@ -138,66 +137,25 @@ const ScheduleScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  monthButton: {
-    padding: 10,
-  },
-  monthButtonText: {
-    fontSize: 18,
-    color: '#1890ff',
   },
   list: {
     padding: 16,
   },
-  item: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 8,
+  card: {
     marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: 'white',
   },
-  date: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateInfo: {
+    alignItems: 'center',
+    marginRight: 16,
+    minWidth: 40,
   },
   shiftInfo: {
-    alignItems: 'flex-end',
-  },
-  shiftName: {
-    fontSize: 16,
-    color: '#1890ff',
-    marginBottom: 4,
-  },
-  time: {
-    fontSize: 14,
-    color: '#666',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: '#999',
+    flex: 1,
   },
 });
 
