@@ -6,7 +6,7 @@ describe('date 契约验证', () => {
   it('往返属性：parseDate(formatDate(date)) 保持日期部分不变', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') }),
+        fc.date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') }).filter(d => !isNaN(d.getTime())),
         (date) => {
           const formatted = formatDate(date);
           const parsed = parseDate(formatted);
