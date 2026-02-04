@@ -8,18 +8,26 @@ import {
   CorrectionDailyRecordVo as DailyRecordVo,
   QueryDailyRecordsDto,
   PaginatedResponse,
-  ApiResponse
+  ApiResponse,
+  UpdateCorrectionDto
 } from '@attendance/shared';
 import { 
   PaginatedCorrectionVoSchema, 
   SupplementResultVoSchema, 
-  PaginatedDailyRecordVoSchema 
+  PaginatedDailyRecordVoSchema,
+  CorrectionVoSchema
 } from '../schemas/attendance';
 
 // SW68: Get correction history
 export const getCorrections = async (params: QueryCorrectionsDto): Promise<PaginatedResponse<CorrectionVo>> => {
   const res = await api.get<unknown, ApiResponse<PaginatedResponse<CorrectionVo>>>('/attendance/corrections', { params });
   return validateResponse(PaginatedCorrectionVoSchema, res);
+};
+
+// SW68: Update correction record
+export const updateCorrection = async (id: number, data: UpdateCorrectionDto): Promise<CorrectionVo> => {
+  const res = await api.put<unknown, ApiResponse<CorrectionVo>>(`/attendance/corrections/${id}`, data);
+  return validateResponse(CorrectionVoSchema, res);
 };
 
 // SW66: Supplement Check-in
