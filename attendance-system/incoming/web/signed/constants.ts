@@ -1,0 +1,57 @@
+
+import { AttendanceRecord } from './types';
+
+export const MOCK_ATTENDANCE_DATA: AttendanceRecord[] = [
+  {
+    id: '1',
+    workday: '2026/01/14',
+    department: 'atnd01_dev',
+    employeeId: '6CS9Nu',
+    name: 'atnd01_dev_admin',
+    shiftName: '11',
+    shiftTime: '09:00-17:00',
+    clockIn: null,
+    clockOut: null,
+    status: '缺勤',
+    absenceDuration: 480,
+  },
+  {
+    id: '2',
+    workday: '2026/01/14',
+    department: 'atnd01_dev',
+    employeeId: '447',
+    name: '李华',
+    shiftName: '11',
+    shiftTime: '09:00-17:00',
+    clockIn: null,
+    clockOut: null,
+    status: '缺勤',
+    absenceDuration: 480,
+  },
+  {
+    id: '3',
+    workday: '2026/01/14',
+    department: 'atnd01_dev',
+    employeeId: '11',
+    name: '张三',
+    shiftName: '11',
+    shiftTime: '09:00-17:00',
+    clockIn: null,
+    clockOut: null,
+    status: '缺勤',
+    absenceDuration: 480,
+  },
+  {
+    id: '4',
+    workday: '2026/01/13',
+    department: 'atnd01_sales',
+    employeeId: '992',
+    name: '王五',
+    shiftName: '常规班',
+    shiftTime: '08:30-17:30',
+    clockIn: '08:25',
+    clockOut: '17:35',
+    status: '正常',
+    absenceDuration: 0,
+  }
+];
