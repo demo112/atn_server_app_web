@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, StyleSheet, FlatList } from 'react-native';
+import { Text, Card, FAB, useTheme, Searchbar, Avatar, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { Shift } from '../../types/shift';
+import AddShiftModal from '../../components/shift/AddShiftModal';
 
 const INITIAL_SHIFTS: Shift[] = [
   { id: '7', name: '默认班次_7', startTime: '09:00', endTime: '18:00' },
@@ -15,9 +16,11 @@ const INITIAL_SHIFTS: Shift[] = [
 ];
 
 export default function ShiftListScreen() {
+  const theme = useTheme();
   const navigation = useNavigation();
   const [shifts, setShifts] = useState<Shift[]>(INITIAL_SHIFTS);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const filteredShifts = useMemo(() => {
     return shifts.filter(s =>
@@ -26,80 +29,121 @@ export default function ShiftListScreen() {
     );
   }, [shifts, searchTerm]);
 
+  const handleAddShift = (newShift: Omit<Shift, 'id'>) => {
+    const shift: Shift = {
+      ...newShift,
+      id: Date.now().toString()
+    };
+    setShifts([shift, ...shifts]);
+  };
+
   const renderItem = ({ item }: { item: Shift }) => (
-    <TouchableOpacity 
-        style={styles.card}
-        onPress={() => navigation.navigate('ShiftEdit' as never, { shift: item, id: item.id } as never)}
+    <Card 
+      style={styles.card} 
+      mode="elevated"
+      onPress={() => (navigation as any).navigate('ShiftEdit', { shift: item, id: item.id })}
     >
-      <View>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <Text style={styles.cardSubtitle}>{item.startTime}-{item.endTime}</Text>
-      </View>
-      <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
-    </TouchableOpacity>
+      <Card.Content style={styles.cardContent}>
+        <Avatar.Icon 
+          size={40} 
+          icon="clock-outline" 
+          style={{ backgroundColor: theme.colors.tertiaryContainer }}
+          color={theme.colors.onTertiaryContainer}
+        />
+        <View style={styles.info}>
+          <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.name}</Text>
+          <Text variant="bodyMedium" style={{ color: theme.colors.secondary }}>
+            {item.startTime} - {item.endTime}
+          </Text>
+        </View>
+        <IconButton icon="chevron-right" size={20} />
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.searchBar}>
-            <MaterialIcons name="search" size={20} color="#94A3B8" />
-            <TextInput
-                style={styles.searchInput}
-                placeholder="搜索班次"
-                value={searchTerm}
-                onChangeText={setSearchTerm}
-            />
-        </View>
-      </View>
-
-      <View style={styles.content}>
-        <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate('ShiftEdit' as never)}
-        >
-            <MaterialIcons name="add" size={20} color="#007AFF" />
-            <Text style={styles.addButtonText}>添加班次</Text>
-        </TouchableOpacity>
-
-        <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>
-                班次列表 <Text style={styles.count}>({shifts.length}/100)</Text>
-            </Text>
-        </View>
-
-        <FlatList
-            data={filteredShifts}
-            renderItem={renderItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-                <View style={styles.emptyState}>
-                    <MaterialIcons name="search-off" size={48} color="#CBD5E1" />
-                    <Text style={styles.emptyText}>未找到相关班次</Text>
-                </View>
-            }
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.searchContainer}>
+        <Searchbar
+          placeholder="搜索班次"
+          onChangeText={setSearchTerm}
+          value={searchTerm}
+          style={styles.searchbar}
+          elevation={1}
         />
       </View>
-    </SafeAreaView>
+
+      <View style={styles.listHeader}>
+        <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+          班次列表 ({shifts.length})
+        </Text>
+      </View>
+
+      <FlatList
+        data={filteredShifts}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.secondary }}>
+            未找到相关班次
+          </Text>
+        }
+      />
+
+      <FAB
+        icon="plus"
+        label="添加班次"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="white"
+        onPress={() => setIsModalVisible(true)}
+      />
+
+      <AddShiftModal 
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onAdd={handleAddShift}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8FAFC' },
-    header: { padding: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-    searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', borderRadius: 8, paddingHorizontal: 12, height: 40 },
-    searchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: '#0F172A' },
-    content: { flex: 1, padding: 16 },
-    addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
-    addButtonText: { fontSize: 16, fontWeight: '600', color: '#0F172A', marginLeft: 8 },
-    listHeader: { marginBottom: 12 },
-    listTitle: { fontSize: 16, fontWeight: 'bold', color: '#0F172A' },
-    count: { color: '#10B981', fontWeight: '600' },
-    card: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, borderWidth: 1, borderColor: '#F1F5F9' },
-    cardTitle: { fontSize: 16, fontWeight: '600', color: '#0F172A', marginBottom: 4 },
-    cardSubtitle: { fontSize: 14, color: '#64748B', fontWeight: '500' },
-    listContent: { paddingBottom: 20 },
-    emptyState: { alignItems: 'center', justifyContent: 'center', padding: 40 },
-    emptyText: { color: '#94A3B8', marginTop: 8, fontSize: 14 }
+  container: {
+    flex: 1,
+  },
+  searchContainer: {
+    padding: 16,
+    paddingBottom: 8,
+  },
+  searchbar: {
+    backgroundColor: 'white',
+  },
+  listHeader: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  list: {
+    padding: 16,
+    paddingTop: 0,
+    paddingBottom: 80,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  info: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+  },
 });
