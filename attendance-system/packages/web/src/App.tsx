@@ -1,11 +1,13 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet, Link } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Outlet, Link, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './components/common/ToastProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthGuard } from './components/AuthGuard';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
 import EmployeeList from './pages/employee/EmployeeList';
+import EmployeeManagement from './pages/employee/EmployeeManagement';
 import DepartmentPage from './pages/department/DepartmentPage';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import ShiftPage from '@/pages/attendance/shift/ShiftPage';
@@ -57,36 +59,38 @@ export default function App(): React.ReactElement {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={
-              <AuthGuard>
-                <MainLayout />
-              </AuthGuard>
-            }>
-              <Route index element={<Home />} />
-              <Route path="users" element={<UserList />} />
-              <Route path="employees" element={<EmployeeList />} />
-              <Route path="departments" element={<DepartmentPage />} />
-              <Route path="attendance">
-                 <Route path="time-periods" element={<TimePeriodPage />} />
-                 <Route path="shifts" element={<ShiftPage />} />
-                 <Route path="schedule" element={<SchedulePage />} />
-                 <Route path="clock-records" element={<ClockRecordPage />} />
-                 <Route path="leave" element={<LeavePage />} />
-                 <Route path="correction" element={<CorrectionPage />} />
-                 <Route path="settings" element={<AttendanceSettingsPage />} />
-                 <Route path="daily-records" element={<DailyRecords />} />
+        <ToastProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <AuthGuard>
+                  <MainLayout />
+                </AuthGuard>
+              }>
+                <Route index element={<Home />} />
+                <Route path="users" element={<UserList />} />
+                <Route path="employees" element={<EmployeeManagement />} />
+                <Route path="departments" element={<DepartmentPage />} />
+                <Route path="attendance">
+                   <Route path="time-periods" element={<TimePeriodPage />} />
+                   <Route path="shifts" element={<ShiftPage />} />
+                   <Route path="schedule" element={<SchedulePage />} />
+                   <Route path="clock-records" element={<ClockRecordPage />} />
+                   <Route path="leave" element={<LeavePage />} />
+                   <Route path="correction" element={<CorrectionPage />} />
+                   <Route path="settings" element={<AttendanceSettingsPage />} />
+                   <Route path="daily-records" element={<DailyRecords />} />
+                </Route>
+                <Route path="statistics">
+                    <Route path="details" element={<AttendanceDetailsPage />} />
+                    <Route path="summary" element={<SummaryPage />} />
+                    <Route path="reports" element={<ReportPage />} />
+                </Route>
               </Route>
-              <Route path="statistics">
-                  <Route path="details" element={<AttendanceDetailsPage />} />
-                  <Route path="summary" element={<SummaryPage />} />
-                  <Route path="reports" element={<ReportPage />} />
-              </Route>
-            </Route>
-          </Routes>
-        </AuthProvider>
+            </Routes>
+          </AuthProvider>
+        </ToastProvider>
       </ErrorBoundary>
     </BrowserRouter>
   );

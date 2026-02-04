@@ -69,12 +69,12 @@
 
 | 属性 | 值 |
 |------|-----|
-| 文件 | `packages/web/src/pages/user/index.tsx`<br>`packages/web/src/pages/user/components/UserModal.tsx` |
-| 操作 | 新增 |
-| 内容 | 1. 用户列表展示 (分页/搜索)<br>2. 用户创建/编辑弹窗 |
-| 验证 | 浏览器操作用户管理功能 |
+| 文件 | `packages/web/src/pages/employee/EmployeeManagement.tsx`<br>`packages/web/src/pages/employee/components_new/*` |
+| 操作 | 重构/UI复刻 |
+| 内容 | 1. 部门树侧边栏 (DepartmentSidebar)<br>2. 人员列表 (PersonnelDashboard)<br>3. 人员添加/编辑 (AddPersonModal)<br>4. 真实数据对接 (EmployeeService/DepartmentService) |
+| 验证 | 浏览器访问 `/employees`，增删查正常 |
 | 状态 | 已完成 |
-| 预计 | 15 分钟 |
+| 预计 | 60 分钟 |
 | 依赖 | Task 3, Task 4 |
 
 ### 阶段4：App端实现 (App)

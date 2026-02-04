@@ -139,6 +139,56 @@ interface UpdateUserDto {
 }
 ```
 
+### 3. Employee 模块
+
+#### GET /api/v1/employees
+
+获取人员列表。
+
+**Request (Query):**
+```typescript
+interface GetEmployeesDto {
+  page?: number
+  pageSize?: number
+  keyword?: string // 搜索 name 或 idNumber
+  deptId?: number // 部门筛选
+}
+```
+
+**Response:**
+```typescript
+type Response = PaginatedResponse<EmployeeVo>
+```
+
+#### POST /api/v1/employees
+
+创建人员。
+
+**Request:**
+```typescript
+interface CreateEmployeeDto {
+  name: string
+  employeeNo: string
+  deptId: number
+  hireDate: string
+  phone?: string
+  email?: string
+}
+```
+
+#### GET /api/v1/departments/tree
+
+获取部门树。
+
+**Response:**
+```typescript
+interface DepartmentVo {
+  id: number
+  name: string
+  children?: DepartmentVo[]
+}
+```
+
 ## 文件变更清单
 
 | 文件 | 操作 | 内容 |
