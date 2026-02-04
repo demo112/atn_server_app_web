@@ -32,15 +32,18 @@ export class AuthService {
       throw AppError.badRequest('Invalid credentials');
     }
 
+    // Explicitly cast role to string to ensure compatibility
+    const role = user.role as unknown as string;
+
     const token = jwt.sign(
       { 
         id: user.id, 
         username: user.username, 
-        role: (user as any).role,
+        role: role,
         employeeId: user.employeeId 
-      } as object,
+      },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN as any }
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     return {
@@ -48,7 +51,7 @@ export class AuthService {
       user: {
         id: user.id,
         username: user.username,
-        role: (user as any).role as UserRole,
+        role: role as UserRole,
         name: user.employee?.name,
         employeeId: user.employeeId ?? undefined
       }
@@ -65,10 +68,12 @@ export class AuthService {
       throw AppError.notFound('User');
     }
 
+    const role = user.role as unknown as string;
+
     return {
       id: user.id,
       username: user.username,
-      role: (user as any).role as UserRole,
+      role: role as UserRole,
       employeeId: user.employeeId ?? undefined,
       permissions: [] // TODO: Implement permissions based on role
     };

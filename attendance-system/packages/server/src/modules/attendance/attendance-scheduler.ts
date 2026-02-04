@@ -31,7 +31,12 @@ export class AttendanceScheduler {
   async init() {
     // Lazy init Redis connection
     if (!this.connection) {
-       this.connection = await this.createRedisConnection();
+       try {
+         this.connection = await this.createRedisConnection();
+       } catch (err) {
+         logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to initialize Redis connection. Attendance Scheduler will be disabled.');
+         return;
+       }
        
        this.connection.on('error', (err) => {
          logger.error({ err }, 'Redis connection error');
