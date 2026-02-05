@@ -129,8 +129,12 @@ export class AttendanceCorrectionController {
       query.employeeId = user.employeeId;
     }
     
-    const result = await service.getDailyRecords(query);
-    
-    res.json(success(result));
+    try {
+      const result = await service.getDailyRecords(query);
+      res.json(success(result));
+    } catch (error) {
+      logger.error({ error, query, user: user.id }, 'getDailyRecords failed');
+      throw error;
+    }
   }
 }

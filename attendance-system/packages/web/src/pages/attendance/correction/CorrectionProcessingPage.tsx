@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as correctionService from '../../../services/correction';
-import { DepartmentTree } from '@/components/common/DepartmentTree';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 import { useToast } from '@/components/common/ToastProvider';
 import { CheckInDialog } from './components/CheckInDialog';
 import { CheckOutDialog } from './components/CheckOutDialog';
@@ -34,13 +34,17 @@ const getStatusStyle = (status: string) => {
 const CorrectionProcessingPage: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DailyRecordVo[]>([]);
   const [total, setTotal] = useState(0);
   
   // Modal State
-  const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<DailyRecordVo | null>(null);
+
+  // Selection Modal State
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
 
   // Filter State
   const [params, setParams] = useState({
@@ -48,32 +52,44 @@ const CorrectionProcessingPage: React.FC = () => {
     pageSize: 20,
     startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-    deptId: undefined as number | undefined,
+    deptId: undefined as number | undefined | null,
     keyword: '',
     status: '' as AttendanceStatus | '' | 'all',
   });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await correctionService.getDailyRecords({
+      const queryParams: any = {
         page: params.page,
         pageSize: params.pageSize,
         startDate: params.startDate,
         endDate: params.endDate,
-        deptId: params.deptId,
-        employeeName: params.keyword, // API参数映射
         status: params.status === 'all' ? undefined : (params.status || 'abnormal') as any,
-      });
+      };
+
+      if (selectedItems.length > 0) {
+        const item = selectedItems[0];
+        if (item.type === 'department') {
+          queryParams.deptId = item.id;
+        } else {
+          // queryParams.employeeId = item.id; // Use employeeId if supported, else use name
+          queryParams.employeeName = item.name; 
+        }
+      }
+
+      const res = await correctionService.getDailyRecords(queryParams);
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {
-      toast.error('获取考勤数据失败');
+      // toast handled by request interceptor
       console.error(error);
+      setError('加载失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, [params, toast]);
+  }, [params, selectedItems]);
 
   useEffect(() => {
     fetchData();
@@ -93,6 +109,7 @@ const CorrectionProcessingPage: React.FC = () => {
       keyword: '',
       status: '',
     });
+    setSelectedItems([]);
   };
 
   const handleDateShortcut = (type: 'yesterday' | 'last7' | 'last30' | 'month') => {
@@ -139,17 +156,7 @@ const CorrectionProcessingPage: React.FC = () => {
   const totalPages = Math.ceil(total / params.pageSize);
 
   return (
-    <div className="flex h-full bg-slate-50">
-      {/* Sidebar (DepartmentTree) */}
-      <div className="w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-4 border-b border-slate-100 font-medium text-slate-700">
-          部门筛选
-        </div>
-        <div className="flex-1 overflow-auto p-2">
-          <DepartmentTree onSelect={(id) => setParams(prev => ({ ...prev, deptId: id, page: 1 }))} />
-        </div>
-      </div>
-
+    <div className="flex h-full bg-slate-50 flex-col">
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
         {/* Filters Header - Cloning incoming/web/signed/App.tsx structure */}
@@ -247,6 +254,11 @@ const CorrectionProcessingPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                  <tr><td colSpan={11} className="px-4 py-8 text-center text-slate-500">加载中...</td></tr>
+              ) : error ? (
+                 <tr><td colSpan={11} className="px-4 py-8 text-center text-red-500">
+                    <span className="material-icons text-4xl block mb-2 text-red-300">error_outline</span>
+                    {error}
+                 </td></tr>
               ) : data.length === 0 ? (
                  <tr><td colSpan={11} className="px-4 py-8 text-center text-slate-500">
                     <span className="material-icons text-4xl block mb-2 text-slate-300">inventory_2</span>

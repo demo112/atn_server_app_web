@@ -57,4 +57,63 @@ describe('AttendanceCorrectionService Query', () => {
       })
     );
   });
+
+  it('should not filter by status when status is undefined (all records)', async () => {
+    // Setup
+    mockPrisma.attDailyRecord.count.mockResolvedValue(0);
+    mockPrisma.attDailyRecord.findMany.mockResolvedValue([]);
+
+    // Execute
+    await service.getDailyRecords({ status: undefined } as any);
+
+    // Verify
+    expect(mockPrisma.attDailyRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({
+          status: expect.anything()
+        })
+      })
+    );
+  });
+
+  it('should filter by normal status when status is "normal"', async () => {
+    // Setup
+    mockPrisma.attDailyRecord.count.mockResolvedValue(0);
+    mockPrisma.attDailyRecord.findMany.mockResolvedValue([]);
+
+    // Execute
+    await service.getDailyRecords({ status: 'normal' } as any);
+
+    // Verify
+    expect(mockPrisma.attDailyRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: 'normal'
+        })
+      })
+    );
+  });
+
+  it('should ignore invalid deptId', async () => {
+    // Setup
+    mockPrisma.attDailyRecord.count.mockResolvedValue(0);
+    mockPrisma.attDailyRecord.findMany.mockResolvedValue([]);
+
+    // Execute
+    await service.getDailyRecords({ deptId: 'invalid' } as any);
+
+    // Verify
+    // Should not have deptId in where clause or should not be NaN
+    const callArgs = mockPrisma.attDailyRecord.findMany.mock.calls[0][0];
+    const whereArg = callArgs?.where;
+    const employeeArg = whereArg?.employee;
+    
+    // If it was added as NaN, this expectation might fail if we expect it to be undefined
+    // Or we can explicitly check it is undefined
+    if (employeeArg) {
+       expect(employeeArg.deptId).toBeUndefined();
+    } else {
+       expect(employeeArg).toBeUndefined();
+    }
+  });
 });

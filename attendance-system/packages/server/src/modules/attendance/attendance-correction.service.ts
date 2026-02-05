@@ -206,9 +206,15 @@ export class AttendanceCorrectionService {
 
     if (deptId || employeeName || dto.employeeId) {
       const employeeWhere: Prisma.EmployeeWhereInput = {};
-      if (deptId) employeeWhere.deptId = Number(deptId);
+      if (deptId) {
+        const id = Number(deptId);
+        if (!isNaN(id)) employeeWhere.deptId = id;
+      }
       if (employeeName) employeeWhere.name = { contains: employeeName };
-      if (dto.employeeId) employeeWhere.id = Number(dto.employeeId);
+      if (dto.employeeId) {
+        const id = Number(dto.employeeId);
+        if (!isNaN(id)) employeeWhere.id = id;
+      }
       where.employee = employeeWhere;
     }
 
