@@ -95,6 +95,9 @@
 - **GET** `/api/v1/attendance/schedules`
 - **Query**: `employeeId`, `departmentId`, `startDate`, `endDate`
 
+### 2.4 约束限制
+- **最大跨度**：单次排班创建跨度不能超过 1 年 (366天)。超出抛出 `ERR_INVALID_DATE_RANGE` (400)。
+
 ## 3. 数据模型 (Prisma)
 沿用现有 `AttSchedule` 模型：
 ```prisma

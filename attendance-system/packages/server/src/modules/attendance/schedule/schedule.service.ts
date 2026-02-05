@@ -2,12 +2,16 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../../common/db/prisma';
 import { AppError } from '../../../common/errors';
 import { CreateScheduleDto, BatchCreateScheduleDto, ScheduleVo, ScheduleQueryDto } from '@attendance/shared';
+import { createLogger } from '../../../common/logger';
+
+const logger = createLogger('ScheduleService');
 
 export class ScheduleService {
   /**
    * 创建排班 (单人)
    */
   async create(data: CreateScheduleDto): Promise<ScheduleVo> {
+    logger.info({ data }, 'Starting to create schedule');
     const { employeeId, shiftId, startDate, endDate, force } = data;
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -21,6 +25,13 @@ export class ScheduleService {
       throw new AppError('ERR_INVALID_DATE_RANGE', 'Start date must be before end date', 400);
     }
 
+    // 验证日期跨度 (限制为1年，防止过大事务)
+    const MAX_DAYS = 366;
+    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysDiff > MAX_DAYS) {
+      throw new AppError('ERR_INVALID_DATE_RANGE', `Date range cannot exceed ${MAX_DAYS} days`, 400);
+    }
+
     // 验证员工和班次是否存在
     const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
     if (!employee) throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
@@ -28,12 +39,17 @@ export class ScheduleService {
     const shift = await prisma.attShift.findUnique({ where: { id: shiftId } });
     if (!shift) throw new AppError('ERR_SHIFT_NOT_FOUND', 'Shift not found', 404);
 
-    return await prisma.$transaction(async (tx) => {
-      const created = await this.createWithTx(tx, data);
-      return this.mapToVo(created);
-    }, {
-      timeout: 20000 // 增加超时时间到 20s
-    });
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const created = await this.createWithTx(tx, data);
+        return this.mapToVo(created);
+      }, {
+        timeout: 60000 // 增加超时时间到 60s
+      });
+    } catch (err) {
+      logger.error({ err, data }, 'Failed to create schedule transaction');
+      throw err;
+    }
   }
 
   /**
@@ -116,9 +132,10 @@ export class ScheduleService {
         throw new AppError('ERR_SCHEDULE_CONFLICT', `Employee ${employeeId} has conflicts`, 409);
       }
       
-      for (const conflict of conflicts) {
-        await this.resolveConflict(tx, conflict, start, end);
-      }
+      // 并发解决冲突
+      await Promise.all(conflicts.map(conflict => 
+        this.resolveConflict(tx, conflict, start, end)
+      ));
     }
 
     return await tx.attSchedule.create({
@@ -221,13 +238,22 @@ export class ScheduleService {
   }
 
   private mapToVo(schedule: any): ScheduleVo {
-    return {
-      ...schedule,
-      startDate: schedule.startDate.toISOString().split('T')[0],
-      endDate: schedule.endDate.toISOString().split('T')[0],
-      shiftName: schedule.shift?.name,
-      employeeName: schedule.employee?.name,
-    };
+    if (!schedule) {
+      logger.error('mapToVo received null schedule');
+      throw new Error('Schedule is null');
+    }
+    try {
+      return {
+        ...schedule,
+        startDate: schedule.startDate instanceof Date ? schedule.startDate.toISOString().split('T')[0] : schedule.startDate,
+        endDate: schedule.endDate instanceof Date ? schedule.endDate.toISOString().split('T')[0] : schedule.endDate,
+        shiftName: schedule.shift?.name,
+        employeeName: schedule.employee?.name,
+      };
+    } catch (err) {
+      logger.error({ err, schedule }, 'mapToVo failed to map fields');
+      throw err;
+    }
   }
 
   /**
