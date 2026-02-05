@@ -157,7 +157,7 @@ const LeaveScreen = () => {
             <ScrollView contentContainerStyle={styles.form}>
               <TextInput
                 mode="outlined"
-                label="类型 (annual, sick, etc.)"
+                label="类型（年假、病假等）"
                 value={formData.type}
                 onChangeText={(text) => setFormData({...formData, type: text as LeaveType})}
                 style={styles.input}
