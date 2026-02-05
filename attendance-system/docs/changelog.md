@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Docs: 升级 Redis 版本要求至 6.2+
 
 ### Fixed
+- **[SW71] 考勤明细与日历**
+  - Web: 修复考勤重算请求 Zod 校验失败的问题 (允许后端返回非 void 数据)
 - **[UA2] 人员与部门管理**
   - Server: 修复部门删除操作超时问题 (由 Redis 连接失败导致)
   - Server: 修复人员创建接口字段校验问题
