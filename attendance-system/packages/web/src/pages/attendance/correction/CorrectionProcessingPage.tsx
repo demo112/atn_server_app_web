@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as correctionService from '../../../services/correction';
-import { DepartmentSelect } from '../../../components/DepartmentSelect';
+import { DepartmentTree } from '@/components/common/DepartmentTree';
 import { useToast } from '@/components/common/ToastProvider';
 import { CheckInDialog } from './components/CheckInDialog';
 import { CheckOutDialog } from './components/CheckOutDialog';
@@ -113,57 +113,58 @@ const CorrectionProcessingPage: React.FC = () => {
   const totalPages = Math.ceil(total / params.pageSize);
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Filters Header - Cloning incoming/web/signed/App.tsx structure */}
-      <div className="bg-white px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-40">
-        <div className="flex items-center space-x-6 text-sm">
-          <div className="flex items-center space-x-3">
-            <span className="text-slate-500">起止时间</span>
-            <div className="flex items-center space-x-2">
-              <input 
-                type="date" 
-                value={params.startDate}
-                onChange={(e) => setParams({ ...params, startDate: e.target.value })}
-                className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
-              />
-              <span className="text-slate-400">-</span>
-              <input 
-                type="date" 
-                value={params.endDate}
-                onChange={(e) => setParams({ ...params, endDate: e.target.value })}
-                className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <span className="text-slate-500">部门</span>
-            <div className="w-40">
-              <DepartmentSelect
-                value={params.deptId}
-                onChange={(e) => setParams({ ...params, deptId: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full border-slate-300 rounded text-sm py-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-             <span className="text-slate-500">状态</span>
-             <select
-                value={params.status}
-                onChange={(e) => setParams({ ...params, status: e.target.value as AttendanceStatus })}
-                className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
-             >
-               <option value="">全部</option>
-               <option value="normal">正常</option>
-               <option value="late">迟到</option>
-               <option value="early_leave">早退</option>
-               <option value="absent">缺勤</option>
-             </select>
-          </div>
+    <div className="flex h-full bg-slate-50">
+      {/* Sidebar (DepartmentTree) */}
+      <div className="w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
+        <div className="p-4 border-b border-slate-100 font-medium text-slate-700">
+          部门筛选
         </div>
+        <div className="flex-1 overflow-auto p-2">
+          <DepartmentTree onSelect={(id) => setParams(prev => ({ ...prev, deptId: id, page: 1 }))} />
+        </div>
+      </div>
 
-        <div className="flex items-center space-x-2">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
+        {/* Filters Header - Cloning incoming/web/signed/App.tsx structure */}
+        <div className="bg-white px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-40">
+          <div className="flex items-center space-x-6 text-sm">
+            <div className="flex items-center space-x-3">
+              <span className="text-slate-500">起止时间</span>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="date" 
+                  value={params.startDate}
+                  onChange={(e) => setParams({ ...params, startDate: e.target.value })}
+                  className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
+                />
+                <span className="text-slate-400">-</span>
+                <input 
+                  type="date" 
+                  value={params.endDate}
+                  onChange={(e) => setParams({ ...params, endDate: e.target.value })}
+                  className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+               <span className="text-slate-500">状态</span>
+               <select
+                  value={params.status}
+                  onChange={(e) => setParams({ ...params, status: e.target.value as AttendanceStatus })}
+                  className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
+               >
+                 <option value="">全部</option>
+                 <option value="normal">正常</option>
+                 <option value="late">迟到</option>
+                 <option value="early_leave">早退</option>
+                 <option value="absent">缺勤</option>
+               </select>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
           <div className="relative group">
             <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-primary">search</span>
             <input 
@@ -330,6 +331,7 @@ const CorrectionProcessingPage: React.FC = () => {
           />
         </>
       )}
+      </div>
     </div>
   );
 };
