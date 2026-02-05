@@ -28,15 +28,23 @@ export class AttendanceCorrectionService {
    * 补签到
    */
   async checkIn(dto: SupplementCheckInDto, operatorId: number): Promise<SupplementResultVo> {
-    this.logger.info({ dto, operatorId }, 'Starting check-in correction');
+    this.logger.info({ dto, operatorId }, 'checkIn: start');
     const recordId = BigInt(dto.dailyRecordId);
     const checkInTime = dayjs(dto.checkInTime).toDate();
 
     return await prisma.$transaction(async (tx) => {
-      // 1. 创建补签记录
+      // 1. 获取 DailyRecord 以确定 EmployeeId
+      const dailyRecord = await tx.attDailyRecord.findUnique({
+        where: { id: recordId }
+      });
+      if (!dailyRecord) {
+        throw new AppError('ERR_RECORD_NOT_FOUND', 'Daily record not found', 404);
+      }
+
+      // 2. 创建补签记录
       const correction = await tx.attCorrection.create({
         data: {
-          employeeId: 0, // 稍后修正，需先查询 dailyRecord
+          employeeId: dailyRecord.employeeId,
           dailyRecordId: recordId,
           type: CorrectionType.check_in,
           correctionTime: checkInTime,
@@ -44,9 +52,10 @@ export class AttendanceCorrectionService {
           remark: dto.remark
         }
       });
+      this.logger.info({ correctionId: correction.id }, 'checkIn: correction created');
 
-      // 2. 重算考勤 (会自动修正 correction 的 employeeId)
-      const updatedRecord = await this.recalculateDailyRecord(recordId, tx, correction.id);
+      // 3. 重算考勤
+      const updatedRecord = await this.recalculateDailyRecord(recordId, tx);
       
       return {
         success: true,
@@ -59,30 +68,49 @@ export class AttendanceCorrectionService {
    * 补签退
    */
   async checkOut(dto: SupplementCheckOutDto, operatorId: number): Promise<SupplementResultVo> {
+    this.logger.info({ dto, operatorId }, 'checkOut: start');
     const recordId = BigInt(dto.dailyRecordId);
     const checkOutTime = dayjs(dto.checkOutTime).toDate();
 
-    return await prisma.$transaction(async (tx) => {
-      // 1. 创建补签记录
-      const correction = await tx.attCorrection.create({
-        data: {
-          employeeId: 0, // 稍后修正
-          dailyRecordId: recordId,
-          type: CorrectionType.check_out,
-          correctionTime: checkOutTime,
-          operatorId,
-          remark: dto.remark
+    try {
+      return await prisma.$transaction(async (tx) => {
+        this.logger.info('checkOut: transaction start');
+        
+        // 1. 获取 DailyRecord 以确定 EmployeeId
+        const dailyRecord = await tx.attDailyRecord.findUnique({
+          where: { id: recordId }
+        });
+        if (!dailyRecord) {
+          throw new AppError('ERR_RECORD_NOT_FOUND', 'Daily record not found', 404);
         }
-      });
 
-      // 2. 重算考勤
-      const updatedRecord = await this.recalculateDailyRecord(recordId, tx, correction.id);
+        // 2. 创建补签记录
+        const correction = await tx.attCorrection.create({
+          data: {
+            employeeId: dailyRecord.employeeId,
+            dailyRecordId: recordId,
+            type: CorrectionType.check_out,
+            correctionTime: checkOutTime,
+            operatorId,
+            remark: dto.remark
+          }
+        });
+        this.logger.info({ correctionId: correction.id }, 'checkOut: correction created');
 
-      return {
-        success: true,
-        dailyRecord: this.toDailyRecordVo(updatedRecord)
-      };
-    });
+        // 3. 重算考勤
+        this.logger.info('checkOut: calling recalculateDailyRecord');
+        const updatedRecord = await this.recalculateDailyRecord(recordId, tx);
+        this.logger.info('checkOut: recalculation done');
+
+        return {
+          success: true,
+          dailyRecord: this.toDailyRecordVo(updatedRecord)
+        };
+      }, { timeout: 10000 });
+    } catch (error) {
+      this.logger.error(error, 'checkOut: failed');
+      throw error;
+    }
   }
 
   /**
@@ -168,7 +196,10 @@ export class AttendanceCorrectionService {
     pageSize: number;
     totalPages: number;
   }> {
+    const logger = createLogger('AttendanceCorrectionService');
     const { page = 1, pageSize = 20, deptId, startDate, endDate, status, employeeName } = dto;
+    logger.info({ dto }, 'getDailyRecords called with params');
+
     const skip = (Number(page) - 1) * Number(pageSize);
 
     const where: Prisma.AttDailyRecordWhereInput = {};
@@ -189,8 +220,16 @@ export class AttendanceCorrectionService {
     }
 
     if (status) {
-      where.status = status as AttendanceStatus;
+      if ((status as string) === 'abnormal') {
+        where.status = {
+          in: ['late', 'early_leave', 'absent']
+        };
+      } else {
+        where.status = status as AttendanceStatus;
+      }
     }
+    
+    logger.info({ where }, 'getDailyRecords built where clause');
 
     const [total, items] = await Promise.all([
       prisma.attDailyRecord.count({ where }),
@@ -272,9 +311,9 @@ export class AttendanceCorrectionService {
    */
   private async recalculateDailyRecord(
     dailyRecordId: bigint, 
-    tx: Prisma.TransactionClient,
-    currentCorrectionId?: number
+    tx: Prisma.TransactionClient
   ) {
+    this.logger.debug({ dailyRecordId: dailyRecordId.toString() }, 'recalculateDailyRecord: start');
     // 1. 获取每日记录及上下文
     const record = await tx.attDailyRecord.findUnique({
       where: { id: dailyRecordId },
@@ -292,18 +331,11 @@ export class AttendanceCorrectionService {
       throw new AppError('ERR_PERIOD_NOT_FOUND', 'Period not found', 500);
     }
 
-    // 修正 currentCorrectionId 的 employeeId (如果在创建时未设置)
-    if (currentCorrectionId) {
-      await tx.attCorrection.update({
-        where: { id: currentCorrectionId },
-        data: { employeeId: record.employeeId }
-      });
-    }
-
     // 2. 获取当日所有相关数据
     const dayStart = dayjs(record.workDate).startOf('day').toDate();
     const dayEnd = dayjs(record.workDate).endOf('day').toDate();
 
+    this.logger.debug('recalculateDailyRecord: fetching related data');
     const [clockRecords, corrections, leaves] = await Promise.all([
       tx.attClockRecord.findMany({
         where: { 
@@ -315,7 +347,8 @@ export class AttendanceCorrectionService {
         }
       }),
       tx.attCorrection.findMany({
-        where: { dailyRecordId }
+        where: { dailyRecordId },
+        orderBy: { createdAt: 'desc' } // 按创建时间倒序，确保取到最新的
       }),
       tx.attLeave.findMany({
         where: { 
@@ -327,6 +360,11 @@ export class AttendanceCorrectionService {
         }
       })
     ]);
+    this.logger.debug({ 
+      clockCount: clockRecords.length, 
+      correctionCount: corrections.length, 
+      leaveCount: leaves.length 
+    }, 'recalculateDailyRecord: data fetched');
 
     // 3. 确定有效打卡时间
     // 规则：优先取补签，其次取打卡
@@ -365,7 +403,9 @@ export class AttendanceCorrectionService {
       checkOutTime: checkOutTime || null
     };
 
+    this.logger.debug('recalculateDailyRecord: calling calculator');
     const result = this.calculator.calculate(tempRecord, record.period, leaves);
+    this.logger.debug({ result }, 'recalculateDailyRecord: calculation done');
 
     // 5. 更新数据库
     const updated = await tx.attDailyRecord.update({
@@ -387,6 +427,7 @@ export class AttendanceCorrectionService {
       }
     });
 
+    this.logger.debug('recalculateDailyRecord: update done');
     return updated;
   }
 

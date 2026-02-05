@@ -50,7 +50,7 @@ const CorrectionProcessingPage: React.FC = () => {
     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
     deptId: undefined as number | undefined,
     keyword: '',
-    status: '' as AttendanceStatus | '',
+    status: '' as AttendanceStatus | '' | 'all',
   });
 
   const fetchData = useCallback(async () => {
@@ -63,7 +63,7 @@ const CorrectionProcessingPage: React.FC = () => {
         endDate: params.endDate,
         deptId: params.deptId,
         employeeName: params.keyword, // API参数映射
-        status: params.status || undefined,
+        status: params.status === 'all' ? undefined : (params.status || 'abnormal') as any,
       });
       setData(res.items || []);
       setTotal(res.total);
@@ -185,10 +185,11 @@ const CorrectionProcessingPage: React.FC = () => {
                <span className="text-slate-500">状态</span>
                <select
                   value={params.status}
-                  onChange={(e) => setParams({ ...params, status: e.target.value as AttendanceStatus })}
+                  onChange={(e) => setParams({ ...params, status: e.target.value as any })}
                   className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
                >
-                 <option value="">全部</option>
+                 <option value="">全部异常</option>
+                 <option value="all">所有记录</option>
                  <option value="normal">正常</option>
                  <option value="late">迟到</option>
                  <option value="early_leave">早退</option>
