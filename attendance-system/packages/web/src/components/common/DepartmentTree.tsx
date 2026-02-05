@@ -3,18 +3,20 @@ import { departmentService } from '@/services/department';
 import { DepartmentVO } from '@attendance/shared';
 
 interface DepartmentTreeProps {
-  onSelect: (id: number) => void;
+  onSelect: (id: number | null) => void;
   selectedId?: number | null;
 }
 
 const TreeNode: React.FC<{
   node: DepartmentVO;
   selectedId?: number | null;
-  onSelect: (id: number) => void;
+  onSelect: (id: number | null) => void;
   level?: number;
 }> = ({ node, selectedId, onSelect, level = 0 }) => {
   const isSelected = selectedId === node.id;
   const hasChildren = node.children && node.children.length > 0;
+  // 虚拟根节点 ID 为 -1
+  const isVirtualRoot = node.id === -1;
 
   return (
     <li className="select-none">
@@ -27,7 +29,12 @@ const TreeNode: React.FC<{
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={(e) => {
           e.stopPropagation();
-          onSelect(node.id);
+          // 如果是虚拟根节点，点击视为取消选择或选择空
+          if (isVirtualRoot) {
+            onSelect(null);
+          } else {
+            onSelect(node.id);
+          }
         }}
       >
         <span className="mr-2 text-base">
@@ -62,7 +69,19 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, select
       try {
         setLoading(true);
         const data = await departmentService.getTree();
-        setTreeData(data);
+        
+        // 添加虚拟根节点
+        const virtualRoot: DepartmentVO = {
+          id: -1,
+          name: '全公司',
+          parentId: null,
+          sortOrder: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          children: data
+        };
+        
+        setTreeData([virtualRoot]);
       } catch (err) {
         console.error('Failed to fetch department tree:', err);
         setError('加载部门失败');
