@@ -107,7 +107,7 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
             <div className="space-y-1">
               <p className="text-xs text-blue-700 font-semibold leading-relaxed">温馨提示：</p>
               <p className="text-xs text-blue-600/80 leading-relaxed">
-                补签申请提交后，请联系部门主管及时审批。请假/补签操作不会自动计算考勤，请到“考勤明细”界面手动刷新计算。
+                补签申请提交后，系统将自动重新计算考勤结果。
               </p>
             </div>
           </div>

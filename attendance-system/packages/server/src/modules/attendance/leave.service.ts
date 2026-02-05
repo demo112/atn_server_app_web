@@ -4,9 +4,39 @@ import { AppError } from '../../common/errors';
 import { CreateLeaveDto, UpdateLeaveDto, LeaveQueryDto, AttLeaveVo } from './leave.dto';
 import { Prisma, LeaveStatus } from '@prisma/client';
 import invariant from 'tiny-invariant';
+import dayjs from 'dayjs';
+import { attendanceScheduler } from './attendance-scheduler';
 
 export class LeaveService {
   private logger = createLogger('LeaveService');
+
+  /**
+   * 触发考勤重算
+   */
+  private async triggerRecalculation(employeeId: number, startTime: Date, endTime: Date) {
+    try {
+      const start = dayjs(startTime).startOf('day');
+      const end = dayjs(endTime).endOf('day');
+      
+      let current = start;
+      while (current.isBefore(end) || current.isSame(end, 'day')) {
+        const nextDay = current.add(1, 'day');
+        // 异步触发，不阻塞主流程，但为了保证"同步显示"，这里最好 await
+        // calculateEmployeeDaily 是 async 的
+        await attendanceScheduler.calculateEmployeeDaily(
+          employeeId, 
+          current.toDate(), 
+          nextDay.toDate()
+        );
+        current = nextDay;
+      }
+    } catch (error) {
+      this.logger.error({ error, employeeId, startTime, endTime }, 'Failed to trigger recalculation');
+      // 不抛出错误，以免影响请假主流程? 
+      // 用户要求"同步显示"，如果失败了就不同步了。最好是 catch log 但不阻断，或者阻断?
+      // 考虑到这是"附加"功能，记录日志即可。
+    }
+  }
 
   /**
    * 转换为 VO
@@ -93,6 +123,12 @@ export class LeaveService {
     });
 
     this.logger.info(`Created leave record: Emp ${record.employeeId} Type ${record.type} (ID: ${record.id})`);
+    
+    // 触发重算 (如果已审批)
+    if (record.status === LeaveStatus.approved) {
+      await this.triggerRecalculation(record.employeeId, record.startTime, record.endTime);
+    }
+
     return this.mapToVo(record);
   }
 
@@ -206,6 +242,18 @@ export class LeaveService {
     });
 
     this.logger.info(`Updated leave record: ID ${id}`);
+
+    // 触发重算
+    // 1. 如果原记录是已通过，需要重算原时间段 (清除旧影响)
+    if (record.status === LeaveStatus.approved) {
+       await this.triggerRecalculation(record.employeeId, record.startTime, record.endTime);
+    }
+    
+    // 2. 如果新记录是已通过，需要重算新时间段 (应用新影响)
+    if (updated.status === LeaveStatus.approved) {
+       await this.triggerRecalculation(updated.employeeId, updated.startTime, updated.endTime);
+    }
+
     return this.mapToVo(updated);
   }
 
@@ -229,6 +277,11 @@ export class LeaveService {
     });
     
     this.logger.info(`Cancelled leave record: ID ${id}`);
+
+    if (record.status === LeaveStatus.approved) {
+      await this.triggerRecalculation(record.employeeId, record.startTime, record.endTime);
+    }
+
     return this.mapToVo(updated);
   }
 }
