@@ -1,11 +1,10 @@
-console.log('DEBUG: Starting index.ts');
-process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
-process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
-
 import 'reflect-metadata';
 import 'dotenv/config';
 import { app } from './app';
 import { logger } from './common/logger';
+
+process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
+process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
 
 logger.info('Starting server initialization...');
 

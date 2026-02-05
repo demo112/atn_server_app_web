@@ -38,7 +38,7 @@ export class AttendanceSettingsService {
     
     // 转换为键值对对象
     const result: any = {};
-    settings.forEach((s) => {
+    settings.forEach((s: any) => {
       result[s.key] = s.value;
     });
 

@@ -385,6 +385,15 @@ export class AttendanceScheduler {
     try {
       return await this.tryConnect(config, 'Primary');
     } catch (error) {
+      // Check if primary is already localhost
+      const isLocalhost = config.host === 'localhost' || config.host === '127.0.0.1';
+      const isDefaultPort = parseInt(String(config.port)) === 6379;
+
+      if (isLocalhost && isDefaultPort) {
+         logger.warn('Failed to connect to local Redis. Attendance Scheduler will be disabled.');
+         throw error;
+      }
+
       logger.warn({ error }, 'Failed to connect to primary Redis, trying local fallback');
       
       const localConfig = {

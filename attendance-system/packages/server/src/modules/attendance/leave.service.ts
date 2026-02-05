@@ -250,14 +250,18 @@ export class LeaveService {
     return this.mapToVo(updated);
   }
 
-  private async triggerRecalculation(employeeId: number, start: Date, end: Date) {
-      const startDate = dayjs(start).format('YYYY-MM-DD');
-      const endDate = dayjs(end).format('YYYY-MM-DD');
-      // Trigger calculation and ignore batchId
+  /**
+   * 触发重算
+   */
+  private async triggerRecalculation(employeeId: number, startTime: Date, endTime: Date) {
+    try {
       await attendanceScheduler.triggerCalculation({
-          startDate,
-          endDate,
-          employeeIds: [employeeId]
+        employeeIds: [employeeId],
+        startDate: dayjs(startTime).format('YYYY-MM-DD'),
+        endDate: dayjs(endTime).format('YYYY-MM-DD')
       });
+    } catch (err) {
+      this.logger.error({ err, employeeId }, 'Failed to trigger attendance recalculation');
+    }
   }
 }
