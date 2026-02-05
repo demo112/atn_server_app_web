@@ -43,8 +43,9 @@ const GroupList: React.FC<GroupListProps> = ({ onAdd, onEdit }) => {
 
       {/* Table Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
+            <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-sm font-semibold text-gray-600">考勤组名称</th>
               <th className="px-6 py-4 text-sm font-semibold text-gray-600">人数</th>
@@ -91,6 +92,7 @@ const GroupList: React.FC<GroupListProps> = ({ onAdd, onEdit }) => {
             ))}
           </tbody>
         </table>
+      </div>
 
         {/* Pagination */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">

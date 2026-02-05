@@ -11,7 +11,7 @@ const ShiftTable: React.FC<ShiftTableProps> = ({ shifts, onDelete, onEdit }) => 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 h-[48px]">
               <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">班次名称</th>

@@ -64,8 +64,8 @@ const PunchTable: React.FC<PunchTableProps> = ({ data, loading }) => {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700 min-w-max">
-      <table className="w-full text-sm text-left border-collapse">
+    <div className="flex-1 overflow-x-auto bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700">
+      <table className="w-full text-sm text-left border-collapse min-w-[1000px]">
         <thead className="bg-gray-50/80 dark:bg-gray-800/80 sticky top-0 z-10 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm">
           <tr>
             <th className="px-6 py-3.5 font-semibold">姓名</th>

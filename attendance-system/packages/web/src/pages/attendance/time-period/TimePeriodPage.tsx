@@ -90,8 +90,8 @@ const TimePeriodPage: React.FC = (): React.ReactElement => {
 
         {/* Table */}
         <div className="flex-1 overflow-auto p-4">
-          <div className="overflow-hidden border border-gray-200 rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="min-w-[1000px] divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>

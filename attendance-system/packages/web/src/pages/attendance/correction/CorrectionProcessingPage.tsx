@@ -95,6 +95,32 @@ const CorrectionProcessingPage: React.FC = () => {
     });
   };
 
+  const handleDateShortcut = (type: 'yesterday' | 'last7' | 'last30' | 'month') => {
+    let start = '';
+    let end = '';
+    const today = dayjs();
+    
+    switch (type) {
+      case 'yesterday':
+        start = today.subtract(1, 'day').format('YYYY-MM-DD');
+        end = today.subtract(1, 'day').format('YYYY-MM-DD');
+        break;
+      case 'last7':
+        start = today.subtract(6, 'day').format('YYYY-MM-DD');
+        end = today.format('YYYY-MM-DD');
+        break;
+      case 'last30':
+        start = today.subtract(29, 'day').format('YYYY-MM-DD');
+        end = today.format('YYYY-MM-DD');
+        break;
+      case 'month':
+        start = today.startOf('month').format('YYYY-MM-DD');
+        end = today.endOf('month').format('YYYY-MM-DD');
+        break;
+    }
+    setParams(prev => ({ ...prev, startDate: start, endDate: end, page: 1 }));
+  };
+
   const openCheckIn = (record: DailyRecordVo) => {
     setSelectedRecord(record);
     setCheckInOpen(true);
@@ -120,7 +146,7 @@ const CorrectionProcessingPage: React.FC = () => {
           部门筛选
         </div>
         <div className="flex-1 overflow-auto p-2">
-          <DepartmentTree onSelect={(id) => setParams(prev => ({ ...prev, deptId: id ?? undefined, page: 1 }))} />
+          <DepartmentTree onSelect={(id) => setParams(prev => ({ ...prev, deptId: id, page: 1 }))} />
         </div>
       </div>
 
@@ -148,6 +174,13 @@ const CorrectionProcessingPage: React.FC = () => {
               </div>
             </div>
             
+            <div className="flex items-center space-x-3 text-primary">
+              <button onClick={() => handleDateShortcut('yesterday')} className="hover:underline">昨天</button>
+              <button onClick={() => handleDateShortcut('last7')} className="hover:underline">最近7天</button>
+              <button onClick={() => handleDateShortcut('last30')} className="hover:underline">最近30天</button>
+              <button onClick={() => handleDateShortcut('month')} className="hover:underline">当月</button>
+            </div>
+            
             <div className="flex items-center space-x-3">
                <span className="text-slate-500">状态</span>
                <select
@@ -169,8 +202,8 @@ const CorrectionProcessingPage: React.FC = () => {
             <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-primary">search</span>
             <input 
               type="text" 
-              placeholder="姓名/工号" 
-              className="pl-9 pr-4 py-1.5 border-slate-300 rounded text-sm w-48 focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+              placeholder="请输入关键字并回车" 
+              className="pl-9 pr-4 py-1.5 border-slate-300 rounded text-sm w-56 focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
               value={params.keyword}
               onChange={(e) => setParams({ ...params, keyword: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -193,8 +226,8 @@ const CorrectionProcessingPage: React.FC = () => {
 
       {/* Table Section */}
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-          <table className="w-full text-left text-sm border-collapse">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium whitespace-nowrap">
               <tr>
                 <th className="px-4 py-3 font-medium">工作日</th>

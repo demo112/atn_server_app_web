@@ -169,7 +169,8 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
       {/* Table Content */}
       <div className="flex-1 px-6 pb-6 overflow-auto custom-scrollbar">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left min-w-[1000px]">
             <thead className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200">
               <tr>
                 <th className="px-5 py-4 w-12">
@@ -239,6 +240,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
               ))}
             </tbody>
           </table>
+        </div>
           {!loading && records.length === 0 && (
             <div className="py-20 text-center text-slate-400">
               <span className="material-icons text-6xl mb-2 opacity-20">search_off</span>

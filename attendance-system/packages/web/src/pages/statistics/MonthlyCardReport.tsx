@@ -287,8 +287,8 @@ const MonthlyCardReport: React.FC = () => {
           </button>
         </div>
 
-        <div className="overflow-hidden border border-slate-200 rounded-xl shadow-sm">
-          <table className="w-full text-sm border-collapse">
+        <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+          <table className="w-full text-sm border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-slate-50 text-slate-700 border-b border-slate-200">
                 <th className="px-6 py-4 font-black uppercase text-xs tracking-widest text-left">姓名</th>

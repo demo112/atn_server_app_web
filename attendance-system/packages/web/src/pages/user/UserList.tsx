@@ -262,7 +262,7 @@ const UserList: React.FC = () => {
       {/* Data Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[400px]">
         <div className="overflow-x-auto flex-1">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
             <thead className="bg-gray-50 text-gray-500 font-medium">
               <tr>
                 <th className="px-6 py-3 w-10 text-center">

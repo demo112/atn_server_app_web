@@ -123,7 +123,7 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
 
       {/* Table Area */}
       <section className="flex-1 overflow-auto custom-scrollbar">
-        <table className="w-full text-sm text-left border-collapse">
+        <table className="w-full text-sm text-left border-collapse min-w-[1000px]">
           <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 border-b border-border-light dark:border-border-dark">
             <tr>
               <th className="p-3 w-10 text-center">

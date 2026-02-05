@@ -257,8 +257,8 @@ const MonthlySummaryReport: React.FC = () => {
       </div>
 
       <div className="mx-4 flex-1 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col mb-4">
-        <div className="flex-1 overflow-auto custom-scrollbar">
-          <table className="min-w-max w-full text-sm text-center border-collapse">
+        <div className="flex-1 overflow-x-auto custom-scrollbar">
+          <table className="min-w-[3000px] w-full text-sm text-center border-collapse">
             <thead className="bg-slate-50 sticky top-0 z-10">
               <tr className="border-b border-slate-200 text-slate-700">
                 <th colSpan={3} className="sticky left-0 bg-slate-50 px-4 py-3 border-r border-slate-200 shadow-sm z-30 font-bold">基本信息</th>

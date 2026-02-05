@@ -181,7 +181,7 @@ const LeavePage: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-gray-50 text-gray-600">
                 <th className="p-4 font-medium">员工ID</th>

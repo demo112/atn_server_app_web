@@ -144,8 +144,8 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, onCancel, onSave }) => {
             {/* Attendance Days Table */}
             <div className="mt-8">
               <h3 className="text-sm font-medium mb-4 text-gray-700">考勤时间</h3>
-              <div className="border border-gray-200 rounded-md overflow-hidden">
-                <table className="w-full text-sm text-left">
+              <div className="border border-gray-200 rounded-md overflow-x-auto">
+                <table className="w-full text-sm text-left min-w-[1000px]">
                   <thead className="bg-gray-50 text-gray-600">
                     <tr>
                       <th className="px-6 py-3 font-semibold border-b border-gray-200">星期</th>
