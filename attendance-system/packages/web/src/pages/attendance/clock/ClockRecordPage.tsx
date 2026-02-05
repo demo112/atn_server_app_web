@@ -180,7 +180,7 @@ const ClockRecordPage: React.FC = () => {
           users={users}
         />
         
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden relative flex flex-col">
           <PunchTable data={data} loading={loading} />
         </div>
 
