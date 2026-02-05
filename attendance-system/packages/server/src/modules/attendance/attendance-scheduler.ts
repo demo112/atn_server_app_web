@@ -141,7 +141,14 @@ export class AttendanceScheduler {
   async getBatchStatus(batchId: string) {
     if (!this.connection) return null;
     const data = await this.connection.get(`attendance:batch:${batchId}`);
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+
+    const status = JSON.parse(data);
+    const progress = status.total > 0 
+      ? Math.round(((status.completed + status.failed) / status.total) * 100) 
+      : 0;
+
+    return { ...status, progress };
   }
 
   async updateBatchStatus(batchId: string, type: 'completed' | 'failed') {
