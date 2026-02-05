@@ -68,6 +68,29 @@ const AttendanceDetailsPage: React.FC = () => {
     });
   };
 
+  const handleRecalculate = async () => {
+    if (!confirm('确定要重新计算当前日期范围内的考勤数据吗？')) return;
+    
+    try {
+      setLoading(true);
+      await correctionService.triggerRecalculation({
+        startDate: params.startDate,
+        endDate: params.endDate,
+        // 如果有选人，可以传 employeeIds，这里简化为只传日期范围，后端会重算所有人（或者需要后端支持过滤）
+        // 目前后端 attendanceScheduler.triggerCalculation 支持 employeeIds
+        // 如果 params.employeeName 是工号/姓名，这里很难直接转为 ID 列表，除非先查一遍
+        // 简单起见，这里只传日期，后端可能会重算该日期段所有人的数据
+        // 如果性能有问题，后续优化
+      });
+      toast.success('已触发重新计算，请稍后刷新查看结果');
+      // 稍微延迟一下再刷新，或者不自动刷新
+      setTimeout(() => fetchData(), 1000);
+    } catch (error) {
+      toast.error('触发重算失败');
+      setLoading(false);
+    }
+  };
+
   const formatMinutes = (minutes: number | undefined): string => {
     if (!minutes) return '-';
     const hours = Math.floor(minutes / 60);
@@ -81,10 +104,19 @@ const AttendanceDetailsPage: React.FC = () => {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-gray-900">每日考勤明细</h1>
-        <button className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-          <span className="material-icons text-sm mr-2">download</span>
-          导出
-        </button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={handleRecalculate}
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            <span className="material-icons text-sm mr-2">refresh</span>
+            重新计算
+          </button>
+          <button className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            <span className="material-icons text-sm mr-2">download</span>
+            导出
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSearch} className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

@@ -47,3 +47,8 @@ export const getDailyRecords = async (params: QueryDailyRecordsDto): Promise<Pag
   const res = await api.get<unknown, ApiResponse<PaginatedResponse<DailyRecordVo>>>('/attendance/daily', { params });
   return validateResponse(PaginatedDailyRecordVoSchema, res);
 };
+
+// Manually trigger recalculation
+export const triggerRecalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<void> => {
+  await api.post('/attendance/recalculate', data);
+};

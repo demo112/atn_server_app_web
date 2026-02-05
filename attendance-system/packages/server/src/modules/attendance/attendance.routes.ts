@@ -15,6 +15,17 @@ const router = Router();
 // 所有考勤路由都需要认证
 router.use(authenticate);
 
+// 手动触发重算
+router.post('/recalculate', async (req, res) => {
+  try {
+    const { startDate, endDate, employeeIds } = req.body;
+    await attendanceScheduler.triggerCalculation({ startDate, endDate, employeeIds });
+    res.json({ success: true, message: 'Calculation triggered' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 // Debug路由 - 必须放在其他路由之前或者明确路径
 router.post('/debug/calc', async (req, res) => {
   try {
