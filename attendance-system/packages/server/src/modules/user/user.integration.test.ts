@@ -86,6 +86,8 @@ describe('User API Integration', () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.username).toBe(dto.username);
+      expect(res.body.data).toHaveProperty('createdAt');
+      expect(res.body.data).toHaveProperty('updatedAt');
       expect(prisma.user.create).toHaveBeenCalled();
     });
 
@@ -164,6 +166,8 @@ describe('User API Integration', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.role).toBe('admin');
       expect(res.body.data.status).toBe('inactive');
+      expect(res.body.data).toHaveProperty('createdAt');
+      expect(res.body.data).toHaveProperty('updatedAt');
       expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
           where: { id: 2 },
           data: expect.objectContaining(updateDto)

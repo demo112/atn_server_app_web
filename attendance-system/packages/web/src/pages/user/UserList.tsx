@@ -179,7 +179,9 @@ const UserList: React.FC = () => {
       fetchData(page);
     } catch (error) {
       console.error(error);
-      if (!(error instanceof AxiosError)) {
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        toast.error('用户或关联员工已存在');
+      } else {
         toast.error(modalMode === 'create' ? '创建失败' : '更新失败');
       }
     } finally {

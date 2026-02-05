@@ -36,6 +36,8 @@ export class UserService {
         role: user.role,
         status: user.status,
         employeeId: user.employeeId,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
       };
     } catch (error: any) {
       if (error.code === 'P2002' && error.meta?.target?.includes('employeeId')) {
@@ -120,6 +122,9 @@ export class UserService {
       username: user.username,
       role: user.role,
       status: user.status,
+      employeeId: user.employeeId,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
     };
   }
 
