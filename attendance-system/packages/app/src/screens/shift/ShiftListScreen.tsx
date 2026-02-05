@@ -93,6 +93,7 @@ export default function ShiftListScreen() {
           placeholder="搜索班次"
           onChangeText={setSearchTerm}
           value={searchTerm}
+          icon="magnify"
           style={styles.searchbar}
           elevation={0}
         />
@@ -161,7 +162,8 @@ const styles = StyleSheet.create({
   },
   listHeader: {
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 12,
+    paddingTop: 4,
   },
   list: {
     padding: 16,
