@@ -13,10 +13,11 @@
 
 ### 阶段1：前端开发
 
-#### Task 1: 实现员工选择并更新测试
+#### Task 1: 实现员工选择并更新测试 (已完成)
 
 | 属性 | 值 |
 |------|-----|
+| 状态 | ✅ 已完成 |
 | 文件 | `packages/app/src/screens/attendance/LeaveScreen.tsx` (修改)<br>`packages/app/src/screens/attendance/LeaveScreen.test.tsx` (修改) |
 | 操作 | 修改 |
 | 内容 | 1. 在 `LeaveScreen` 中引入 `useAuth` 和 `getEmployees`<br>2. 根据管理员权限加载并显示员工选择器<br>3. 更新 `handleSubmit` 使用选中的员工ID<br>4. 更新测试文件，Mock `useAuth` 和 `getEmployees`，验证新逻辑 |
