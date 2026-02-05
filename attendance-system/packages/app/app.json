@@ -3,6 +3,7 @@
     "name": "attendance-app",
     "slug": "attendance-app",
     "version": "1.0.0",
+    "entryPoint": "./index.ts",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",

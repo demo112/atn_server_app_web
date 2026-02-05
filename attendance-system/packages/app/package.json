@@ -2,7 +2,7 @@
   "name": "@attendance/app",
   "version": "0.1.0",
   "private": true,
-  "main": "src/index.ts",
+  "main": "./index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
