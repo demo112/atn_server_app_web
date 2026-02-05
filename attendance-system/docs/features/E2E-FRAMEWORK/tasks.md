@@ -106,9 +106,10 @@
   - [x] 4.3 创建 fixtures/index.ts 统一导出
   
   - [x] 4.4 编写 Fixtures 属性测试
-    - **Property 7: Fixture 自动清理**
-    - **Property 8: Worker 隔离性**
-    - **Validates: Requirements 4.3, 4.4**
+    - **Property 1: 认证 Token 注入**
+    - **Property 2: Worker 前缀隔离**
+    - **Property 3: 测试数据自动清理**
+    - **Validates: Requirements 3.1, 3.2, 4.1, 4.2, 4.3, 4.4**
 
 - [x] 5. 实现组件对象
   - [x] 5.1 实现 TableComponent
@@ -132,7 +133,7 @@
     - 实现 `login()`、`expectLoginSuccess()`、`expectError()`、`expectWarning()`
     - _Requirements: 7.1_
   
-  - [ ] 6.2 编写登录测试用例
+  - [x] 6.2 编写登录测试用例
     - 测试正确账号密码登录成功
     - 测试错误密码显示错误提示
     - 测试未勾选协议显示警告
