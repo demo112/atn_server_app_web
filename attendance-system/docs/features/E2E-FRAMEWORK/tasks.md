@@ -72,20 +72,20 @@
     - 实现 `goto()`、`waitForLoad()`、`getToast()`、`getModal()` 方法
     - _Requirements: 2.3_
 
-- [ ] 3. 实现 API 辅助层
-  - [ ] 3.1 实现 ApiClient 类
+- [x] 3. 实现 API 辅助层
+  - [x] 3.1 实现 ApiClient 类
     - 实现 `login()` 方法获取 token
     - 实现员工 CRUD 方法（`createEmployee`、`deleteEmployee`、`getEmployees`）
     - 实现部门 CRUD 方法（`createDepartment`、`deleteDepartment`）
     - 实现 `cleanupTestData()` 按前缀清理
     - _Requirements: 5.1, 5.2, 5.3_
   
-  - [ ] 3.2 实现 TestDataFactory 类
+  - [x] 3.2 实现 TestDataFactory 类
     - 实现带前缀的 `createEmployee()`、`createDepartment()` 方法
     - 实现 `generatePhone()`、`generateEmployeeNo()` 唯一值生成
     - _Requirements: 5.4_
   
-  - [ ] 3.3 编写 API 辅助层属性测试
+  - [x] 3.3 编写 API 辅助层属性测试
     - **Property 4: API 登录返回 Token**
     - **Property 5: 前缀批量清理**
     - **Property 6: 唯一值生成**
@@ -128,8 +128,8 @@
     - 实现 `expectToastDisappear()`
     - _Requirements: 6.3_
 
-- [ ] 6. 实现登录测试示例
-  - [ ] 6.1 实现 LoginPage 页面对象
+- [x] 6. 实现登录测试示例
+  - [x] 6.1 实现 LoginPage 页面对象
     - 定义定位器：`usernameInput`、`passwordInput`、`agreeCheckbox`、`loginButton`
     - 实现 `login()`、`expectLoginSuccess()`、`expectError()`、`expectWarning()`
     - _Requirements: 7.1_
