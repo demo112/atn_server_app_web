@@ -37,6 +37,11 @@ const LeavePage: React.FC = () => {
   });
 
   const fetchData = useCallback(async () => {
+    if (filters.startTime && filters.endTime && filters.startTime > filters.endTime) {
+      toast.warning('开始时间不能晚于结束时间');
+      return;
+    }
+
     try {
       setLoading(true);
       const queryParams: any = {
@@ -185,6 +190,7 @@ const LeavePage: React.FC = () => {
               type="datetime-local"
               className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
               value={filters.startTime}
+              max={filters.endTime}
               onChange={e => setFilters({...filters, startTime: e.target.value})}
             />
             <span className="text-gray-500">-</span>
@@ -192,6 +198,7 @@ const LeavePage: React.FC = () => {
               type="datetime-local"
               className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
               value={filters.endTime}
+              min={filters.startTime}
               onChange={e => setFilters({...filters, endTime: e.target.value})}
             />
           </div>
