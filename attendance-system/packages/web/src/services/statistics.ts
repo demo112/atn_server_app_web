@@ -17,7 +17,7 @@ import {
   DeptStatsVoSchema,
   ChartStatsVoSchema
 } from '../schemas/statistics';
-import { PaginatedDailyRecordVoSchema } from '../schemas/attendance';
+import { PaginatedDailyRecordVoSchema, AttendanceStatusSchema } from '../schemas/attendance';
 import { z } from 'zod';
 
 export const getDepartmentSummary = async (params: GetSummaryDto): Promise<AttendanceSummaryVo[]> => {
@@ -34,15 +34,35 @@ export const getCalendar = async (year: number, month: number, employeeId?: numb
   const res = await api.get('/statistics/card', { params: { year, month, employeeId } });
   return validateResponse(z.array(z.object({
     date: z.string(),
-    status: z.any(), // z.custom<AttendanceStatus>() is tricky without enum definition here, using any or string
+    status: AttendanceStatusSchema,
     isAbnormal: z.boolean()
   })), res);
 };
 
-export const triggerCalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<void> => {
+export interface CalculationStatus {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  message?: string;
+  error?: string;
+}
+
+export const getRecalculationStatus = async (batchId: string): Promise<CalculationStatus> => {
+  const res = await api.get(`/statistics/calculate/${batchId}/status`);
+  return validateResponse(z.object({
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
+    progress: z.number(),
+    message: z.string().optional(),
+    error: z.string().optional()
+  }), res);
+};
+
+export const triggerCalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> => {
   const res = await api.post('/statistics/calculate', data);
-  // Backend returns { message: '...' } but we don't need it, so use z.any() to pass validation
-  return validateResponse(z.any(), res);
+  const validated = validateResponse(z.object({
+    message: z.string(),
+    batchId: z.string()
+  }), res);
+  return validated.batchId;
 };
 
 export const getDeptStats = async (params: GetDeptStatsDto): Promise<DeptStatsVo[]> => {

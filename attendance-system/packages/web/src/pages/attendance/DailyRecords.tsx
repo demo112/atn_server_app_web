@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus, QueryDailyRecordsDto } from '@attendance/shared';
-import { getDailyRecords, triggerCalculation } from '../../services/statistics';
+import { getDailyRecords, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { useAuth } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
 import dayjs from 'dayjs';
 import StandardModal from '@/components/common/StandardModal';
+import { useToast } from '@/components/common/ToastProvider';
 
 const statusMap: Record<AttendanceStatus, { text: string; color: string; bgColor: string }> = {
   normal: { text: '正常', color: 'text-green-800', bgColor: 'bg-green-100' },
@@ -17,6 +18,7 @@ const statusMap: Record<AttendanceStatus, { text: string; color: string; bgColor
 
 const DailyRecords: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DailyRecordVo[]>([]);
   const [total, setTotal] = useState(0);
@@ -104,7 +106,7 @@ const DailyRecords: React.FC = () => {
 
   const handleRecalculate = async (): Promise<void> => {
     if (!recalcForm.startDate || !recalcForm.endDate) {
-      logger.error('Please select date range');
+      toast.error('请选择日期范围');
       return;
     }
     setRecalcLoading(true);
@@ -115,12 +117,33 @@ const DailyRecords: React.FC = () => {
         employeeIds: recalcForm.employeeIds ? recalcForm.employeeIds.split(',').map((id: string) => Number(id.trim())) : undefined,
       };
 
-      await triggerCalculation(params);
-      setRecalcModalVisible(false);
-      fetchRecords(filters.page, filters.pageSize);
+      const batchId = await triggerCalculation(params);
+      
+      const poll = async () => {
+        try {
+          const status = await getRecalculationStatus(batchId);
+          if (status.status === 'completed') {
+            setRecalcModalVisible(false);
+            setRecalcLoading(false);
+            toast.success('重新计算完成');
+            fetchRecords(filters.page, filters.pageSize);
+          } else if (status.status === 'failed') {
+            setRecalcLoading(false);
+            toast.error(status.message || '重算失败');
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          logger.error('Polling failed', error);
+          toast.error('查询计算进度失败');
+          setRecalcLoading(false);
+        }
+      };
+      
+      poll();
     } catch (error) {
       logger.error('Recalculation failed', error);
-    } finally {
+      toast.error('触发重算失败');
       setRecalcLoading(false);
     }
   };

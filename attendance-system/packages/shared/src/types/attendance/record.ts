@@ -124,7 +124,7 @@ export interface DailyRecordVo {
   id: string; // BigInt -> String
   employeeId: number;
   employeeName: string;
-  employeeNo: string;
+  employeeNo?: string;
   deptName: string;
   workDate: string;
   shiftName?: string;

@@ -206,12 +206,21 @@ export class StatisticsController {
       throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required', 400);
     }
 
-    await attendanceScheduler.triggerCalculation({
+    const batchId = await attendanceScheduler.triggerCalculation({
       startDate,
       endDate,
       employeeIds
     });
 
-    res.json(success({ message: 'Calculation triggered successfully' }));
+    res.json(success({ message: 'Calculation triggered successfully', batchId }));
+  };
+
+  getCalculationStatus = async (req: Request, res: Response) => {
+    const { batchId } = req.params;
+    const status = await attendanceScheduler.getBatchStatus(batchId);
+    if (!status) {
+      throw new AppError('ERR_NOT_FOUND', 'Batch not found', 404);
+    }
+    res.json(success(status));
   };
 }

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDepartmentSummary, exportStats, triggerCalculation } from '../../services/statistics';
+import { getDepartmentSummary, exportStats, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { AttendanceSummaryVo, ExportStatsDto } from '@attendance/shared';
 import { logger } from '../../utils/logger';
 import StandardModal from '../../components/common/StandardModal';
+import { useToast } from '@/components/common/ToastProvider';
 
 const MonthlySummaryReport: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   // Generate Days 1-31 columns
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
@@ -90,7 +92,7 @@ const MonthlySummaryReport: React.FC = () => {
 
   const handleRecalculate = async () => {
     if (!recalcForm.startDate || !recalcForm.endDate) {
-      alert('请选择日期范围');
+      toast.error('请选择日期范围');
       return;
     }
     setRecalcLoading(true);
@@ -101,30 +103,48 @@ const MonthlySummaryReport: React.FC = () => {
         employeeIds: recalcForm.employeeIds ? recalcForm.employeeIds.split(',').map((id: string) => Number(id.trim())) : undefined,
       };
 
-      await triggerCalculation(params);
-      setRecalcModalVisible(false);
+      const batchId = await triggerCalculation(params);
       
-      // Auto refresh if current month is in range
-      const [year, month] = currentMonth.split('-');
-      const yearNum = parseInt(year);
-      const monthNum = parseInt(month);
-      const end = new Date(yearNum, monthNum, 0);
-      const currentMonthStart = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
-      const currentMonthEnd = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+      const poll = async () => {
+        try {
+          const status = await getRecalculationStatus(batchId);
+          if (status.status === 'completed') {
+            setRecalcModalVisible(false);
+            setRecalcLoading(false);
+            toast.success('重新计算完成');
+            
+            // Auto refresh if current month is in range
+            const [year, month] = currentMonth.split('-');
+            const yearNum = parseInt(year);
+            const monthNum = parseInt(month);
+            const end = new Date(yearNum, monthNum, 0);
+            const currentMonthStart = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
+            const currentMonthEnd = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+            
+            if (
+              (recalcForm.startDate >= currentMonthStart && recalcForm.startDate <= currentMonthEnd) ||
+              (recalcForm.endDate >= currentMonthStart && recalcForm.endDate <= currentMonthEnd) ||
+              (recalcForm.startDate <= currentMonthStart && recalcForm.endDate >= currentMonthEnd)
+            ) {
+              fetchData();
+            }
+          } else if (status.status === 'failed') {
+            setRecalcLoading(false);
+            toast.error(status.message || '重算失败');
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          console.error('Polling failed', error);
+          toast.error('查询计算进度失败');
+          setRecalcLoading(false);
+        }
+      };
       
-      if (
-        (recalcForm.startDate >= currentMonthStart && recalcForm.startDate <= currentMonthEnd) ||
-        (recalcForm.endDate >= currentMonthStart && recalcForm.endDate <= currentMonthEnd) ||
-        (recalcForm.startDate <= currentMonthStart && recalcForm.endDate >= currentMonthEnd)
-      ) {
-        fetchData();
-      }
-      
-      alert('考勤重算已触发，请稍后刷新查看结果');
+      poll();
     } catch (error) {
       logger.error('Recalculation failed', error);
-      alert('重算请求失败');
-    } finally {
+      toast.error('重算请求失败');
       setRecalcLoading(false);
     }
   };

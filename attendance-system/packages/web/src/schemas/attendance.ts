@@ -100,7 +100,7 @@ export const ClockTypeSchema = z.enum(['sign_in', 'sign_out']);
 export const ClockSourceSchema = z.enum(['app', 'web', 'device']);
 
 export const ClockRecordSchema = z.object({
-  id: z.union([z.string(), z.number().transform(String)]),
+  id: z.coerce.string(),
   employeeId: z.coerce.number(),
   clockTime: z.string(),
   type: ClockTypeSchema,
@@ -152,7 +152,7 @@ export const DailyRecordVoSchema = z.object({
   leaveMinutes: z.number(),
   workMinutes: z.number().nullable().optional().transform(v => v ?? undefined),
   remark: z.string().nullable().optional().transform(v => v ?? undefined),
-  employeeNo: z.string().nullable().optional().transform(v => v ?? ''),
+  employeeNo: z.string().nullish().transform(v => v ?? ''),
 });
 
 export const PaginatedDailyRecordVoSchema = z.object({

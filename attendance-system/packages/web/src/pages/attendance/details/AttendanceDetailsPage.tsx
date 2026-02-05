@@ -73,18 +73,32 @@ const AttendanceDetailsPage: React.FC = () => {
     
     try {
       setLoading(true);
-      await correctionService.triggerRecalculation({
+      const batchId = await correctionService.triggerRecalculation({
         startDate: params.startDate,
         endDate: params.endDate,
-        // 如果有选人，可以传 employeeIds，这里简化为只传日期范围，后端会重算所有人（或者需要后端支持过滤）
-        // 目前后端 attendanceScheduler.triggerCalculation 支持 employeeIds
-        // 如果 params.employeeName 是工号/姓名，这里很难直接转为 ID 列表，除非先查一遍
-        // 简单起见，这里只传日期，后端可能会重算该日期段所有人的数据
-        // 如果性能有问题，后续优化
       });
-      toast.success('已触发重新计算，请稍后刷新查看结果');
-      // 稍微延迟一下再刷新，或者不自动刷新
-      setTimeout(() => fetchData(), 1000);
+      
+      const poll = async () => {
+        try {
+          const status = await correctionService.getRecalculationStatus(batchId);
+          if (status.status === 'completed') {
+            setLoading(false);
+            toast.success('重新计算完成');
+            fetchData();
+          } else if (status.status === 'failed') {
+            setLoading(false);
+            toast.error(status.message || '重算失败');
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          console.error('Polling failed', error);
+          toast.error('查询计算进度失败');
+          setLoading(false);
+        }
+      };
+      
+      poll();
     } catch (error) {
       toast.error('触发重算失败');
       setLoading(false);

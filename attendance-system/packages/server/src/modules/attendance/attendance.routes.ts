@@ -19,8 +19,24 @@ router.use(authenticate);
 router.post('/recalculate', async (req, res) => {
   try {
     const { startDate, endDate, employeeIds } = req.body;
-    await attendanceScheduler.triggerCalculation({ startDate, endDate, employeeIds });
-    res.json({ success: true, message: 'Calculation triggered' });
+    const batchId = await attendanceScheduler.triggerCalculation({ startDate, endDate, employeeIds });
+    res.json({ success: true, data: { message: 'Calculation triggered', batchId } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 查询重算状态
+router.get('/recalculate/:batchId/status', async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    const status = await attendanceScheduler.getBatchStatus(batchId);
+    
+    if (!status) {
+      res.status(404).json({ success: false, message: 'Batch not found' });
+      return;
+    }
+    res.json({ success: true, data: status });
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : String(error) });
   }

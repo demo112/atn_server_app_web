@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDailyRecords, exportStats, triggerCalculation } from '../../services/statistics';
+import { getDailyRecords, exportStats, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
+import { useToast } from '../../components/common/ToastProvider';
 
 const DailyStatsReport: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [data, setData] = useState<DailyRecordVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -109,7 +111,7 @@ const DailyStatsReport: React.FC = () => {
 
   const handleRecalculate = async () => {
     if (!startDate || !endDate) {
-      alert('请选择日期范围');
+      toast.error('请选择日期范围');
       return;
     }
     setRecalcLoading(true);
@@ -119,13 +121,32 @@ const DailyStatsReport: React.FC = () => {
         endDate,
       };
 
-      await triggerCalculation(params);
-      fetchData();
-      alert('考勤重算已触发，请稍后刷新查看结果');
+      const batchId = await triggerCalculation(params);
+      
+      const poll = async () => {
+        try {
+          const status = await getRecalculationStatus(batchId);
+          if (status.status === 'completed') {
+            setRecalcLoading(false);
+            toast.success('重新计算完成');
+            fetchData();
+          } else if (status.status === 'failed') {
+            setRecalcLoading(false);
+            toast.error(status.message || '重算失败');
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          console.error('Polling failed', error);
+          toast.error('查询计算进度失败');
+          setRecalcLoading(false);
+        }
+      };
+      
+      poll();
     } catch (error) {
       console.error('Recalculation failed', error);
-      alert('重算请求失败');
-    } finally {
+      toast.error('重算请求失败');
       setRecalcLoading(false);
     }
   };

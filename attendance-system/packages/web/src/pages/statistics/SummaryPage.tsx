@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
-import { getDepartmentSummary, triggerCalculation } from '../../services/statistics';
+import { getDepartmentSummary, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { AttendanceSummaryVo, GetSummaryDto } from '@attendance/shared';
 import { DepartmentSelect } from '../../components/DepartmentSelect';
 import { useToast } from '@/components/common/ToastProvider';
@@ -47,15 +47,34 @@ const SummaryPage: React.FC = (): React.ReactElement => {
       }
 
       setLoading(true);
-      await triggerCalculation({
+      const batchId = await triggerCalculation({
         startDate,
         endDate,
       });
       
-      toast.success('已触发重新计算，请稍后刷新查看结果');
-      // 延迟刷新
-      setTimeout(() => fetchData(), 2000);
+      const poll = async () => {
+        try {
+          const status = await getRecalculationStatus(batchId);
+          if (status.status === 'completed') {
+            setLoading(false);
+            toast.success('重新计算完成');
+            fetchData();
+          } else if (status.status === 'failed') {
+            setLoading(false);
+            toast.error(status.message || '重算失败');
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          console.error('Polling failed', error);
+          toast.error('查询计算进度失败');
+          setLoading(false);
+        }
+      };
+      
+      poll();
     } catch (error) {
+      console.error('Recalculation failed', error);
       toast.error('触发计算失败');
       setLoading(false);
     }

@@ -21,5 +21,6 @@ router.get('/departments', controller.getDeptStats);
 router.get('/charts', controller.getChartStats);
 router.get('/export', controller.exportStats);
 router.post('/calculate', controller.triggerCalculation);
+router.get('/calculate/:batchId/status', controller.getCalculationStatus);
 
 export const statisticsRouter = router;

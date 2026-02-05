@@ -17,6 +17,7 @@ import {
   PaginatedDailyRecordVoSchema,
   CorrectionVoSchema
 } from '../schemas/attendance';
+import { z } from 'zod';
 
 // SW68: Get correction history
 export const getCorrections = async (params: QueryCorrectionsDto): Promise<PaginatedResponse<CorrectionVo>> => {
@@ -49,6 +50,28 @@ export const getDailyRecords = async (params: QueryDailyRecordsDto): Promise<Pag
 };
 
 // Manually trigger recalculation
-export const triggerRecalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<void> => {
-  await api.post('/attendance/recalculate', data);
+export const triggerRecalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> => {
+  const res = await api.post('/attendance/recalculate', data);
+  const validated = validateResponse(z.object({
+    message: z.string(),
+    batchId: z.string()
+  }), res);
+  return validated.batchId;
+};
+
+export interface CalculationStatus {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  message?: string;
+  error?: string;
+}
+
+export const getRecalculationStatus = async (batchId: string): Promise<CalculationStatus> => {
+  const res = await api.get(`/attendance/recalculate/${batchId}/status`);
+  return validateResponse(z.object({
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
+    progress: z.number(),
+    message: z.string().optional(),
+    error: z.string().optional()
+  }), res);
 };

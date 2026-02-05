@@ -247,4 +247,15 @@ export class LeaveService {
 
     return this.mapToVo(updated);
   }
+
+  private async triggerRecalculation(employeeId: number, start: Date, end: Date) {
+      const startDate = dayjs(start).format('YYYY-MM-DD');
+      const endDate = dayjs(end).format('YYYY-MM-DD');
+      // Trigger calculation and ignore batchId
+      await attendanceScheduler.triggerCalculation({
+          startDate,
+          endDate,
+          employeeIds: [employeeId]
+      });
+  }
 }

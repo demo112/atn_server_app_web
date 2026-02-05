@@ -5,6 +5,7 @@ import { prisma } from '../../common/db/prisma';
 import dayjs from 'dayjs';
 import { AttendanceCalculator } from './domain/attendance-calculator';
 import { CorrectionType } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('AttendanceScheduler');
 
@@ -52,12 +53,18 @@ export class AttendanceScheduler {
         }
       }, { connection: this.connection });
 
-      this.worker.on('completed', (job) => {
+      this.worker.on('completed', async (job) => {
         logger.info({ jobId: job.id }, 'Job completed');
+        if (job.data && job.data.batchId) {
+            await this.updateBatchStatus(job.data.batchId, 'completed');
+        }
       });
 
-      this.worker.on('failed', (job, err) => {
+      this.worker.on('failed', async (job, err) => {
         logger.error({ jobId: job?.id, err }, 'Job failed');
+        if (job?.data && job.data.batchId) {
+            await this.updateBatchStatus(job.data.batchId, 'failed');
+        }
       });
     }
 
@@ -91,31 +98,68 @@ export class AttendanceScheduler {
   /**
    * 手动触发计算任务
    */
-  async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[] }) {
+  async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> {
     if (!this.queue) {
       logger.warn('Attendance scheduler not initialized, skipping calculation trigger');
-      return;
+      throw new Error('Scheduler not initialized');
     }
-    // 拆分为每一天的任务，或者在一个任务中处理多天
-    // 这里简单起见，直接在后台执行，不进队列（或者进队列异步执行）
-    // 为了利用 Worker，最好进队列。
-    // 但是 daily-calculation 逻辑是针对单日（默认昨日）。
-    // 我们可以复用 processDailyCalculation 逻辑，或者增强它。
-    
+
+    const batchId = uuidv4();
     const start = dayjs(data.startDate);
     const end = dayjs(data.endDate);
-    
+    const days = end.diff(start, 'day') + 1;
+
+    // Initial status
+    const status = {
+      id: batchId,
+      status: 'processing',
+      total: days,
+      completed: 0,
+      failed: 0,
+      message: 'Calculation started'
+    };
+
+    if (this.connection) {
+        await this.connection.set(`attendance:batch:${batchId}`, JSON.stringify(status), 'EX', 3600);
+    }
+
     let current = start;
     while (current.isBefore(end) || current.isSame(end, 'day')) {
       const dateStr = current.format('YYYY-MM-DD');
       await this.queue.add('daily-calculation', {
         date: dateStr,
-        employeeIds: data.employeeIds
+        employeeIds: data.employeeIds,
+        batchId
       });
       current = current.add(1, 'day');
     }
     
-    logger.info({ startDate: data.startDate, endDate: data.endDate }, 'Triggered manual calculation jobs');
+    logger.info({ startDate: data.startDate, endDate: data.endDate, batchId }, 'Triggered manual calculation jobs');
+    return batchId;
+  }
+
+  async getBatchStatus(batchId: string) {
+    if (!this.connection) return null;
+    const data = await this.connection.get(`attendance:batch:${batchId}`);
+    return data ? JSON.parse(data) : null;
+  }
+
+  async updateBatchStatus(batchId: string, type: 'completed' | 'failed') {
+      if (!this.connection) return;
+      const key = `attendance:batch:${batchId}`;
+      const data = await this.connection.get(key);
+      if (!data) return;
+      
+      const status = JSON.parse(data);
+      if (type === 'completed') status.completed++;
+      if (type === 'failed') status.failed++;
+      
+      if (status.completed + status.failed >= status.total) {
+          status.status = status.failed > 0 ? 'completed_with_errors' : 'completed';
+          status.message = 'Calculation finished';
+      }
+      
+      await this.connection.set(key, JSON.stringify(status), 'EX', 3600);
   }
 
   async processDailyCalculation(data: { date?: string, employeeIds?: number[] }) {
