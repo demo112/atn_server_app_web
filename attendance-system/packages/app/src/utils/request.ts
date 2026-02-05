@@ -33,6 +33,15 @@ export const validateResponse = async <T>(
 
   const result = schema.safeParse(response.data);
   if (!result.success) {
+    // Fallback: if schema expects array but server wraps in { items }, try parsing items
+    try {
+      if (schema instanceof z.ZodArray && response && typeof response.data === 'object' && response.data && 'items' in (response.data as any)) {
+        const alt = schema.safeParse((response.data as any).items);
+        if (alt.success) {
+          return alt.data as T;
+        }
+      }
+    } catch { /* no-op */ }
     logger.error('Response validation failed:', result.error);
     throw new Error('Response validation failed');
   }

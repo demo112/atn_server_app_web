@@ -181,9 +181,9 @@ export const CorrectionVoSchema = z.object({
 export const PaginatedCorrectionVoSchema = z.object({
   items: z.array(CorrectionVoSchema),
   total: z.number(),
-  page: z.number(),
-  pageSize: z.number(),
-  totalPages: z.number(),
+  page: z.number().optional(),
+  pageSize: z.number().optional(),
+  totalPages: z.number().optional(),
 });
 
 export const SupplementResultVoSchema = z.object({
