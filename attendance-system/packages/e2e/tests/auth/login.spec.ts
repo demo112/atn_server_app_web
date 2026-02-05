@@ -25,13 +25,13 @@ test.describe('登录功能', () => {
    */
   test('正确账号密码登录成功', async ({ page }) => {
     // 执行登录
-    await loginPage.login('admin', 'admin123');
+    await loginPage.login('admin', '123456');
 
     // 验证跳转到首页
     await loginPage.expectLoginSuccess();
 
     // 验证 localStorage 中有 token
-    const token = await page.evaluate(() => localStorage.getItem('token'));
+    const token = await page.evaluate(() => localStorage.getItem('atn_token'));
     expect(token).not.toBeNull();
     expect(token!.length).toBeGreaterThan(0);
   });
@@ -45,7 +45,7 @@ test.describe('登录功能', () => {
     await loginPage.login('admin', 'wrongpassword');
 
     // 验证显示错误提示
-    await loginPage.expectError('密码错误');
+    await loginPage.expectError('Invalid credentials');
 
     // 验证仍在登录页
     await expect(loginPage.page).toHaveURL(/\/login/);
@@ -57,7 +57,7 @@ test.describe('登录功能', () => {
    */
   test('未勾选协议显示警告', async () => {
     // 填写表单但不勾选协议
-    await loginPage.fillForm('admin', 'admin123', false);
+    await loginPage.fillForm('admin', '123456', false);
     await loginPage.loginButton.click();
 
     // 验证显示警告提示

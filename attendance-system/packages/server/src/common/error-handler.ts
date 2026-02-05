@@ -47,6 +47,17 @@ export function errorHandler(
   }
 
   logger.error({ err, path: req.path }, '未处理异常');
+  
+  // 临时：写入错误到文件以便调试
+  try {
+    const fs = require('fs');
+    const logPath = require('path').join(process.cwd(), 'server-error.log');
+    const logEntry = `[${new Date().toISOString()}] ${req.method} ${req.path}\n${err.stack || err}\n\n`;
+    fs.appendFileSync(logPath, logEntry);
+  } catch (e) {
+    console.error('Failed to write error log', e);
+  }
+
   return res.status(500).json({
     success: false,
     error: { code: 'ERR_INTERNAL', message: '服务器内部错误' }

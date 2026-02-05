@@ -10,6 +10,8 @@ test.describe('API Helper Layer', () => {
   test.beforeEach(async ({ request }) => {
     apiClient = new ApiClient(request);
     testData = new TestDataFactory(workerId);
+    // Ensure we are logged in for API calls
+    await apiClient.login('admin', '123456');
   });
 
   test.afterEach(async () => {
@@ -30,20 +32,6 @@ test.describe('API Helper Layer', () => {
     // 1. Create Department
     const deptData = testData.generateDepartment();
     
-    // Note: We need admin login first usually, but assuming request context might be pre-configured 
-    // or we need to login in test.
-    // For this test, we assume we might need to login. 
-    // But usually login is done in global setup or fixture. 
-    // Here we explicitly login for the test if needed, or assume Auth is disabled/mocked?
-    // In real E2E, we need a valid user.
-    // Let's assume we need to login as admin.
-    try {
-      await apiClient.login('admin', 'admin123'); // Default assumption
-    } catch (e) {
-      console.log('Login failed (server might be down or creds wrong), skipping API calls verification');
-      return;
-    }
-
     const dept = await apiClient.createDepartment(deptData);
     expect(dept.name).toBe(deptData.name);
     expect(dept.id).toBeDefined();
@@ -57,12 +45,6 @@ test.describe('API Helper Layer', () => {
   });
 
   test('should create and retrieve employee', async () => {
-    try {
-      await apiClient.login('admin', 'admin123');
-    } catch (e) {
-      return; // Skip if no server
-    }
-
     // 1. Create Department first
     const deptData = testData.generateDepartment();
     const dept = await apiClient.createDepartment(deptData);

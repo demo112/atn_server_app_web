@@ -1,4 +1,22 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+import fs from 'fs';
+
+function getServerPort() {
+  try {
+    const envPath = path.resolve(__dirname, '../server/.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf-8');
+      const match = content.match(/^PORT=(\d+)/m);
+      if (match) return parseInt(match[1], 10);
+    }
+  } catch (e) {
+    console.warn('Failed to load server .env, using default port 3001');
+  }
+  return 3001;
+}
+
+const SERVER_PORT = getServerPort();
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -54,7 +72,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm --filter @attendance/server dev',
-      port: 3000,
+      port: SERVER_PORT,
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe',
     },

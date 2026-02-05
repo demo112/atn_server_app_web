@@ -11,7 +11,7 @@ export interface ApiLoginResponse {
 export class ApiClient {
   private request: APIRequestContext;
   private token: string | null = null;
-  private readonly baseUrl = 'http://localhost:3000'; // Default API URL
+  private readonly baseUrl = process.env.API_BASE_URL || 'http://localhost:3001'; // Default API URL
 
   constructor(request: APIRequestContext) {
     this.request = request;

@@ -18,7 +18,7 @@ console.log('[DEBUG] Imports done');
 
 logger.info('Starting server initialization...');
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = '0.0.0.0';
 
 logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');

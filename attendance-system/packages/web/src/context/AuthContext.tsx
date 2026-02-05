@@ -33,9 +33,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('登录成功');
     } catch (error: unknown) {
       logger.error('Login failed', error);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const err = error as any;
-      toast.error(err.response?.data?.error?.message || '登录失败');
       throw error;
     }
   };

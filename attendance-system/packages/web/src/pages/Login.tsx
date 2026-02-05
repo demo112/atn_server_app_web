@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LoginDto } from '@attendance/shared';
 import { useToast } from '@/components/common/ToastProvider';
 
 const Login: React.FC = (): React.ReactElement => {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -14,6 +14,13 @@ const Login: React.FC = (): React.ReactElement => {
   const [agreed, setAgreed] = useState(false);
 
   const [isDark, setIsDark] = useState(false);
+
+  // 监听认证状态，登录成功后自动跳转
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -30,7 +37,7 @@ const Login: React.FC = (): React.ReactElement => {
     try {
       const loginData: LoginDto = { username, password };
       await login(loginData);
-      navigate('/');
+      // 不需要在这里 navigate，useEffect 会处理
     } catch {
       // Error handled in context or show toast here
     }

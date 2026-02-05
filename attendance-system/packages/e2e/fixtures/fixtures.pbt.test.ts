@@ -13,7 +13,7 @@ import { TestDataFactory } from '../utils/test-data';
 
 // 测试配置
 const TEST_PREFIX = '[FIXTURE_PBT]';
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001';
 
 // 跳过条件：如果没有后端服务则跳过
 const skipIfNoBackend = process.env.SKIP_E2E_PBT === 'true';
@@ -160,7 +160,7 @@ describe.skipIf(skipIfNoBackend)('测试数据自动清理 PBT', () => {
   beforeAll(async () => {
     api = new ApiClient(API_BASE_URL);
     try {
-      await api.login('admin', 'admin123');
+      await api.login('admin', '123456');
     } catch {
       console.warn('无法连接后端服务，跳过清理属性测试');
     }
