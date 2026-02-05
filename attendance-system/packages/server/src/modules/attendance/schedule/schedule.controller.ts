@@ -71,6 +71,10 @@ export class ScheduleController {
       query.employeeId = user.employeeId;
     }
 
+    if (!query.startDate || !query.endDate) {
+      throw new AppError('ERR_VALIDATION_FAILED', 'startDate and endDate are required', 400);
+    }
+
     const result = await service.getOverview(query);
     
     res.status(200).json({

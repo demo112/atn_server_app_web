@@ -13,12 +13,11 @@ export class CreateScheduleReqDto implements CreateScheduleDto {
   shiftId!: number;
 
   @IsString()
-  // 移除严格正则校验，允许 ISO 格式或其他日期格式
-  // @Matches(DATE_REGEX, { message: 'startDate must be in YYYY-MM-DD format' })
+  @Matches(DATE_REGEX, { message: 'startDate must be in YYYY-MM-DD format' })
   startDate!: string;
 
   @IsString()
-  // @Matches(DATE_REGEX, { message: 'endDate must be in YYYY-MM-DD format' })
+  @Matches(DATE_REGEX, { message: 'endDate must be in YYYY-MM-DD format' })
   endDate!: string;
 
   @IsBoolean()

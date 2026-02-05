@@ -29,24 +29,7 @@ export class ScheduleService {
     if (!shift) throw new AppError('ERR_SHIFT_NOT_FOUND', 'Shift not found', 404);
 
     return await prisma.$transaction(async (tx) => {
-      await this.createWithTx(tx, data);
-      
-      const created = await tx.attSchedule.findFirst({
-        where: {
-          employeeId,
-          shiftId,
-          startDate: start,
-          endDate: end
-        },
-        include: {
-          shift: true,
-          employee: true,
-        },
-        orderBy: { id: 'desc' } // Get the one just created
-      });
-
-      if (!created) throw new AppError('ERR_CREATE_FAILED', 'Failed to create schedule', 500);
-
+      const created = await this.createWithTx(tx, data);
       return this.mapToVo(created);
     }, {
       timeout: 20000 // 增加超时时间到 20s
@@ -138,12 +121,16 @@ export class ScheduleService {
       }
     }
 
-    await tx.attSchedule.create({
+    return await tx.attSchedule.create({
       data: {
         employeeId,
         shiftId,
         startDate: start,
         endDate: end,
+      },
+      include: {
+        shift: true,
+        employee: true,
       }
     });
   }
