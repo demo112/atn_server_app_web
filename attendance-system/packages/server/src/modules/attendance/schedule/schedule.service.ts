@@ -48,6 +48,8 @@ export class ScheduleService {
       if (!created) throw new AppError('ERR_CREATE_FAILED', 'Failed to create schedule', 500);
 
       return this.mapToVo(created);
+    }, {
+      timeout: 20000 // 增加超时时间到 20s
     });
   }
 
