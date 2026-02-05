@@ -9,7 +9,7 @@ describe('User Schemas Property Tests', () => {
     const userArb = fc.record({
       id: fc.integer(),
       username: fc.string(),
-      employeeId: fc.oneof(fc.integer(), fc.constant(undefined)),
+      employeeId: fc.oneof(fc.integer(), fc.constant(null), fc.constant(undefined)),
       role: userRoleArb,
       status: userStatusArb,
       createdAt: fc.string(),
