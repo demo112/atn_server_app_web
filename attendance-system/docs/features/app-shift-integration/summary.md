@@ -6,12 +6,12 @@
 
 ## 交付物清单
 1.  **文档**:
-    *   `docs/APP班次管理集成/ALIGNMENT_APP班次管理集成.md`
-    *   `docs/APP班次管理集成/CONSENSUS_APP班次管理集成.md`
-    *   `docs/APP班次管理集成/DESIGN_APP班次管理集成.md`
-    *   `docs/APP班次管理集成/TASK_APP班次管理集成.md`
-    *   `docs/APP班次管理集成/ACCEPTANCE_APP班次管理集成.md`
-    *   `docs/APP班次管理集成/TODO_APP班次管理集成.md`
+    *   `alignment.md`
+    *   `consensus.md`
+    *   `design.md`
+    *   `tasks.md`
+    *   `acceptance.md`
+    *   `todo.md`
 2.  **代码**:
     *   `packages/app/src/types/shift.ts`: 数据模型更新
     *   `packages/app/src/screens/HomeScreen.tsx`: 入口添加
