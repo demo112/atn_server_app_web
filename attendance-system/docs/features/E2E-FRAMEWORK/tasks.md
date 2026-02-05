@@ -6,7 +6,7 @@
 
 ## Tasks
 
-- [ ] 1. 安装 Playwright 并创建配置文件
+- [x] 1. 安装 Playwright 并创建配置文件
   - 在 `packages/e2e/` 创建独立包，安装 `@playwright/test` 依赖
   - 创建 `packages/e2e/playwright.config.ts` 配置文件
   - 配置 webServer 自动启动前后端服务
@@ -63,18 +63,18 @@
     - **Property 3: 测试数据自动清理**
     - **Validates: Requirements 3.1, 3.2, 4.1, 4.2, 4.3**
 
-- [ ] 5. 实现组件对象
-  - [ ] 5.1 实现 TableComponent
+- [x] 5. 实现组件对象
+  - [x] 5.1 实现 TableComponent
     - 实现 `rows`、`getDataRowCount()`、`findRowByText()`
     - 实现 `clickRowAction()`、`search()`、`nextPage()`、`prevPage()`
     - _Requirements: 6.1_
   
-  - [ ] 5.2 实现 ModalComponent
+  - [x] 5.2 实现 ModalComponent
     - 实现 `waitForOpen()`、`waitForClose()`、`getTitle()`
     - 实现 `close()`、`confirm()`、`cancel()`、`fillField()`
     - _Requirements: 6.2_
   
-  - [ ] 5.3 实现 ToastComponent
+  - [x] 5.3 实现 ToastComponent
     - 实现 `expectSuccess()`、`expectError()`、`expectWarning()`
     - 实现 `expectToastDisappear()`
     - _Requirements: 6.3_
