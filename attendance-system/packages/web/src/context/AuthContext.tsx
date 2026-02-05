@@ -41,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = (): void => {
+    logger.info('User logging out', { userId: user?.id, username: user?.username });
     clearAuth();
     setTokenState(null);
     setUserState(null);
