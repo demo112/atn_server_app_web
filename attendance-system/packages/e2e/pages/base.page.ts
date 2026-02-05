@@ -8,7 +8,7 @@ export abstract class BasePage {
 
   /** 导航到页面 */
   async goto(): Promise<void> {
-    await this.page.goto(this.url);
+    await this.page.goto(this.url, { waitUntil: 'domcontentloaded' });
   }
 
   /** 等待页面加载完成 */
