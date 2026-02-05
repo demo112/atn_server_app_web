@@ -84,9 +84,9 @@ request.interceptors.response.use(
           break;
       }
     } else if (error.request) {
-      Alert.alert('Network Error', 'Please check your internet connection');
+      Alert.alert('网络错误', '请检查网络连接');
     } else {
-      Alert.alert('Error', 'Request configuration error');
+      Alert.alert('错误', '请求配置错误');
     }
     return Promise.reject(error);
   }

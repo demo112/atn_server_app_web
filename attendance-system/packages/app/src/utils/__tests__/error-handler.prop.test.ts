@@ -7,7 +7,7 @@ describe('Error Handler Properties', () => {
       fc.property(fc.object(), (data) => {
         const action = analyzeErrorResponse(401, data);
         expect(action.type).toBe('CLEAR_AUTH_AND_ALERT');
-        expect((action as any).title).toBe('Session Expired');
+        expect((action as any).title).toBe('会话已过期');
       })
     );
   });
@@ -17,7 +17,7 @@ describe('Error Handler Properties', () => {
       fc.property(fc.object(), (data) => {
         const action = analyzeErrorResponse(403, data);
         expect(action.type).toBe('ALERT');
-        expect((action as any).title).toBe('Permission Denied');
+        expect((action as any).title).toBe('无权限');
       })
     );
   });
@@ -56,17 +56,17 @@ describe('Error Handler Properties', () => {
         (msg1, msg2) => {
           // Case 1: data.message exists
           const action1 = analyzeErrorResponse(400, { message: msg1, error: { message: msg2 } });
-          const expected1 = msg1 || (msg2 || 'Request failed'); // Logic matches implementation: fallback on falsy
+          const expected1 = msg1 || (msg2 || '请求失败');
           expect((action1 as any).message).toBe(expected1);
 
           // Case 2: data.message missing, data.error.message exists
           const action2 = analyzeErrorResponse(400, { error: { message: msg2 } });
-          const expected2 = msg2 || 'Request failed';
+          const expected2 = msg2 || '请求失败';
           expect((action2 as any).message).toBe(expected2);
 
           // Case 3: Both missing
           const action3 = analyzeErrorResponse(400, {});
-          expect((action3 as any).message).toBe('Request failed');
+          expect((action3 as any).message).toBe('请求失败');
         }
       )
     );
