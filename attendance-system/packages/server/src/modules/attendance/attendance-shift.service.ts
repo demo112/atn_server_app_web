@@ -59,7 +59,12 @@ export class AttendanceShiftService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        // 列表接口不需要返回 periods 详情，保持轻量
+        include: {
+          periods: {
+            include: { period: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
       })
     ]);
 
@@ -67,6 +72,7 @@ export class AttendanceShiftService {
       id: shift.id,
       name: shift.name,
       cycleDays: shift.cycleDays,
+      periods: shift.periods, // Include periods
       createdAt: shift.createdAt,
       updatedAt: shift.updatedAt,
     }));

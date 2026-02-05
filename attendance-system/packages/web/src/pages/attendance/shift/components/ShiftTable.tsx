@@ -34,13 +34,7 @@ const ShiftTable: React.FC<ShiftTableProps> = ({ shifts, onDelete, onEdit }) => 
                     {shift.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    <div className="flex flex-col gap-1">
-                      {shift.times.map((t, i) => (
-                        <span key={i} className="inline-flex items-center w-fit px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                          {t.clockIn} - {t.clockOut}
-                        </span>
-                      ))}
-                    </div>
+                    {shift.times.map((t) => `${t.clockIn} - ${t.clockOut}`).join(', ')}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center space-x-2">

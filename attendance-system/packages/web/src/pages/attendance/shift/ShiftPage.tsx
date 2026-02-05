@@ -6,7 +6,8 @@ import type {
   CreateShiftDto, 
   UpdateShiftDto,
   CreateTimePeriodDto,
-  UpdateTimePeriodDto
+  UpdateTimePeriodDto,
+  TimePeriod
 } from '@attendance/shared';
 import ShiftModal from './components/ShiftModal';
 import ShiftTable from './components/ShiftTable';
@@ -35,36 +36,28 @@ const ShiftPage: React.FC = (): React.ReactElement => {
   const { toast } = useToast();
 
   const mapBackendToUI = useCallback((backendShift: BackendShift): UIShift => {
-    // Sort periods by sortOrder
-    const sortedPeriods = [...(backendShift.periods || [])].sort((a, b) => a.sortOrder - b.sortOrder);
+    let periodsToUse: TimePeriod[] = [];
+
+    if (backendShift.days && backendShift.days.length > 0) {
+      // Use the first day's periods (assuming single day or representative day for list)
+      const sortedDays = [...backendShift.days].sort((a, b) => a.dayOfCycle - b.dayOfCycle);
+      periodsToUse = sortedDays[0].periods;
+    } else if (backendShift.periods && backendShift.periods.length > 0) {
+      // Legacy structure
+      periodsToUse = [...backendShift.periods]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(p => p.period)
+        .filter((p): p is TimePeriod => !!p);
+    }
     
     // Map periods to times
-    const times: ShiftTimeConfig[] = sortedPeriods.map(p => {
-      const tp = p.period;
-      if (!tp) {
-        // Fallback if period data is missing
-        return {
-          id: p.periodId,
-          clockIn: '09:00',
-          clockOut: '18:00',
-          isClockInMandatory: true,
-          isClockOutMandatory: true,
-          validFromStart: '08:00',
-          validFromEnd: '10:00',
-          validUntilStart: '17:00',
-          validUntilEnd: '19:00'
-        };
-      }
-      
+    const times: ShiftTimeConfig[] = periodsToUse.map(tp => {
       return {
         id: tp.id,
         clockIn: tp.startTime || '09:00',
         clockOut: tp.endTime || '18:00',
-        // Assuming rules map to these booleans, but backend might not have them explicitly
-        // We'll assume true for now or derive from rules if possible
-        isClockInMandatory: true, 
+        isClockInMandatory: true,
         isClockOutMandatory: true,
-        // Mapping valid windows from rules (offsets)
         validFromStart: tp.rules?.checkInStartOffset ? calculateTime(tp.startTime, -tp.rules.checkInStartOffset) : '08:00',
         validFromEnd: tp.rules?.checkInEndOffset ? calculateTime(tp.startTime, tp.rules.checkInEndOffset) : '10:00',
         validUntilStart: tp.rules?.checkOutStartOffset ? calculateTime(tp.endTime, -tp.rules.checkOutStartOffset) : '17:00',
@@ -73,7 +66,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
     });
 
     // Determine grace periods from the first period (assuming uniform for now)
-    const firstPeriod = sortedPeriods[0]?.period;
+    const firstPeriod = periodsToUse[0];
     const lateGrace = firstPeriod?.rules?.lateGraceMinutes || 0;
     const earlyLeaveGrace = firstPeriod?.rules?.earlyLeaveGraceMinutes || 0;
 

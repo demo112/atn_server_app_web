@@ -71,11 +71,17 @@ export interface ShiftPeriod {
   period?: TimePeriod;
 }
 
+export interface ShiftDay {
+  dayOfCycle: number;
+  periods: TimePeriod[];
+}
+
 export interface Shift {
   id: number;
   name: string;
   cycleDays: number;
   periods?: ShiftPeriod[];
+  days?: ShiftDay[];
 }
 
 export interface CreateShiftDto {
