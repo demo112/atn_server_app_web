@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **[Deploy] 部署要求**
+  - Docs: 升级 Redis 版本要求至 6.2+
+
 ### Fixed
 - **[UA2] 人员与部门管理**
   - Server: 修复部门删除操作超时问题 (由 Redis 连接失败导致)
