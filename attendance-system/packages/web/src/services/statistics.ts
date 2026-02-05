@@ -41,7 +41,8 @@ export const getCalendar = async (year: number, month: number, employeeId?: numb
 
 export const triggerCalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<void> => {
   const res = await api.post('/statistics/calculate', data);
-  return validateResponse(z.void(), res);
+  // Backend returns { message: '...' } but we don't need it, so use z.any() to pass validation
+  return validateResponse(z.any(), res);
 };
 
 export const getDeptStats = async (params: GetDeptStatsDto): Promise<DeptStatsVo[]> => {
