@@ -16,6 +16,7 @@ import { attendanceScheduler } from './modules/attendance/attendance-scheduler';
 
 export const app = express();
 
+
 // 初始化调度器
 attendanceScheduler.init().catch(err => {
   logger.error({ err }, 'Failed to initialize attendance scheduler');

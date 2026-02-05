@@ -14,8 +14,11 @@ const HOST = '0.0.0.0';
 
 logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
 
-// Keep process alive hack
-setInterval(() => {}, 1000 * 60 * 60);
+// Keep process alive hack - explicitly required to prevent premature exit
+// likely due to empty event loop when Redis connection fails
+setInterval(() => {
+  // Heartbeat to keep process alive
+}, 1000 * 60);
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`[Startup] Server started on http://${HOST}:${PORT}`);
