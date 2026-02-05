@@ -14,7 +14,7 @@ import { errorHandler } from './common/error-handler';
 import { logger } from './common/logger';
 import { attendanceScheduler } from './modules/attendance/attendance-scheduler';
 
-export const app = express();
+export const app: express.Application = express();
 
 
 // 初始化调度器

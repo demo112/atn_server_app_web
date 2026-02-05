@@ -7,4 +7,4 @@ const router = Router();
 router.post('/login', authController.login.bind(authController));
 router.get('/me', authMiddleware, authController.me.bind(authController));
 
-export const authRouter = router;
+export const authRouter: Router = router;

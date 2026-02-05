@@ -102,4 +102,4 @@ router.get('/leaves', leaveController.getList.bind(leaveController));
 router.put('/leaves/:id', leaveController.update.bind(leaveController));
 router.delete('/leaves/:id', leaveController.cancel.bind(leaveController));
 
-export const attendanceRouter = router;
+export const attendanceRouter: Router = router;

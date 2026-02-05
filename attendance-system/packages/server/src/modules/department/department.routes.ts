@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { departmentController } from './department.controller';
 import { authMiddleware } from '../../common/middleware/auth';
 
-export const departmentRouter = Router();
+export const departmentRouter: Router = Router();
 
 // Apply authentication middleware to all routes
 departmentRouter.use(authMiddleware);
