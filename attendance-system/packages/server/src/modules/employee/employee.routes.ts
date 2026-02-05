@@ -14,4 +14,4 @@ router.put('/:id', employeeController.update);
 router.delete('/:id', employeeController.delete);
 router.post('/:id/bind-user', employeeController.bindUser);
 
-export const employeeRouter = router;
+export const employeeRouter: Router = router;

@@ -114,11 +114,11 @@ export class AttendanceClockService {
    */
   async findAll(query: ClockQueryDto) {
     const { page = 1, pageSize = 20, employeeId, deptId, startTime, endTime, type, source } = query;
-    const skip = (page - 1) * pageSize;
+    const skip = (Number(page) - 1) * Number(pageSize);
 
     const where: any = {};
     
-    if (employeeId) where.employeeId = employeeId;
+    if (employeeId) where.employeeId = Number(employeeId);
     if (type) where.type = type;
     if (source) where.source = source;
     
@@ -131,8 +131,10 @@ export class AttendanceClockService {
     
     // 部门查询 (通过关联)
     if (deptId) {
-      where.employee = { deptId };
+      where.employee = { deptId: Number(deptId) };
     }
+
+    this.logger.info({ query, where, skip, take: Number(pageSize) }, 'findAll query');
 
     const [total, items] = await Promise.all([
       prisma.attClockRecord.count({ where }),

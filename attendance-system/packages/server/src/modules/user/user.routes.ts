@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { userController } from './user.controller';
 import { authMiddleware as authenticate } from '../../common/middleware/auth';
 
-export const userRouter = Router();
+export const userRouter: Router = Router();
 
 userRouter.use(authenticate); // Protect all routes
 
