@@ -15,6 +15,7 @@ const DEFAULT_FILTER = {
   startTime: dayjs().startOf('day').format('YYYY-MM-DDTHH:mm'),
   endTime: dayjs().endOf('day').format('YYYY-MM-DDTHH:mm'),
   employeeId: '' as string | number,
+  deptId: undefined as number | undefined,
 };
 
 const ClockRecordPage: React.FC = () => {

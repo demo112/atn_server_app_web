@@ -1,11 +1,13 @@
 import React from 'react';
 import { UserListVo } from '@attendance/shared';
+import { DepartmentSelect } from '@/components/DepartmentSelect';
 
 interface PunchFilterProps {
   params: {
     startTime: string;
     endTime: string;
     employeeId: string | number;
+    deptId?: number;
   };
   setParams: (params: any) => void;
   onSearch: () => void;
