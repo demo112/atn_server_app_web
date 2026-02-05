@@ -1,27 +1,24 @@
-console.log('[DEBUG] Starting index.ts');
+console.log('DEBUG: Starting index.ts');
+process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
+process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
 
-// Add global error handlers FIRST
-process.on('uncaughtException', (err) => {
-  console.error('[Process] Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('[Process] Unhandled Rejection:', reason);
-});
-
+import 'reflect-metadata';
 import 'dotenv/config';
 import { app } from './app';
 import { logger } from './common/logger';
 
-console.log('[DEBUG] Imports done');
-
 logger.info('Starting server initialization...');
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = '0.0.0.0';
 
 logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
+
+// Keep process alive hack - explicitly required to prevent premature exit
+// likely due to empty event loop when Redis connection fails
+setInterval(() => {
+  // Heartbeat to keep process alive
+}, 1000 * 60);
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`[Startup] Server started on http://${HOST}:${PORT}`);

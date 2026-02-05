@@ -1,3 +1,4 @@
+import { request } from '@playwright/test';
 import { ApiClient } from './utils/api-client';
 
 /**
@@ -7,11 +8,12 @@ import { ApiClient } from './utils/api-client';
 async function globalTeardown(): Promise<void> {
   console.log('[E2E] Global Teardown 开始...');
 
-  const api = new ApiClient();
+  const requestContext = await request.newContext();
+  const api = new ApiClient(requestContext);
 
   try {
     // 登录
-    await api.login('admin', 'admin123');
+    await api.login('admin', '123456');
 
     // 兜底清理所有带 [W 前缀的测试数据
     console.log('[E2E] 兜底清理测试数据...');

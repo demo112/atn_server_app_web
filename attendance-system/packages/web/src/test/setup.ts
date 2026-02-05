@@ -48,8 +48,8 @@ Object.defineProperty(window, 'localStorage', {
 delete (window as any).location;
 window.location = {
   ...window.location,
-  origin: 'http://localhost:3000',
-  href: 'http://localhost:3000/',
+  origin: `http://localhost:${process.env.SERVER_PORT || 3001}`,
+  href: `http://localhost:${process.env.SERVER_PORT || 3001}/`,
   assign: vi.fn(),
   replace: vi.fn(),
   reload: vi.fn(),

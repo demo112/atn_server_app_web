@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, ScrollView, Alert, Modal } from 'react-native';
-import { Text, FAB, Surface, useTheme, Card, Chip, TextInput, Button, ActivityIndicator } from 'react-native-paper';
+import { Text, FAB, Surface, useTheme, Card, Chip, TextInput, Button, ActivityIndicator, RadioButton } from 'react-native-paper';
 import { getLeaves, createLeave, cancelLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
 import { LeaveType } from '@attendance/shared';
 import { logger } from '../../utils/logger';
@@ -92,6 +92,10 @@ const LeaveScreen = () => {
       item.status === 'approved' ? theme.colors.primary :
       item.status === 'rejected' ? theme.colors.error :
       theme.colors.secondary;
+    const statusText =
+      item.status === 'approved' ? '已通过' :
+      item.status === 'rejected' ? '已拒绝' :
+      '审核中';
 
     return (
       <Card style={styles.card} mode="elevated">
@@ -103,13 +107,13 @@ const LeaveScreen = () => {
               style={{ backgroundColor: withAlpha(statusColor, 0.12) }} 
               textStyle={{ color: statusColor }}
             >
-              {item.status}
+              {statusText}
             </Chip>
           </View>
           <Text variant="bodyMedium" style={{ marginTop: 8 }}>
             {new Date(item.startTime).toLocaleString()} - {new Date(item.endTime).toLocaleString()}
           </Text>
-          <Text variant="bodyMedium" style={{ marginTop: 4, color: theme.colors.secondary }}>
+          <Text variant="bodyMedium" style={{ marginTop: 8, marginBottom: 8, color: theme.colors.secondary }}>
             原因: {item.reason}
           </Text>
         </Card.Content>
@@ -139,6 +143,7 @@ const LeaveScreen = () => {
 
       <FAB
         icon="plus"
+        label="+ 新申请"
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="white"
         onPress={() => setModalVisible(true)}
@@ -155,13 +160,34 @@ const LeaveScreen = () => {
             <Text variant="titleLarge" style={styles.modalTitle}>新建申请</Text>
             
             <ScrollView contentContainerStyle={styles.form}>
-              <TextInput
-                mode="outlined"
-                label="类型（年假、病假等）"
-                value={formData.type}
-                onChangeText={(text) => setFormData({...formData, type: text as LeaveType})}
-                style={styles.input}
-              />
+              <Text variant="titleMedium">类型（年假、病假等）</Text>
+              <RadioButton.Group
+                onValueChange={value => setFormData({ ...formData, type: value as LeaveType })}
+                value={formData.type as LeaveType}
+              >
+                <View style={styles.radioRow}>
+                  <View style={styles.radioItem}>
+                    <RadioButton value={LeaveType.annual} testID="input-type-annual" />
+                    <Text>年假</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton value={LeaveType.sick} testID="input-type-sick" />
+                    <Text>病假</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton value={LeaveType.personal} testID="input-type-personal" />
+                    <Text>事假</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton value={LeaveType.business_trip} testID="input-type-business" />
+                    <Text>出差</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton value={LeaveType.other} testID="input-type-other" />
+                    <Text>其他</Text>
+                  </View>
+                </View>
+              </RadioButton.Group>
               <TextInput
                 mode="outlined"
                 label="开始时间 (YYYY-MM-DD HH:mm)"
@@ -169,6 +195,7 @@ const LeaveScreen = () => {
                 onChangeText={(text) => setFormData({...formData, startTime: text})}
                 placeholder="2024-01-01 09:00"
                 style={styles.input}
+                testID="input-startTime"
               />
               <TextInput
                 mode="outlined"
@@ -177,6 +204,7 @@ const LeaveScreen = () => {
                 onChangeText={(text) => setFormData({...formData, endTime: text})}
                 placeholder="2024-01-01 18:00"
                 style={styles.input}
+                testID="input-endTime"
               />
               <TextInput
                 mode="outlined"
@@ -186,6 +214,7 @@ const LeaveScreen = () => {
                 multiline
                 numberOfLines={3}
                 style={styles.input}
+                testID="input-reason"
               />
             </ScrollView>
 
@@ -245,6 +274,17 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: 'white',
+  },
+  radioRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 8,
+    gap: 12,
+  },
+  radioItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
   },
   modalActions: {
     flexDirection: 'row',

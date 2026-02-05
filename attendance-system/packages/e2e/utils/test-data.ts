@@ -37,7 +37,7 @@ export class TestDataFactory {
     return {
       name: `${this.prefix}User_${faker.person.firstName()}`,
       employeeNo: this.generateEmployeeNo(),
-      mobile: this.generatePhone(),
+      phone: this.generatePhone(),
       position: 'Staff',
       email: faker.internet.email(),
       hireDate: '2024-01-01',
@@ -47,14 +47,14 @@ export class TestDataFactory {
   }
 
   /** 创建带前缀的员工（需要先设置 API） */
-  async createEmployee(data: { name: string; phone?: string; email?: string; departmentId?: number }) {
+  async createEmployee(data: { name: string; phone?: string; email?: string; deptId?: number }) {
     if (!this.api) throw new Error('API client not set');
     const employee = await this.api.createEmployee({
       ...this.generateEmployee(),
       name: `${this.prefix}${data.name}`,
-      mobile: data.phone,
+      phone: data.phone,
       email: data.email,
-      departmentId: data.departmentId,
+      deptId: data.deptId,
     });
     this.createdEmployeeIds.push(employee.id);
     return employee;

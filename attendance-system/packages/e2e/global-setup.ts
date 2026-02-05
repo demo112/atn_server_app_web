@@ -1,3 +1,4 @@
+import { request } from '@playwright/test';
 import { ApiClient } from './utils/api-client';
 
 /**
@@ -7,12 +8,13 @@ import { ApiClient } from './utils/api-client';
 async function globalSetup(): Promise<void> {
   console.log('[E2E] Global Setup 开始...');
 
-  const api = new ApiClient();
+  const requestContext = await request.newContext();
+  const api = new ApiClient(requestContext);
 
   try {
     // 1. 验证后端服务可用
     console.log('[E2E] 验证后端服务...');
-    await api.login('admin', 'admin123');
+    await api.login('admin', '123456');
     console.log('[E2E] 后端服务正常');
 
     // 2. 兜底清理上次残留的测试数据

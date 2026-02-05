@@ -12,7 +12,7 @@ import { ApiClient } from './api-client';
 
 // 测试配置
 const TEST_PREFIX = '[PBT]';
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001';
 
 // 跳过条件：如果没有后端服务则跳过
 const skipIfNoBackend = process.env.SKIP_E2E_PBT === 'true';
@@ -24,7 +24,7 @@ describe.skipIf(skipIfNoBackend)('ApiClient PBT', () => {
     api = new ApiClient(API_BASE_URL);
     // 登录获取 token
     try {
-      await api.login('admin', 'admin123');
+      await api.login('admin', '123456');
     } catch {
       console.warn('无法连接后端服务，跳过 API 属性测试');
     }
@@ -45,7 +45,7 @@ describe.skipIf(skipIfNoBackend)('ApiClient PBT', () => {
    */
   it('Property 4: API 登录返回有效 Token', async () => {
     const freshApi = new ApiClient(API_BASE_URL);
-    const result = await freshApi.login('admin', 'admin123');
+    const result = await freshApi.login('admin', '123456');
 
     expect(result).toHaveProperty('token');
     expect(typeof result.token).toBe('string');
@@ -62,7 +62,7 @@ describe.skipIf(skipIfNoBackend)('ApiClient PBT', () => {
     const freshApi = new ApiClient(API_BASE_URL);
     expect(freshApi.getToken()).toBeNull();
 
-    await freshApi.login('admin', 'admin123');
+    await freshApi.login('admin', '123456');
 
     expect(freshApi.getToken()).not.toBeNull();
     expect(typeof freshApi.getToken()).toBe('string');

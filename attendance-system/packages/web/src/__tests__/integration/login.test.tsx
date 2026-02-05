@@ -75,8 +75,9 @@ describe('Login Integration', () => {
   });
 
   it('should handle successful login', async () => {
+    const port = process.env.SERVER_PORT || 3001;
     server.use(
-      http.post('http://localhost:3000/api/v1/auth/login', () => {
+      http.post(`http://localhost:${port}/api/v1/auth/login`, () => {
         return HttpResponse.json({
           success: true,
           data: {
