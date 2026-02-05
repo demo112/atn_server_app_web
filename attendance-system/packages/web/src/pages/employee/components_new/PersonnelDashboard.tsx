@@ -7,9 +7,10 @@ interface Props {
   onDelete: (id: string) => void;
   onBatchDelete?: (ids: string[]) => void;
   onAdd: () => void;
+  onEdit?: (id: string) => void;
 }
 
-const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, onBatchDelete, onAdd }) => {
+const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, onBatchDelete, onAdd, onEdit }) => {
   const [localFilters, setLocalFilters] = useState<FilterParams>({ name: '', idNumber: '', status: 'all' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -155,7 +156,7 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
                       type="checkbox"
                     />
                   </td>
-                  <td className="p-3">{person.id}</td>
+                  <td className="p-3">{person.employeeNo}</td>
                   <td className="p-3 font-medium">{person.name}</td>
                   <td className="p-3">{person.contact}</td>
                   <td className="p-3 text-slate-500">{person.gender === 'Unknown' ? '未知' : person.gender}</td>
@@ -164,7 +165,12 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
                   <td className="p-3">{person.idNumber}</td>
                   <td className="p-3">
                     <div className="flex justify-center space-x-3">
-                      <button className="text-slate-400 hover:text-primary transition-colors"><span className="material-icons-round text-lg">edit</span></button>
+                      <button 
+                        onClick={() => onEdit?.(person.id)}
+                        className="text-slate-400 hover:text-primary transition-colors"
+                      >
+                        <span className="material-icons-round text-lg">edit</span>
+                      </button>
                       <button 
                         onClick={() => onDelete(person.id)}
                         className="text-slate-400 hover:text-red-500 transition-colors"

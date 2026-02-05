@@ -1,12 +1,13 @@
 export interface Person {
   id: string;
+  employeeNo: string;
   name: string;
   contact: string;
-  gender: 'Male' | 'Female' | 'Unknown';
+  gender: string;
   department: string;
   idType: string;
   idNumber: string;
-  status: 'Active' | 'Inactive';
+  status: string;
 }
 
 export interface Department {
