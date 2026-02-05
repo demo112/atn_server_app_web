@@ -57,6 +57,27 @@ interface TriggerCalculationDto {
 }
 ```
 
+### GET /api/v1/statistics/calculate/{batchId}/status
+
+查询计算任务进度。
+
+**请求参数 (Path)**
+- batchId: string
+
+**响应数据**
+```typescript
+interface CalculationStatus {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'completed_with_errors';
+  progress: number; // 0-100
+  total: number;
+  completed: number;
+  failed: number;
+  message?: string;
+  error?: string;
+}
+```
+
 ## 数据模型
 
 ### 核心依赖表
