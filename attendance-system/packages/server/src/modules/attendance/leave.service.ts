@@ -6,6 +6,7 @@ import { Prisma, LeaveStatus } from '@prisma/client';
 import invariant from 'tiny-invariant';
 import dayjs from 'dayjs';
 import { attendanceScheduler } from './attendance-scheduler';
+import { departmentService } from '../department/department.service';
 
 export class LeaveService {
   private logger = createLogger('LeaveService');
@@ -122,9 +123,10 @@ export class LeaveService {
       where.endTime = { gt: start };
     }
     
-    // 部门查询 (简单匹配，暂不支持递归)
+    // 部门查询 (支持递归)
     if (deptId) {
-      where.employee = { deptId };
+      const deptIds = await departmentService.getSubDepartmentIds(deptId);
+      where.employee = { deptId: { in: deptIds } };
     }
 
     const [total, items] = await Promise.all([

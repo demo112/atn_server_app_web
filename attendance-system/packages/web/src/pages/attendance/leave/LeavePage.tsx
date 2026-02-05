@@ -6,6 +6,8 @@ import dayjs from 'dayjs';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/components/common/ToastProvider';
 import StandardModal from '@/components/common/StandardModal';
+import { DepartmentTree } from '@/components/common/DepartmentTree';
+import { EmployeeSelect } from '@/components/common/EmployeeSelect';
 
 const LeavePage: React.FC = () => {
   const { toast } = useToast();
@@ -14,6 +16,7 @@ const LeavePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
+  const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LeaveVo | undefined>(undefined);
   
@@ -37,6 +40,7 @@ const LeavePage: React.FC = () => {
         page,
         pageSize: 10,
         employeeId: filters.employeeId,
+        deptId: selectedDeptId || undefined,
         type: filters.type,
         startTime: filters.startTime || undefined,
         endTime: filters.endTime || undefined,
@@ -49,7 +53,7 @@ const LeavePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, filters, toast]);
+  }, [page, filters, selectedDeptId, toast]);
 
   useEffect(() => {
     fetchData();
@@ -124,27 +128,37 @@ const LeavePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">请假/出差管理</h1>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
-          >
-            <span className="material-icons text-xl">add</span>
-            <span>申请请假</span>
-          </button>
-        </div>
+    <div className="flex h-full min-h-[calc(100vh-64px)]">
+      <div className="w-64 border-r bg-gray-50 p-4 shrink-0 hidden md:block">
+        <DepartmentTree
+          selectedId={selectedDeptId}
+          onSelect={(id) => {
+            setSelectedDeptId(id);
+            setPage(1);
+            setFilters(prev => ({ ...prev, employeeId: undefined }));
+          }}
+        />
+      </div>
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">请假/出差管理</h1>
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
+            >
+              <span className="material-icons text-xl">add</span>
+              <span>申请请假</span>
+            </button>
+          </div>
 
-        <div className="flex flex-wrap gap-4 mb-6">
-          <input
-            type="number"
-            placeholder="员工ID"
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-            value={filters.employeeId || ''}
-            onChange={e => setFilters({...filters, employeeId: e.target.value ? Number(e.target.value) : undefined})}
-          />
+          <div className="flex flex-wrap gap-4 mb-6">
+            <EmployeeSelect
+              deptId={selectedDeptId}
+              value={filters.employeeId}
+              onChange={val => setFilters({...filters, employeeId: val})}
+              className="w-48"
+            />
           <select
             className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
             value={filters.type || ''}
@@ -299,6 +313,7 @@ const LeavePage: React.FC = () => {
         >
           <p className="text-gray-600">确定要撤销这条记录吗？</p>
         </StandardModal>
+      </div>
       </div>
     </div>
   );

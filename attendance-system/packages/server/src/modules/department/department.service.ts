@@ -258,6 +258,33 @@ export class DepartmentService {
       children: [],
     };
   }
+
+  /**
+   * 获取部门及其所有子部门的ID列表
+   */
+  async getSubDepartmentIds(rootId: number): Promise<number[]> {
+    // 一次性查出所有部门，在内存中查找
+    const allDepts = await prisma.department.findMany({
+      select: { id: true, parentId: true }
+    });
+
+    const result = new Set<number>();
+    const queue = [rootId];
+    result.add(rootId);
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const children = allDepts.filter(d => d.parentId === currentId);
+      for (const child of children) {
+        if (!result.has(child.id)) {
+          result.add(child.id);
+          queue.push(child.id);
+        }
+      }
+    }
+
+    return Array.from(result);
+  }
 }
 
 export const departmentService = new DepartmentService();
