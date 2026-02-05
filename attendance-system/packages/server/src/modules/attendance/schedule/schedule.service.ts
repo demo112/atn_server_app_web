@@ -71,19 +71,24 @@ export class ScheduleService {
       return { count: 0 };
     }
 
-    // 2. 批量执行
+    // 2. 批量执行 (分批并发处理)
+    const chunkSize = 10; // 每批 10 人并发
+    const total = employees.length;
+
     await prisma.$transaction(async (tx) => {
-      for (const emp of employees) {
-        await this.createWithTx(tx, {
+      for (let i = 0; i < total; i += chunkSize) {
+        const batch = employees.slice(i, i + chunkSize);
+        // 并发执行当前批次
+        await Promise.all(batch.map(emp => this.createWithTx(tx, {
           employeeId: emp.id,
           shiftId,
           startDate,
           endDate,
           force
-        });
+        })));
       }
     }, {
-      timeout: 20000 // 增加超时时间
+      timeout: 60000 // 增加超时时间到 60s
     });
 
     return { count: employees.length };
