@@ -567,7 +567,7 @@ export class StatisticsService {
   }
 
   async exportStats(dto: ExportStatsDto): Promise<Buffer> {
-    const stats = await this.getDeptStats({ month: dto.month, deptId: dto.deptId });
+    const stats = await this.getDeptStats({ month: dto.month || new Date().toISOString().slice(0, 7), deptId: dto.deptId });
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('部门统计报表');

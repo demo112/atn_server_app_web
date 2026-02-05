@@ -17,6 +17,12 @@ const Login: React.FC = (): React.ReactElement => {
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    
+    if (!username.trim() || !password) {
+      toast.warning('请输入用户名和密码');
+      return;
+    }
+
     if (!agreed) {
       toast.warning('请先阅读并同意服务协议和隐私协议');
       return;

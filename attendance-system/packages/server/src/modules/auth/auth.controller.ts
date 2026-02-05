@@ -14,8 +14,12 @@ export class AuthController {
       const result = await authService.login(dto);
       logger.info('Login service returned');
       res.json({ success: true, data: result });
-    } catch (e) {
-      logger.error({ err: e }, 'AuthController.login error');
+    } catch (e: any) {
+      if (e.name === 'ZodError') {
+        logger.error({ err: e.issues }, 'Login validation failed');
+      } else {
+        logger.error({ err: e }, 'AuthController.login error');
+      }
       next(e);
     }
   }
