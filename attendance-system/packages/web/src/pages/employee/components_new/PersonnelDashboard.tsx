@@ -5,10 +5,11 @@ interface Props {
   data: Person[];
   onFilterChange: (filters: FilterParams) => void;
   onDelete: (id: string) => void;
+  onBatchDelete?: (ids: string[]) => void;
   onAdd: () => void;
 }
 
-const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, onAdd }) => {
+const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, onBatchDelete, onAdd }) => {
   const [localFilters, setLocalFilters] = useState<FilterParams>({ name: '', idNumber: '', status: 'all' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -96,6 +97,7 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
           <span>添加</span>
         </button>
         <button 
+          onClick={() => onBatchDelete?.(Array.from(selectedIds))}
           disabled={selectedIds.size === 0}
           className="flex items-center space-x-1 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded text-sm transition text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >

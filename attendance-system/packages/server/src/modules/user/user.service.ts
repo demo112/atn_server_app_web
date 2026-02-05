@@ -100,8 +100,10 @@ export class UserService {
         username: user.username,
         role: user.role as UserRole,
         status: user.status as any,
+        employeeId: user.employeeId,
         employeeName: user.employee?.name,
         createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
     };
   }
 

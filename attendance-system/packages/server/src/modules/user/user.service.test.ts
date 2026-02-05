@@ -42,11 +42,15 @@ describe('UserService', () => {
         role: 'user',
         status: 'active',
         employeeId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       } as any);
 
-      await service.create({ username: 'newuser', role: 'user' });
+      const result = await service.create({ username: 'newuser', role: 'user' });
 
       expect(bcrypt.hash).toHaveBeenCalledWith('123456', 10);
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('updatedAt');
     });
 
     it('should throw AppError if username exists', async () => {
