@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
+
+
 import { attendanceRouter } from './modules/attendance';
 import { authRouter } from './modules/auth';
 import { userRouter } from './modules/user';
@@ -10,14 +12,14 @@ import { departmentRouter } from './modules/department';
 import { statisticsRouter } from './modules/statistics/statistics.routes';
 import { errorHandler } from './common/error-handler';
 import { logger } from './common/logger';
-// import { attendanceScheduler } from './modules/attendance/attendance-scheduler';
+import { attendanceScheduler } from './modules/attendance/attendance-scheduler';
 
 export const app = express();
 
 // 初始化调度器
-// attendanceScheduler.init().catch(err => {
-//   logger.error({ err }, 'Failed to initialize attendance scheduler');
-// });
+attendanceScheduler.init().catch(err => {
+  logger.error({ err }, 'Failed to initialize attendance scheduler');
+});
 
 // 中间件
 app.use(cors());
