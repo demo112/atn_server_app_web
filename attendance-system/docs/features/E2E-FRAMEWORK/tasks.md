@@ -14,12 +14,12 @@
   - 配置失败截图和 trace
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. 创建目录结构和基础类
-  - [ ] 2.1 创建 e2e 目录结构
+- [x] 2. 创建目录结构和基础类
+  - [x] 2.1 创建 e2e 目录结构
     - 在 `packages/e2e/` 下创建 `fixtures/`、`pages/`、`components/`、`tests/`、`utils/` 子目录
     - _Requirements: 2.1, 2.2_
   
-  - [ ] 2.2 实现 BasePage 基类
+  - [x] 2.2 实现 BasePage 基类
     - 实现 `goto()`、`waitForLoad()`、`getToast()`、`getModal()` 方法
     - _Requirements: 2.3_
 
