@@ -6,7 +6,7 @@ export const UserStatusSchema = z.enum(['active', 'inactive']);
 export const UserSchema = z.object({
   id: z.number(),
   username: z.string(),
-  employeeId: z.number().optional(),
+  employeeId: z.union([z.number(), z.null()]).optional().transform((v) => (v === null ? undefined : v)),
   role: UserRoleSchema,
   status: UserStatusSchema,
   createdAt: z.string(),

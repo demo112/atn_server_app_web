@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
+import { AxiosError } from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { CreateUserDto, UserRole, UserStatus } from '@attendance/shared';
 import { createUser, updateUser, getUserById } from '../../../services/user';
@@ -72,7 +73,11 @@ export const UserEditScreen = () => {
       }
     } catch (error) {
       logger.error(error);
-      Alert.alert('错误', '保存失败');
+      if (error instanceof AxiosError) {
+        return;
+      }
+      const msg = (error as any)?.message || '保存失败';
+      Alert.alert('错误', String(msg));
     } finally {
       setLoading(false);
     }

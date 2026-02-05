@@ -13,7 +13,7 @@ export const LoginVoSchema = z.object({
     username: z.string(),
     role: UserRoleSchema,
     name: z.string().optional(),
-    employeeId: z.number().optional(),
+    employeeId: z.union([z.number(), z.null()]).optional().transform((v) => (v === null ? undefined : v)),
     permissions: z.array(z.string()).optional(),
   }),
 });
@@ -23,6 +23,6 @@ export const MeVoSchema = z.object({
   id: z.number(),
   username: z.string(),
   role: UserRoleSchema,
-  employeeId: z.number().optional(),
+  employeeId: z.union([z.number(), z.null()]).optional().transform((v) => (v === null ? undefined : v)),
   permissions: z.array(z.string()),
 });
