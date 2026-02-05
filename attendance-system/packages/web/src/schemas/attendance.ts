@@ -152,7 +152,7 @@ export const DailyRecordVoSchema = z.object({
   leaveMinutes: z.number(),
   workMinutes: z.number().nullable().optional().transform(v => v ?? undefined),
   remark: z.string().nullable().optional().transform(v => v ?? undefined),
-  employeeNo: z.string().nullish().transform(v => v ?? ''),
+  employeeNo: z.string().nullable().optional().transform(v => v ?? undefined),
 });
 
 export const PaginatedDailyRecordVoSchema = z.object({
