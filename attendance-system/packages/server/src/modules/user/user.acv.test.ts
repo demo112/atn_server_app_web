@@ -63,7 +63,8 @@ describe('UserService - ACV Verification', () => {
               username, 
               role: 'user', 
               status: 'active',
-              createdAt: new Date() 
+              createdAt: new Date(),
+              updatedAt: new Date(),
             });
 
             await service.create({ username, role: 'user' } as any);
@@ -89,7 +90,8 @@ describe('UserService - ACV Verification', () => {
               ...dto, 
               id: 1, 
               status: 'active', 
-              createdAt: new Date() 
+              createdAt: new Date(),
+              updatedAt: new Date(),
             });
 
             try {
