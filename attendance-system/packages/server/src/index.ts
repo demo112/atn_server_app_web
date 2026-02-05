@@ -1,30 +1,30 @@
-import 'dotenv/config';
-import { app } from './app';
-import { logger } from './common/logger';
+console.log('[DEBUG] Starting index.ts');
 
-// Add global error handlers first
-process.on('exit', (code) => {
-  console.log(`[Process] Process exiting with code ${code}`);
-});
-
+// Add global error handlers FIRST
 process.on('uncaughtException', (err) => {
   console.error('[Process] Uncaught Exception:', err);
-  logger.error(err, 'Uncaught Exception');
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[Process] Unhandled Rejection:', reason);
-  logger.error({ reason, promise }, 'Unhandled Rejection');
 });
 
-console.log('[Startup] Starting server initialization...');
+import 'dotenv/config';
+import { app } from './app';
+import { logger } from './common/logger';
+
+console.log('[DEBUG] Imports done');
+
 logger.info('Starting server initialization...');
 
-const PORT = process.env.PORT || 3000;
-console.log(`[Startup] Attempting to listen on port ${PORT}...`);
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = '0.0.0.0';
 
-const server = app.listen(PORT, () => {
-  console.log(`[Startup] Server started on port ${PORT}`);
+logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`[Startup] Server started on http://${HOST}:${PORT}`);
   logger.info({ port: PORT, env: process.env.NODE_ENV }, 'Server started');
 });
 
