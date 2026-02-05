@@ -56,6 +56,9 @@ const ClockRecordPage: React.FC = () => {
       if (queryParams.employeeId) {
         apiParams.employeeId = Number(queryParams.employeeId);
       }
+      if (queryParams.deptId) {
+        apiParams.deptId = Number(queryParams.deptId);
+      }
 
       const res = await getClockRecords(apiParams);
       setData(res.items);

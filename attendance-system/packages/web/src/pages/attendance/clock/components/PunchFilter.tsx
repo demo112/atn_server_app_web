@@ -43,6 +43,17 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
       </div>
 
       <div className="space-y-1">
+        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">筛选部门</label>
+        <div className="w-48">
+          <DepartmentSelect
+            value={params.deptId}
+            onSelect={(val) => setParams({ ...params, deptId: val })}
+            className="block w-full px-3 py-1.5 text-sm border-gray-300 dark:border-gray-600 bg-transparent rounded focus:ring-primary focus:border-primary dark:text-gray-200 cursor-pointer transition-all"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
         <label className="text-xs font-medium text-gray-500 dark:text-gray-400">筛选员工</label>
         <div className="relative group">
           <select
