@@ -1,4 +1,4 @@
-import { render, RenderOptions } from '@testing-library/react';
+import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { ToastProvider } from '../components/common/ToastProvider';
@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 const renderWithProviders = (
   ui: ReactElement,
   { route = '/', ...options }: RenderOptions & { route?: string } = {}
-) => {
+): RenderResult & { user: ReturnType<typeof userEvent.setup> } => {
   window.history.pushState({}, 'Test page', route);
 
   return {

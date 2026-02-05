@@ -10,7 +10,7 @@ import StandardModal from '@/components/common/StandardModal';
 const LeavePage: React.FC = () => {
   const { toast } = useToast();
   const [data, setData] = useState<LeaveVo[]>([]);
-  const [total, setTotal] = useState(0);
+  // const [total, setTotal] = useState(0); // Unused
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -42,7 +42,7 @@ const LeavePage: React.FC = () => {
         endTime: filters.endTime || undefined,
       });
       setData(res.items || []);
-      setTotal(res.total);
+      // setTotal(res.total);
     } catch (error) {
       logger.error('Failed to fetch leaves', error);
       toast.error('加载请假列表失败');
@@ -217,7 +217,7 @@ const LeavePage: React.FC = () => {
                     </td>
                     <td className="p-4">{dayjs(item.startTime).format('YYYY-MM-DD HH:mm')}</td>
                     <td className="p-4">{dayjs(item.endTime).format('YYYY-MM-DD HH:mm')}</td>
-                    <td className="p-4">{item.duration}</td>
+                    <td className="p-4">{dayjs(item.endTime).diff(dayjs(item.startTime), 'hour', true).toFixed(1)}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(item.status)}`}>
                         {item.status}

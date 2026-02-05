@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/components/common/ToastProvider';
-import dayjs from 'dayjs';
 import { getSettings, updateSettings } from '../../../services/attendance-settings';
 
 const AttendanceSettingsPage: React.FC = (): React.ReactElement => {

@@ -1,12 +1,11 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet, Link, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './components/common/ToastProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthGuard } from './components/AuthGuard';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
-import EmployeeList from './pages/employee/EmployeeList';
 import EmployeeManagement from './pages/employee/EmployeeManagement';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import ShiftPage from '@/pages/attendance/shift/ShiftPage';

@@ -15,7 +15,7 @@ import StandardModal from '../../../components/common/StandardModal';
 import { useToast } from '../../../components/common/ToastProvider';
 
 const ShiftPage: React.FC = (): React.ReactElement => {
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [shifts, setShifts] = useState<UIShift[]>([]);
   const [searchText, setSearchText] = useState('');
   
@@ -86,7 +86,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
   }, []);
 
   const fetchShifts = useCallback(async (name?: string): Promise<void> => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const data = await getShifts({ name });
       const uiShifts = data.map(mapBackendToUI);
@@ -95,7 +95,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
       console.error(err);
       toast.error('获取班次列表失败');
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   }, [mapBackendToUI, toast]);
 
@@ -142,7 +142,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
 
   const handleModalConfirm = async (uiData: UIShift) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       // 1. Process TimePeriods
       const periodIds: number[] = [];
 
@@ -210,7 +210,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
       console.error(error);
       toast.error('操作失败');
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 

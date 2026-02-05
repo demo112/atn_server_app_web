@@ -1,12 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SchedulePage from '../../../pages/attendance/schedule/SchedulePage';
 import { renderWithProviders } from '../../../test/utils';
-import * as attendanceService from '../../../services/attendance';
-import * as shiftService from '../../../services/shift';
-import * as employeeService from '../../../services/employee';
-import * as departmentService from '../../../services/department';
+import { attendanceService } from '../../../services/attendance';
+import { employeeService } from '../../../services/employee';
 
 // Mock Services
 vi.mock('../../../services/attendance', () => ({
@@ -14,8 +12,8 @@ vi.mock('../../../services/attendance', () => ({
     getSchedules: vi.fn(),
     createSchedule: vi.fn(),
     batchCreateSchedule: vi.fn(),
-    getShifts: vi.fn(),
     deleteSchedule: vi.fn(),
+    getShifts: vi.fn(),
   },
 }));
 
@@ -142,7 +140,7 @@ describe('Schedule Integration Test', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(attendanceService.createSchedule).toHaveBeenCalledWith(expect.objectContaining({
+      expect(attendanceService.batchCreateSchedule).toHaveBeenCalledWith(expect.objectContaining({
         employeeId: 101,
         shiftId: 1,
         startDate: '2023-07-01',

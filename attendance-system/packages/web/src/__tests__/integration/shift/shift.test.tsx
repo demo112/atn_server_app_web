@@ -246,7 +246,8 @@ describe('Shift Integration Test', () => {
     // If previous tests used getByTitle('Delete'), Edit likely has title too.
     // If not, I'll fix it in problem-fixing.
     // Let's look for any button that isn't Delete
-    const buttons = within(row!).getAllByRole('button');
+    // const buttons = within(row!).getAllByRole('button');
+    // const deleteBtn = within(row!).getByRole('button', { name: /delete/i });
     // Usually Edit is first, Delete is second
     // Or check if there is an Edit button text
     

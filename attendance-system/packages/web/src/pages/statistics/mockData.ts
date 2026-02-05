@@ -1,4 +1,3 @@
-import { AttendanceRecord, MonthlySummaryData, MonthlyCardUser } from './types';
 
 export const IMAGES = {
   DAILY_STATS: "https://lh3.googleusercontent.com/aida-public/AB6AXuDMLGV647AClA2RVWce0NbuomcJZOjAwz053wnHsaAhSXrUzJyTMyOsTjNgPw1Br0Ubh9WfEBZHp8jlkGW_yfQJn0mJdZxoxBRsSZxg9o_PfziGOYtAa9Dhxsqov-ObjPlpr-ON-3YSyCIRERDXPeiO6TAza4UpsS5p346srPDzbOVdc0xqnW3WiQ-3oEWWjfIPllgnOgOlGrBWQLniHRNSPnSuEwtWntWkXNfoYyKrGeZ_dQ0aEbvRFL6pwixm3O7ZqHNk_8_H25w",

@@ -95,22 +95,7 @@ const PunchTable: React.FC<PunchTableProps> = ({ data, loading }) => {
               <td className="px-6 py-4">{getTypeBadge(record.type)}</td>
               <td className="px-6 py-4">{getMethodBadge(record.source)}</td>
               <td className="px-6 py-4 font-mono text-xs text-gray-400 group relative">
-                {record.deviceSn ? (
-                  <>
-                    <span className="cursor-help border-b border-dashed border-gray-300">{record.deviceSn.slice(0, 8)}...</span>
-                    <div className="absolute bottom-full left-0 hidden group-hover:block bg-gray-900 text-white p-2 rounded text-[10px] z-20 mb-2 whitespace-nowrap shadow-xl">
-                      设备SN: {record.deviceSn}
-                      {record.deviceInfo && (
-                        <>
-                          <br />
-                          型号: {record.deviceInfo.model || '-'}
-                        </>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  '-'
-                )}
+                -
               </td>
             </tr>
           ))}

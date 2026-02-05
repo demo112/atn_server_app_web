@@ -345,7 +345,7 @@ const MonthlyCardReport: React.FC = () => {
                                  record.status === 'late' ? '迟到' :
                                  record.status === 'early_leave' ? '早退' :
                                  record.status === 'absent' ? '旷工' : 
-                                 record.status === 'rest' ? '休息' : record.status}
+                                record.status}
                               </span>
                             </td>
                           </tr>

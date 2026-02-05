@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, Mock } from 'vitest';
+import { describe, it, expect, vi, Mock, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DepartmentSelect } from './index';

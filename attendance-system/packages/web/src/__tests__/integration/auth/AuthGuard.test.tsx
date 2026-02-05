@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { screen } from '@testing-library/react';
 import { AuthGuard } from '../../../components/AuthGuard';
-import { AuthContext, AuthContextType } from '../../../context/AuthContext';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import * as authUtils from '../../../utils/auth';
+import { renderWithProviders } from '../../../test/utils';
 
 // Mock react-router-dom Navigate
 vi.mock('react-router-dom', async () => {

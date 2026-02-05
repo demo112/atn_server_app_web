@@ -21,10 +21,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types"],
     "paths": {
       "@/*": ["src/*"],
       "@attendance/shared": ["../../packages/shared/src"],
-      "@attendance/shared/*": ["../../packages/shared/src/*"]
+      "@attendance/shared/*": ["../../packages/shared/src/*"],
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
     }
   },
   "include": ["src"],

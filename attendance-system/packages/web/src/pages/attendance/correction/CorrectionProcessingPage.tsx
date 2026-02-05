@@ -5,7 +5,7 @@ import { DepartmentTree } from '@/components/common/DepartmentTree';
 import { useToast } from '@/components/common/ToastProvider';
 import { CheckInDialog } from './components/CheckInDialog';
 import { CheckOutDialog } from './components/CheckOutDialog';
-import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus, AttendanceRecord } from '@attendance/shared';
+import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 
 // 状态映射（保持与 reference 一致的样式逻辑）
 const getStatusStyle = (status: string) => {

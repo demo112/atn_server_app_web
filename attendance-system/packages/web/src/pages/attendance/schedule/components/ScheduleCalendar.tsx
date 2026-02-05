@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Schedule } from '@attendance/shared';
 import { attendanceService } from '@/services/attendance';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';

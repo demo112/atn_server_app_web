@@ -60,18 +60,18 @@ describe('CorrectionPage Integration', () => {
       employeeName: 'John Doe',
       deptName: 'Engineering',
       workDate: '2024-03-20',
-      checkInTime: null, // Missing check-in
+      checkInTime: undefined, // Missing check-in
       checkOutTime: '2024-03-20 18:00:00',
       status: 'absent',
     },
     {
       id: '2',
-      employeeId: '102',
+      employeeId: 102,
       employeeName: 'Jane Smith',
       deptName: 'Marketing',
       workDate: '2024-03-20',
       checkInTime: '2024-03-20 09:00:00',
-      checkOutTime: null, // Missing check-out
+      checkOutTime: undefined, // Missing check-out
       status: 'late',
     },
   ];
@@ -81,21 +81,22 @@ describe('CorrectionPage Integration', () => {
     
     // Default mock implementation
     vi.mocked(correctionService.getDailyRecords).mockResolvedValue({
-      items: mockRecords,
+      items: mockRecords as any,
       total: 2,
+      totalPages: 1,
       page: 1,
       pageSize: 10,
     });
 
     vi.mocked(correctionService.supplementCheckIn).mockResolvedValue({
-      id: 1,
+      // id: 1,
       // message: 'Success', // Removed extra property
-    });
+    } as any);
 
     vi.mocked(correctionService.supplementCheckOut).mockResolvedValue({
-      id: 2,
+      // id: 2,
       // message: 'Success',
-    });
+    } as any);
   });
 
   it('should render daily records and allow check-in correction', async () => {

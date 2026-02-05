@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import * as correctionService from '@/services/correction';
 import dayjs from 'dayjs';
 import { logger } from '@/utils/logger';
-import StandardModal from '@/components/common/StandardModal';
 import { useToast } from '@/components/common/ToastProvider';
 
 interface CheckOutDialogProps {
@@ -15,7 +14,7 @@ interface CheckOutDialogProps {
 }
 
 export const CheckOutDialog: React.FC<CheckOutDialogProps> = ({ 
-  isOpen, onClose, onSuccess, dailyRecordId, employeeName, workDate 
+  isOpen, onClose, onSuccess, dailyRecordId 
 }): React.ReactElement | null => {
   const { success, error } = useToast();
   const [loading, setLoading] = useState(false);

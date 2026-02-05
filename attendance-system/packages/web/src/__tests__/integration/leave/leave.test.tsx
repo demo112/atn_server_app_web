@@ -108,7 +108,11 @@ describe('Leave Integration Test', () => {
 
   it('opens create dialog and submits valid leave request', async () => {
     const user = userEvent.setup();
-    vi.mocked(leaveService.createLeave).mockResolvedValue({ ...mockLeaves[0], id: 3 }); // fixed index
+    vi.mocked(leaveService.createLeave).mockResolvedValue({ 
+      ...mockLeaves[0], 
+      id: 3,
+      updatedAt: '2024-03-20 10:00:00' 
+    }); // fixed index
 
     renderWithProviders(<LeavePage />);
 

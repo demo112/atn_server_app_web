@@ -14,6 +14,7 @@ export const AttendanceSummaryVoSchema = z.object({
   earlyLeaveMinutes: z.number(),
   absentCount: z.number(),
   absentMinutes: z.number(),
+  missingCount: z.number(),
   leaveCount: z.number(),
   leaveMinutes: z.number(),
   actualMinutes: z.number(),

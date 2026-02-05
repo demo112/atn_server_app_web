@@ -68,7 +68,7 @@ const AttendanceDetailsPage: React.FC = () => {
     });
   };
 
-  const formatMinutes = (minutes: number): string => {
+  const formatMinutes = (minutes: number | undefined): string => {
     if (!minutes) return '-';
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;

@@ -4,7 +4,7 @@ import { departmentService } from '../../services/department';
 import { DepartmentVO } from '@attendance/shared';
 import { useToast } from '@/components/common/ToastProvider';
 
-export interface DepartmentSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface DepartmentSelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onSelect'> {
   value?: number;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onSelect?: (value: number) => void;
