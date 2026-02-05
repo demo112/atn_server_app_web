@@ -123,12 +123,16 @@ const DailyStatsReport: React.FC = () => {
 
       const batchId = await triggerCalculation(params);
       
-      const poll = async () => {
+        const poll = async () => {
         try {
           const status = await getRecalculationStatus(batchId);
-          if (status.status === 'completed') {
+          if (status.status === 'completed' || status.status === 'completed_with_errors') {
             setRecalcLoading(false);
-            toast.success('重新计算完成');
+            if (status.status === 'completed_with_errors') {
+               toast.error(status.message || '重算完成，但有部分失败');
+            } else {
+               toast.success('重新计算完成');
+            }
             fetchData();
           } else if (status.status === 'failed') {
             setRecalcLoading(false);

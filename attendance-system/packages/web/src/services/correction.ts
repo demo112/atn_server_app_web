@@ -60,7 +60,7 @@ export const triggerRecalculation = async (data: { startDate: string; endDate: s
 };
 
 export interface CalculationStatus {
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'completed_with_errors';
   progress: number;
   message?: string;
   error?: string;
@@ -69,7 +69,7 @@ export interface CalculationStatus {
 export const getRecalculationStatus = async (batchId: string): Promise<CalculationStatus> => {
   const res = await api.get(`/attendance/recalculate/${batchId}/status`);
   return validateResponse(z.object({
-    status: z.enum(['pending', 'processing', 'completed', 'failed']),
+    status: z.enum(['pending', 'processing', 'completed', 'failed', 'completed_with_errors']),
     progress: z.number(),
     message: z.string().optional(),
     error: z.string().optional()

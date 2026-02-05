@@ -55,9 +55,13 @@ const SummaryPage: React.FC = (): React.ReactElement => {
       const poll = async () => {
         try {
           const status = await getRecalculationStatus(batchId);
-          if (status.status === 'completed') {
+          if (status.status === 'completed' || status.status === 'completed_with_errors') {
             setLoading(false);
-            toast.success('重新计算完成');
+            if (status.status === 'completed_with_errors') {
+              toast.error(status.message || '重算完成，但有部分失败');
+            } else {
+              toast.success('重新计算完成');
+            }
             fetchData();
           } else if (status.status === 'failed') {
             setLoading(false);

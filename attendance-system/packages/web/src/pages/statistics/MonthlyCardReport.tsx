@@ -148,10 +148,14 @@ const MonthlyCardReport: React.FC = () => {
       const poll = async () => {
         try {
           const status = await getRecalculationStatus(batchId);
-          if (status.status === 'completed') {
+          if (status.status === 'completed' || status.status === 'completed_with_errors') {
             setRecalcModalVisible(false);
             setRecalcLoading(false);
-            toast.success('重新计算完成');
+            if (status.status === 'completed_with_errors') {
+              toast.error(status.message || '重算完成，但有部分失败');
+            } else {
+              toast.success('重新计算完成');
+            }
             
             // Auto refresh if current month is in range
             const [year, month] = currentMonth.split('-');
