@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
+import { AxiosError } from 'axios';
 import { userService } from '../../services/user';
 import type { UserRole, UserStatus } from '@attendance/shared';
 import { useToast } from '@/components/common/ToastProvider';
@@ -178,7 +179,9 @@ const UserList: React.FC = () => {
       fetchData(page);
     } catch (error) {
       console.error(error);
-      toast.error(modalMode === 'create' ? '创建失败' : '更新失败');
+      if (!(error instanceof AxiosError)) {
+        toast.error(modalMode === 'create' ? '创建失败' : '更新失败');
+      }
     } finally {
       setSubmitLoading(false);
     }

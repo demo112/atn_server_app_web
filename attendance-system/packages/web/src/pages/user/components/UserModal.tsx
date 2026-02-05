@@ -34,9 +34,11 @@ const UserModal: React.FC<UserModalProps> = ({
     status: 'active',
     password: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isOpen) {
+      setErrors({});
       if (mode === 'edit' && initialData) {
         setFormData({
           username: initialData.username || '',
@@ -57,9 +59,31 @@ const UserModal: React.FC<UserModalProps> = ({
     }
   }, [isOpen, mode, initialData]);
 
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.username || formData.username.length < 3) {
+      newErrors.username = '用户名至少需要3个字符';
+    }
+    
+    // Create mode: password required, min 6
+    if (!isEdit && (!formData.password || formData.password.length < 6)) {
+      newErrors.password = '密码至少需要6个字符';
+    }
+    
+    // Edit mode: password optional, but if provided, min 6
+    if (isEdit && formData.password && formData.password.length < 6) {
+      newErrors.password = '密码至少需要6个字符';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm(formData);
+    if (validate()) {
+      onConfirm(formData);
+    }
   };
 
   const isEdit = mode === 'edit';
@@ -100,12 +124,16 @@ const UserModal: React.FC<UserModalProps> = ({
           <div className="col-span-3">
             <input 
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary text-sm outline-none"
+              className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-primary focus:border-primary text-sm outline-none ${errors.username ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="请输入用户名"
               value={formData.username}
-              onChange={e => setFormData({...formData, username: e.target.value})}
+              onChange={e => {
+                setFormData({...formData, username: e.target.value});
+                if (errors.username) setErrors({...errors, username: ''});
+              }}
               disabled={isEdit} // 用户名通常不可修改
             />
+            {errors.username && <p className="mt-1 text-xs text-red-500">{errors.username}</p>}
           </div>
         </div>
 
@@ -117,11 +145,15 @@ const UserModal: React.FC<UserModalProps> = ({
             <input 
               type="password"
               required={!isEdit}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary text-sm outline-none"
+              className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-primary focus:border-primary text-sm outline-none ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
               placeholder={isEdit ? "留空则不修改密码" : "请输入密码"}
               value={formData.password}
-              onChange={e => setFormData({...formData, password: e.target.value})}
+              onChange={e => {
+                setFormData({...formData, password: e.target.value});
+                if (errors.password) setErrors({...errors, password: ''});
+              }}
             />
+            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
           </div>
         </div>
 
