@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { LeaveType, LeaveVo } from '@attendance/shared';
+import { LeaveType, LeaveVo, EmployeeVo } from '@attendance/shared';
 import * as leaveService from '@/services/leave';
 import dayjs from 'dayjs';
 import { useToast } from '@/components/common/ToastProvider';
 import { logger } from '@/utils/logger';
 import StandardModal from '@/components/common/StandardModal';
+import { DepartmentUserSelectModal } from './DepartmentUserSelectModal';
 
 interface LeaveDialogProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
 }): React.ReactElement => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeVo | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -41,6 +44,7 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
           endTime: dayjs(initialData.endTime).format('YYYY-MM-DDTHH:mm'),
           reason: initialData.reason || ''
         });
+        setSelectedEmployee(null);
       } else {
         setFormData({
           employeeId: '',
@@ -49,9 +53,16 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
           endTime: '',
           reason: ''
         });
+        setSelectedEmployee(null);
       }
     }
   }, [isOpen, initialData]);
+
+  const handleEmployeeSelect = (employee: EmployeeVo) => {
+    setFormData(prev => ({ ...prev, employeeId: employee.id.toString() }));
+    setSelectedEmployee(employee);
+    setIsSelectModalOpen(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,86 +123,96 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
   );
 
   return (
-    <StandardModal
-      title={initialData ? "编辑请假" : "申请请假"}
-      isOpen={isOpen}
-      onClose={onClose}
-      footer={footer}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            员工ID <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-            placeholder="请输入员工ID"
-            value={formData.employeeId}
-            disabled={!!initialData}
-            onChange={e => setFormData({...formData, employeeId: e.target.value})}
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            请假类型 <span className="text-red-500">*</span>
-          </label>
-          <select
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-            value={formData.type}
-            onChange={e => setFormData({...formData, type: e.target.value as LeaveType})}
-            required
-          >
-            <option value={LeaveType.annual}>年假</option>
-            <option value={LeaveType.sick}>病假</option>
-            <option value={LeaveType.personal}>事假</option>
-            <option value={LeaveType.business_trip}>出差</option>
-            <option value={LeaveType.other}>其他</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+    <>
+      <StandardModal
+        title={initialData ? "编辑请假" : "申请请假"}
+        isOpen={isOpen}
+        onClose={onClose}
+        footer={footer}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              开始时间 <span className="text-red-500">*</span>
+              员工 <span className="text-red-500">*</span>
             </label>
-            <input
-              type="datetime-local"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-              value={formData.startTime}
-              onChange={e => setFormData({...formData, startTime: e.target.value})}
-              required
-            />
+            <div onClick={() => !initialData && setIsSelectModalOpen(true)}>
+              <input
+                type="text"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2] ${!initialData ? 'cursor-pointer' : 'bg-gray-100'}`}
+                placeholder="请选择员工"
+                value={selectedEmployee ? `${selectedEmployee.name} (ID: ${selectedEmployee.id})` : formData.employeeId}
+                disabled={!!initialData}
+                readOnly
+              />
+            </div>
+            {/* Hidden input for form validation if needed, or just rely on state check in handleSubmit */}
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              结束时间 <span className="text-red-500">*</span>
+              请假类型 <span className="text-red-500">*</span>
             </label>
-            <input
-              type="datetime-local"
+            <select
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-              value={formData.endTime}
-              onChange={e => setFormData({...formData, endTime: e.target.value})}
+              value={formData.type}
+              onChange={e => setFormData({...formData, type: e.target.value as LeaveType})}
               required
+            >
+              <option value={LeaveType.annual}>年假</option>
+              <option value={LeaveType.sick}>病假</option>
+              <option value={LeaveType.personal}>事假</option>
+              <option value={LeaveType.business_trip}>出差</option>
+              <option value={LeaveType.other}>其他</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                开始时间 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+                value={formData.startTime}
+                onChange={e => setFormData({...formData, startTime: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                结束时间 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+                value={formData.endTime}
+                onChange={e => setFormData({...formData, endTime: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              事由
+            </label>
+            <textarea
+              rows={4}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+              placeholder="请输入请假/出差事由"
+              value={formData.reason}
+              onChange={e => setFormData({...formData, reason: e.target.value})}
             />
           </div>
-        </div>
+        </form>
+      </StandardModal>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            事由
-          </label>
-          <textarea
-            rows={4}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-            placeholder="请输入请假/出差事由"
-            value={formData.reason}
-            onChange={e => setFormData({...formData, reason: e.target.value})}
-          />
-        </div>
-      </form>
-    </StandardModal>
+      <DepartmentUserSelectModal
+        isOpen={isSelectModalOpen}
+        onClose={() => setIsSelectModalOpen(false)}
+        onSelect={handleEmployeeSelect}
+      />
+    </>
   );
 };
