@@ -163,30 +163,48 @@ export class DepartmentService {
    * 删除部门
    */
   async delete(id: number): Promise<void> {
+    const start = Date.now();
+    logger.info({ departmentId: id }, 'Starting department deletion');
+
     const dept = await prisma.department.findUnique({ where: { id } });
     if (!dept) {
       throw AppError.notFound('Department');
     }
 
-    // 校验子部门
-    const childCount = await prisma.department.count({ where: { parentId: id } });
+    // 并行校验子部门和员工
+    const [childCount, employeeCount] = await Promise.all([
+      prisma.department.count({ where: { parentId: id } }),
+      prisma.employee.count({ 
+        where: { 
+          deptId: id,
+          status: { not: 'deleted' }
+        } 
+      })
+    ]);
+
+    logger.info({ 
+      departmentId: id, 
+      childCount, 
+      employeeCount, 
+      checkDuration: Date.now() - start 
+    }, 'Department deletion checks completed');
+
     if (childCount > 0) {
       throw AppError.badRequest('Cannot delete department with sub-departments', 'ERR_DEPT_HAS_CHILDREN');
     }
 
-    // 校验员工 (不包括已删除的)
-    const employeeCount = await prisma.employee.count({ 
-      where: { 
-        deptId: id,
-        status: { not: 'deleted' }
-      } 
-    });
     if (employeeCount > 0) {
       throw AppError.badRequest('Cannot delete department with employees', 'ERR_DEPT_HAS_EMPLOYEES');
     }
 
+    const deleteStart = Date.now();
     await prisma.department.delete({ where: { id } });
-    logger.info({ departmentId: id }, 'Department deleted');
+    
+    logger.info({ 
+      departmentId: id, 
+      totalDuration: Date.now() - start,
+      deleteDuration: Date.now() - deleteStart
+    }, 'Department deleted successfully');
   }
 
   /**
