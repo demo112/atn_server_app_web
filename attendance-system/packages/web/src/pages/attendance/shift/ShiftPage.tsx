@@ -10,6 +10,7 @@ import type {
 } from '@attendance/shared';
 import ShiftModal from './components/ShiftModal';
 import ShiftTable from './components/ShiftTable';
+import Pagination from './components/Pagination';
 import { Shift as UIShift, ShiftTimeConfig } from './types';
 import StandardModal from '../../../components/common/StandardModal';
 import { useToast } from '../../../components/common/ToastProvider';
@@ -18,6 +19,9 @@ const ShiftPage: React.FC = (): React.ReactElement => {
   // const [loading, setLoading] = useState(false);
   const [shifts, setShifts] = useState<UIShift[]>([]);
   const [searchText, setSearchText] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,12 +89,13 @@ const ShiftPage: React.FC = (): React.ReactElement => {
     };
   }, []);
 
-  const fetchShifts = useCallback(async (name?: string): Promise<void> => {
+  const fetchShifts = useCallback(async (name?: string, currentPage: number = 1, size: number = 10): Promise<void> => {
     // setLoading(true);
     try {
-      const data = await getShifts({ name });
-      const uiShifts = data.map(mapBackendToUI);
+      const { items, total } = await getShifts({ name, page: currentPage, pageSize: size });
+      const uiShifts = items.map(mapBackendToUI);
       setShifts(uiShifts);
+      setTotal(total);
     } catch (err) {
       console.error(err);
       toast.error('获取班次列表失败');
@@ -100,13 +105,18 @@ const ShiftPage: React.FC = (): React.ReactElement => {
   }, [mapBackendToUI, toast]);
 
   useEffect(() => {
-    fetchShifts();
-  }, [fetchShifts]);
+    fetchShifts(searchText, page, pageSize);
+  }, [fetchShifts, searchText, page, pageSize]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchText(value);
-    fetchShifts(value);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage: number, newPageSize: number) => {
+    setPage(newPage);
+    setPageSize(newPageSize);
   };
 
   const handleDeleteClick = (id: string): void => {
@@ -120,7 +130,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
     try {
       await deleteShift(parseInt(shiftToDelete));
       toast.success('删除成功');
-      fetchShifts();
+      fetchShifts(searchText, page, pageSize);
       setConfirmModalOpen(false);
     } catch {
       toast.error('删除失败');
@@ -205,7 +215,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
       }
       
       setIsModalOpen(false);
-      fetchShifts();
+      fetchShifts(searchText, page, pageSize);
     } catch (error) {
       console.error(error);
       toast.error('操作失败');
@@ -246,7 +256,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
               新增
             </button>
             <button 
-              onClick={() => fetchShifts()}
+              onClick={() => fetchShifts(searchText, page, pageSize)}
               className="flex items-center px-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded text-sm hover:border-blue-500 hover:text-blue-500 transition-colors bg-white dark:bg-transparent text-slate-600 dark:text-slate-300"
             >
               <span className="material-icons text-lg mr-1">refresh</span>
@@ -274,6 +284,13 @@ const ShiftPage: React.FC = (): React.ReactElement => {
             onEdit={handleEdit} 
           />
         </div>
+
+        <Pagination
+          current={page}
+          pageSize={pageSize}
+          total={total}
+          onChange={handlePageChange}
+        />
       </div>
 
       <ShiftModal 

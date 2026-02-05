@@ -1,17 +1,20 @@
-import { prisma } from '../../common/db/prisma';
+import { prisma as defaultPrisma } from '../../common/db/prisma';
 import { createLogger } from '../../common/logger';
 import { AppError } from '../../common/errors';
 import { CreateShiftDto, UpdateShiftDto, AttShiftVo } from './attendance-shift.dto';
+import { PrismaClient } from '@prisma/client';
 
 export class AttendanceShiftService {
   private logger = createLogger('AttendanceShift');
+
+  constructor(private prisma: PrismaClient = defaultPrisma) {}
 
   /**
    * 创建班次
    */
   async create(data: CreateShiftDto) {
     // 1. 检查名称是否重复
-    const existing = await prisma.attShift.findFirst({
+    const existing = await this.prisma.attShift.findFirst({
       where: { name: data.name },
     });
 
@@ -23,7 +26,7 @@ export class AttendanceShiftService {
     const shiftPeriodsData = this.prepareShiftPeriodsData(data.days);
 
     // 3. 创建
-    const shift = await prisma.attShift.create({
+    const shift = await this.prisma.attShift.create({
       data: {
         name: data.name,
         cycleDays: data.cycleDays ?? 7,
@@ -46,29 +49,36 @@ export class AttendanceShiftService {
   /**
    * 获取列表
    */
-  async findAll(name?: string) {
+  async findAll(name?: string, page: number = 1, pageSize: number = 10) {
     const where = name ? { name: { contains: name } } : {};
     
-    const shifts = await prisma.attShift.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      // 列表接口不需要返回 periods 详情，保持轻量
-    });
+    const [total, shifts] = await Promise.all([
+      this.prisma.attShift.count({ where }),
+      this.prisma.attShift.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        // 列表接口不需要返回 periods 详情，保持轻量
+      })
+    ]);
 
-    return shifts.map(shift => ({
+    const items = shifts.map(shift => ({
       id: shift.id,
       name: shift.name,
       cycleDays: shift.cycleDays,
       createdAt: shift.createdAt,
       updatedAt: shift.updatedAt,
     }));
+
+    return { items, total };
   }
 
   /**
    * 获取详情
    */
   async findById(id: number) {
-    const shift = await prisma.attShift.findUnique({
+    const shift = await this.prisma.attShift.findUnique({
       where: { id },
       include: {
         periods: {
@@ -94,7 +104,7 @@ export class AttendanceShiftService {
 
     // 如果修改了名称，检查重复
     if (data.name && data.name !== existing.name) {
-      const nameExists = await prisma.attShift.findFirst({
+      const nameExists = await this.prisma.attShift.findFirst({
         where: { name: data.name },
       });
       if (nameExists) {
@@ -111,7 +121,7 @@ export class AttendanceShiftService {
 
     // Prisma 的 update 不支持直接替换关联关系 (deleteMany + create)
     // 需要用事务
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // 1. 更新基本字段
       if (data.name) {
         await tx.attShift.update({
@@ -166,18 +176,18 @@ export class AttendanceShiftService {
    */
   async delete(id: number) {
     // 检查是否存在
-    const existing = await prisma.attShift.findUnique({ where: { id } });
+    const existing = await this.prisma.attShift.findUnique({ where: { id } });
     if (!existing) {
       throw new AppError('ERR_ATT_SHIFT_NOT_FOUND', 'Shift not found', 404);
     }
 
     // 检查是否被排班引用
-    const usageCount = await prisma.attSchedule.count({ where: { shiftId: id } });
+    const usageCount = await this.prisma.attSchedule.count({ where: { shiftId: id } });
     if (usageCount > 0) {
       throw AppError.conflict('Shift is in use', 'ERR_ATT_SHIFT_IN_USE');
     }
 
-    await prisma.attShift.delete({
+    await this.prisma.attShift.delete({
       where: { id },
     });
 

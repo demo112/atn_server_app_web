@@ -60,17 +60,37 @@ describe('AttendanceShiftService', () => {
   });
 
   describe('findAll', () => {
-    it('should return list of shifts', async () => {
+    it('should return paginated list of shifts', async () => {
+      mockPrisma.attShift.count.mockResolvedValue(1);
       mockPrisma.attShift.findMany.mockResolvedValue([mockShift as any]);
+      
       const result = await service.findAll();
-      expect(result).toHaveLength(1);
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(mockPrisma.attShift.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10
+        })
+      );
     });
 
-    it('should filter by name', async () => {
+    it('should filter by name and paginate', async () => {
+      mockPrisma.attShift.count.mockResolvedValue(0);
       mockPrisma.attShift.findMany.mockResolvedValue([]);
-      await service.findAll('Night');
-      expect(mockPrisma.attShift.findMany).toHaveBeenCalledWith(
+      
+      await service.findAll('Night', 2, 20);
+      
+      expect(mockPrisma.attShift.count).toHaveBeenCalledWith(
         expect.objectContaining({ where: { name: { contains: 'Night' } } })
+      );
+      expect(mockPrisma.attShift.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ 
+          where: { name: { contains: 'Night' } },
+          skip: 20,
+          take: 20
+        })
       );
     });
   });

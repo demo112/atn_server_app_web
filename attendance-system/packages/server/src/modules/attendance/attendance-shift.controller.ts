@@ -3,7 +3,7 @@ import { AttendanceShiftService } from './attendance-shift.service';
 import { CreateShiftDto, UpdateShiftDto } from './attendance-shift.dto';
 import { createLogger } from '../../common/logger';
 import { AppError } from '../../common/errors';
-import { success } from '../../common/types/response';
+import { success, paginated } from '../../common/types/response';
 
 const service = new AttendanceShiftService();
 const logger = createLogger('AttendanceShiftController');
@@ -14,8 +14,11 @@ export class AttendanceShiftController {
    */
   async getList(req: Request, res: Response) {
     const name = req.query.name as string;
-    const list = await service.findAll(name);
-    res.json(success(list));
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+    const { items, total } = await service.findAll(name, page, pageSize);
+    res.json(paginated(items, page, pageSize, total));
   }
 
   /**
