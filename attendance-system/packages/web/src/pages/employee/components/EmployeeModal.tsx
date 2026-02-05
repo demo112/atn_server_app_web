@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { CreateEmployeeDto, UpdateEmployeeDto, EmployeeVo } from '@attendance/shared';
+import React, { useState, useEffect, useMemo } from 'react';
+import { CreateEmployeeDto, UpdateEmployeeDto, EmployeeVo, DepartmentVO } from '@attendance/shared';
 import dayjs from 'dayjs';
 import { useToast } from '@/components/common/ToastProvider';
 import StandardModal from '@/components/common/StandardModal';
+import { departmentService } from '@/services/department';
 
 interface EmployeeModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<DepartmentVO[]>([]);
   const [formData, setFormData] = useState<{
     employeeNo: string;
     name: string;
@@ -39,8 +41,32 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     hireDate: '',
   });
 
+  const departmentOptions = useMemo(() => {
+    const flatten = (depts: DepartmentVO[], level = 0, result: { id: number, name: string, level: number }[] = []) => {
+      depts.forEach(dept => {
+        result.push({ id: dept.id, name: dept.name, level });
+        if (dept.children && dept.children.length > 0) {
+          flatten(dept.children, level + 1, result);
+        }
+      });
+      return result;
+    };
+    return flatten(departments);
+  }, [departments]);
+
   useEffect(() => {
     if (open) {
+      const fetchDepartments = async () => {
+        try {
+          const tree = await departmentService.getTree();
+          setDepartments(tree);
+        } catch (error) {
+          console.error('Failed to fetch departments:', error);
+          // toast.error('Failed to load departments'); // Avoid toast spam if it fails repeatedly
+        }
+      };
+      fetchDepartments();
+
       if (mode === 'edit' && initialValues) {
         setFormData({
           employeeNo: initialValues.employeeNo || '',
@@ -179,10 +205,11 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
           >
             <option value="">Select Department</option>
-            <option value={1}>总经办</option>
-            <option value={3}>研发部-后端组</option>
-            <option value={4}>研发部-前端组</option>
-            <option value={5}>人事部</option>
+            {departmentOptions.map(dept => (
+              <option key={dept.id} value={dept.id}>
+                {'\u00A0\u00A0'.repeat(dept.level)}{dept.name}
+              </option>
+            ))}
           </select>
         </div>
 
