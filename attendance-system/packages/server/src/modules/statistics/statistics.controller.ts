@@ -14,39 +14,46 @@ export class StatisticsController {
   }
 
   getDailyRecords = async (req: Request, res: Response) => {
-    const { 
-      startDate, 
-      endDate, 
-      deptId, 
-      employeeId, 
-      employeeName,
-      status,
-      page = 1, 
-      pageSize = 20 
-    } = req.query as unknown as DailyRecordQuery;
+    try {
+      const { 
+        startDate, 
+        endDate, 
+        deptId, 
+        employeeId, 
+        employeeName,
+        status,
+        page = 1, 
+        pageSize = 20 
+      } = req.query as unknown as DailyRecordQuery;
 
-    const user = (req as any).user;
-    
-    const query: DailyRecordQuery = {
-      startDate,
-      endDate,
-      deptId: deptId ? Number(deptId) : undefined,
-      employeeId: employeeId ? Number(employeeId) : undefined,
-      employeeName,
-      status: status as AttendanceStatus,
-      page: Number(page),
-      pageSize: Number(pageSize),
-    };
+      console.log('getDailyRecords request:', { startDate, endDate, page, pageSize });
 
-    // 权限控制：普通用户只能查自己
-    if (user.role !== 'admin') {
-      query.employeeId = user.id;
-      query.deptId = undefined; // 普通用户不能查部门
-      query.employeeName = undefined; // 普通用户不能搜索他人
+      const user = (req as any).user;
+      
+      const query: DailyRecordQuery = {
+        startDate,
+        endDate,
+        deptId: deptId ? Number(deptId) : undefined,
+        employeeId: employeeId ? Number(employeeId) : undefined,
+        employeeName,
+        status: status as AttendanceStatus,
+        page: Number(page),
+        pageSize: Number(pageSize),
+      };
+
+      // 权限控制：普通用户只能查自己
+      if (user.role !== 'admin') {
+        query.employeeId = user.id;
+        query.deptId = undefined; // 普通用户不能查部门
+        query.employeeName = undefined; // 普通用户不能搜索他人
+      }
+
+      const data = await this.service.getDailyRecords(query);
+      res.json(success(data));
+    } catch (error) {
+      console.error('getDailyRecords error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-
-    const data = await this.service.getDailyRecords(query);
-    res.json(success(data));
   };
 
   getCalendar = async (req: Request, res: Response) => {

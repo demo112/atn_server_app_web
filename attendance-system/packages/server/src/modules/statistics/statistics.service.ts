@@ -48,9 +48,24 @@ export class StatisticsService {
 
     // 1. 日期范围筛选
     if (startDate && endDate) {
+      const start = new Date(startDate + 'T00:00:00');
+      const end = new Date(endDate + 'T23:59:59.999');
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        this.logger.warn({ startDate, endDate }, 'Invalid date range');
+        // 返回空数据而不是崩
+        return {
+          items: [],
+          total: 0,
+          page: Number(page),
+          pageSize: Number(pageSize),
+          totalPages: 0,
+        };
+      }
+
       whereClause.workDate = {
-        gte: new Date(startDate + 'T00:00:00'),
-        lte: new Date(endDate + 'T23:59:59.999'),
+        gte: start,
+        lte: end,
       };
     }
 
@@ -130,7 +145,7 @@ export class StatisticsService {
     }
 
     // 5. 执行查询
-    const [total, records] = await Promise.all([
+    const [totalRaw, records] = await Promise.all([
       prisma.attDailyRecord.count({ where: whereClause }),
       prisma.attDailyRecord.findMany({
         where: whereClause,
@@ -143,6 +158,8 @@ export class StatisticsService {
         },
       }),
     ]);
+
+    const total = Number(totalRaw);
 
     // 6. 补充员工和部门信息
     // 收集所有涉及的员工ID
