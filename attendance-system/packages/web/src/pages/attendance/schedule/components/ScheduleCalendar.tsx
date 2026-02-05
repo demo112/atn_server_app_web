@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Schedule } from '@attendance/shared';
 import { attendanceService } from '@/services/attendance';
 import { logger } from '@/utils/logger';
+import { z } from 'zod';
+import { ScheduleVoSchema } from '@/schemas/attendance';
+
+type ScheduleVo = z.infer<typeof ScheduleVoSchema>;
 
 interface ScheduleCalendarProps {
   deptId: number;
@@ -9,7 +13,7 @@ interface ScheduleCalendarProps {
 
 export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): React.ReactElement => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [schedules, setSchedules] = useState<ScheduleVo[]>([]);
   const [loading, setLoading] = useState(false);
 
   const year = currentDate.getFullYear();
@@ -41,7 +45,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
           endDate
         });
         
-        setSchedules(res);
+        setSchedules(res as unknown as ScheduleVo[]);
       } catch (error) {
         logger.error('Failed to fetch schedules', error);
       } finally {
@@ -53,7 +57,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
   }, [deptId, year, month, daysInMonth]);
 
   // 辅助函数：获取某天的排班
-  const getSchedulesForDay = (day: number): Schedule[] => {
+  const getSchedulesForDay = (day: number): ScheduleVo[] => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     return schedules.filter(s => {
@@ -101,8 +105,8 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
                 {/* 排班数据展示 */}
                 <div className="text-xs flex flex-col gap-0.5">
                     {daySchedules.map(s => (
-                        <div key={s.id} className="bg-blue-50 border border-blue-200 px-1 py-0.5 rounded text-blue-800 truncate" title={`${s.employee?.name}: ${s.shift?.name}`}>
-                            {s.employee?.name || s.employeeId}: {s.shift?.name || s.shiftId}
+                        <div key={s.id} className="bg-blue-50 border border-blue-200 px-1 py-0.5 rounded text-blue-800 truncate" title={`${s.employeeName}: ${s.shiftName}`}>
+                            {s.employeeName || s.employeeId}: {s.shiftName || s.shiftId}
                         </div>
                     ))}
                 </div>

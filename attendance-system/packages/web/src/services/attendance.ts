@@ -1,13 +1,13 @@
 import { api, validateResponse } from './api';
 import { z } from 'zod';
 import { Shift, Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
-import { ScheduleSchema, ShiftSchema } from '../schemas/attendance';
+import { ScheduleSchema, ShiftSchema, ScheduleVoSchema } from '../schemas/attendance';
 
 export const attendanceService = {
   // 获取排班列表
   getSchedules: async (params: ScheduleQueryDto): Promise<Schedule[]> => {
     const res = await api.get<unknown, ApiResponse<Schedule[]>>('/attendance/schedules', { params });
-    return validateResponse(z.array(ScheduleSchema), res);
+    return validateResponse(z.array(ScheduleVoSchema), res);
   },
 
   // 创建单人排班
