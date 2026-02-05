@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Card, useTheme, Searchbar, Avatar, IconButton, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { Shift, TimeSlot } from '../../types/shift';
@@ -88,13 +87,8 @@ export default function ShiftListScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={styles.headerContainer}>
-        <View style={styles.headerRow}>
-          <IconButton icon="chevron-left" size={24} onPress={() => (navigation as any).goBack()} />
-          <Text variant="titleLarge" style={[styles.headerTitle, { flex: 1 }]}>班次设置</Text>
-          <View style={{ width: 48 }} />
-        </View>
         <Searchbar
           placeholder="搜索班次"
           onChangeText={setSearchTerm}
@@ -133,7 +127,7 @@ export default function ShiftListScreen() {
           </Text>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -145,11 +139,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 8,
     backgroundColor: 'white',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
   },
   headerTitle: {
     textAlign: 'center',

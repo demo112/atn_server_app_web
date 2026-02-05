@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Switch, useTheme, IconButton, Surface } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -36,6 +35,10 @@ export default function ShiftEditScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { shift } = route.params as { shift: Shift | null };
+
+  React.useLayoutEffect(() => {
+    (navigation as any).setOptions({ title: shift ? '编辑班次' : '新增班次' });
+  }, [navigation, shift]);
 
   const [name, setName] = useState(shift?.name || '');
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(
@@ -114,16 +117,7 @@ export default function ShiftEditScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: '#F2F2F7' }]}> 
-      {/* Header */}
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#F2F2F7' }}>
-        <Surface style={styles.header} elevation={2}>
-          <IconButton icon="chevron-left" onPress={() => navigation.goBack()} />
-          <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-            {shift ? '编辑班次详情' : '新增班次详情'}
-          </Text>
-          <View style={{ width: 48 }} />
-        </Surface>
-      </SafeAreaView>
+      {/* 使用原生导航栏，移除自定义头部 */}
 
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Name Input */}
