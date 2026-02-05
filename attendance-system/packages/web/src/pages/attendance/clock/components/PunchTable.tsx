@@ -64,17 +64,17 @@ const PunchTable: React.FC<PunchTableProps> = ({ data, loading }) => {
   }
 
   return (
-    <div className="flex-1 overflow-x-auto bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700">
-      <table className="w-full text-sm text-left border-collapse min-w-[1000px]">
+    <div className="flex-1 overflow-auto bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700 w-full">
+      <table className="w-full text-sm text-left border-collapse">
         <thead className="bg-gray-50/80 dark:bg-gray-800/80 sticky top-0 z-10 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm">
           <tr>
-            <th className="px-6 py-3.5 font-semibold">姓名</th>
-            <th className="px-6 py-3.5 font-semibold">部门</th>
-            <th className="px-6 py-3.5 font-semibold">工号</th>
-            <th className="px-6 py-3.5 font-semibold">打卡时间</th>
-            <th className="px-6 py-3.5 font-semibold">打卡类型</th>
-            <th className="px-6 py-3.5 font-semibold">打卡方式</th>
-            <th className="px-6 py-3.5 font-semibold">设备信息</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">姓名</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">部门</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">工号</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">打卡时间</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">打卡类型</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">打卡方式</th>
+            <th className="px-6 py-3.5 font-semibold whitespace-nowrap">设备信息</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
@@ -83,18 +83,18 @@ const PunchTable: React.FC<PunchTableProps> = ({ data, loading }) => {
               key={record.id}
               className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors text-gray-700 dark:text-gray-300"
             >
-              <td className="px-6 py-4 font-medium">{record.employeeName || '-'}</td>
+              <td className="px-6 py-4 font-medium whitespace-nowrap">{record.employeeName || '-'}</td>
               <td className="px-6 py-4 truncate max-w-[150px]">{record.deptName || '-'}</td>
-              <td className="px-6 py-4 font-mono text-xs text-gray-500">{record.employeeNo || record.employeeId}</td>
-              <td className="px-6 py-4">
+              <td className="px-6 py-4 font-mono text-xs text-gray-500 whitespace-nowrap">{record.employeeNo || record.employeeId}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex flex-col">
                   <span className="font-medium">{dayjs(record.clockTime).format('HH:mm:ss')}</span>
                   <span className="text-xs text-gray-400">{dayjs(record.clockTime).format('YYYY-MM-DD')}</span>
                 </div>
               </td>
-              <td className="px-6 py-4">{getTypeBadge(record.type)}</td>
-              <td className="px-6 py-4">{getMethodBadge(record.source)}</td>
-              <td className="px-6 py-4 font-mono text-xs text-gray-400 group relative">
+              <td className="px-6 py-4 whitespace-nowrap">{getTypeBadge(record.type)}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{getMethodBadge(record.source)}</td>
+              <td className="px-6 py-4 font-mono text-xs text-gray-400 group relative whitespace-nowrap">
                 -
               </td>
             </tr>
