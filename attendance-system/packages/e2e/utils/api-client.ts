@@ -17,6 +17,16 @@ export class ApiClient {
     this.request = request;
   }
 
+  /** 获取当前 token */
+  getToken(): string | null {
+    return this.token;
+  }
+
+  /** 设置认证 token */
+  setToken(token: string): void {
+    this.token = token;
+  }
+
   private async post(url: string, data: any) {
     const headers: Record<string, string> = {};
     if (this.token) {
@@ -119,7 +129,7 @@ export class ApiClient {
   async cleanupTestData(prefix: string) {
     // 1. Get all employees with prefix
     const emps = await this.getEmployees({ keyword: prefix });
-    const items = Array.isArray(emps) ? emps : emps.items || []; // Handle pagination if needed
+    const items = Array.isArray(emps) ? emps : emps.items || [];
     
     for (const emp of items) {
       if (emp.name.includes(prefix) || emp.employeeNo.includes(prefix)) {
@@ -131,15 +141,38 @@ export class ApiClient {
       }
     }
 
-    // 2. Get all departments (tree) and find with prefix
-    // Note: Deleting departments might be tricky if they have children. 
-    // We should probably delete bottom-up or just catch errors.
-    // For simplicity, we assume test data is simple.
-    // Ideally, we should implement a specific bulk delete endpoint or better cleanup logic.
-    // But iterating is fine for now.
-    // Since tree API returns nested structure, we need to flatten or traverse.
-    // Skipping complex department cleanup for now to avoid recursion issues in this quick implementation.
-    // Assuming tests delete their own departments or we rely on DB reset in worst case.
-    // But let's try to delete top-level ones if they match.
+    // 2. Get all departments and find with prefix
+    try {
+      const departments = await this.getDepartments();
+      const flatDepts = this.flattenDepartments(departments || []);
+      for (const dept of flatDepts) {
+        if (dept.name.includes(prefix)) {
+          try {
+            await this.deleteDepartment(dept.id);
+          } catch {
+            // 忽略删除失败
+          }
+        }
+      }
+    } catch {
+      // 忽略错误
+    }
+  }
+
+  /** 扁平化部门树 */
+  private flattenDepartments(
+    tree: Array<{ id: number; name: string; children?: any[] }>
+  ): Array<{ id: number; name: string }> {
+    const result: Array<{ id: number; name: string }> = [];
+    const traverse = (nodes: Array<{ id: number; name: string; children?: any[] }>) => {
+      for (const node of nodes) {
+        result.push({ id: node.id, name: node.name });
+        if (node.children && Array.isArray(node.children)) {
+          traverse(node.children);
+        }
+      }
+    };
+    traverse(tree);
+    return result;
   }
 }

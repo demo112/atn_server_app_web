@@ -7,12 +7,16 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
-    "test:codegen": "playwright codegen"
+    "test:codegen": "playwright codegen",
+    "test:pbt": "vitest run --config vitest.config.ts",
+    "test:pbt:watch": "vitest --config vitest.config.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.2.0",
     "@playwright/test": "^1.50.1",
     "@types/node": "^22.13.1",
-    "typescript": "^5.0.0"
+    "fast-check": "^3.15.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.8"
   }
 }
