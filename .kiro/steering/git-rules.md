@@ -65,10 +65,10 @@ git config pull.rebase true
 git --no-pager diff --name-only --diff-filter=U
 
 # 查看双方改动历史
-git log --merge -p <file>
+git --no-pager log --merge -p <file>
 
 # 查看共同祖先版本
-git show :1:<file>
+git --no-pager show :1:<file>
 ```
 
 ### 规则 C2: 解决后必须验证
