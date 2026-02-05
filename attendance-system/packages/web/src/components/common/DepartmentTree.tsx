@@ -1,45 +1,112 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { departmentService } from '@/services/department';
+import { DepartmentVO } from '@attendance/shared';
 
 interface DepartmentTreeProps {
   onSelect: (id: number) => void;
+  selectedId?: number | null;
 }
 
-export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect }) => {
+const TreeNode: React.FC<{
+  node: DepartmentVO;
+  selectedId?: number | null;
+  onSelect: (id: number) => void;
+  level?: number;
+}> = ({ node, selectedId, onSelect, level = 0 }) => {
+  const isSelected = selectedId === node.id;
+  const hasChildren = node.children && node.children.length > 0;
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4 h-full bg-gray-50">
-      <h4 className="text-sm font-semibold text-gray-700 mb-3">部门架构</h4>
+    <li className="select-none">
+      <div
+        className={`px-2 py-1.5 cursor-pointer rounded text-sm flex items-center transition-colors ${
+          isSelected 
+            ? 'bg-blue-50 text-blue-600 font-medium' 
+            : 'text-gray-600 hover:bg-gray-100'
+        }`}
+        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(node.id);
+        }}
+      >
+        <span className="mr-2 text-base">
+          {level === 0 ? '🏢' : (hasChildren ? '📂' : '└─')}
+        </span>
+        <span className="truncate">{node.name}</span>
+      </div>
+      {hasChildren && (
+        <ul className="space-y-1 mt-1">
+          {node.children!.map(child => (
+            <TreeNode
+              key={child.id}
+              node={child}
+              selectedId={selectedId}
+              onSelect={onSelect}
+              level={level + 1}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+};
+
+export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, selectedId }) => {
+  const [treeData, setTreeData] = useState<DepartmentVO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTree = async () => {
+      try {
+        setLoading(true);
+        const data = await departmentService.getTree();
+        setTreeData(data);
+      } catch (err) {
+        console.error('Failed to fetch department tree:', err);
+        setError('加载部门失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTree();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="border border-gray-200 rounded-lg p-4 h-full bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400 text-sm">加载中...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border border-gray-200 rounded-lg p-4 h-full bg-gray-50 flex items-center justify-center">
+        <div className="text-red-400 text-sm">{error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-lg p-4 h-full bg-gray-50 overflow-auto">
+      <h4 className="text-sm font-semibold text-gray-700 mb-3 sticky top-0 bg-gray-50 pb-2 border-b border-gray-100">
+        部门架构
+      </h4>
       <ul className="space-y-1">
-        <li 
-          className="px-2 py-1.5 cursor-pointer hover:bg-gray-100 rounded text-sm text-gray-600 flex items-center" 
-          onClick={() => onSelect(1)}
-        >
-          <span className="mr-2">🏢</span> 总经办
-        </li>
-        <li className="px-2 py-1.5 text-sm text-gray-600">
-          <div className="flex items-center mb-1">
-            <span className="mr-2">📂</span> 研发部
-          </div>
-          <ul className="pl-6 space-y-1">
-            <li 
-              className="px-2 py-1 cursor-pointer hover:bg-gray-100 rounded flex items-center" 
-              onClick={() => onSelect(3)}
-            >
-              <span className="text-gray-400 mr-2">└─</span> 💻 后端组
-            </li>
-            <li 
-              className="px-2 py-1 cursor-pointer hover:bg-gray-100 rounded flex items-center" 
-              onClick={() => onSelect(4)}
-            >
-              <span className="text-gray-400 mr-2">└─</span> 🎨 前端组
-            </li>
-          </ul>
-        </li>
-        <li 
-          className="px-2 py-1.5 cursor-pointer hover:bg-gray-100 rounded text-sm text-gray-600 flex items-center" 
-          onClick={() => onSelect(5)}
-        >
-          <span className="mr-2">👥</span> 人事部
-        </li>
+        {treeData.map(node => (
+          <TreeNode
+            key={node.id}
+            node={node}
+            selectedId={selectedId}
+            onSelect={onSelect}
+          />
+        ))}
+        {treeData.length === 0 && (
+          <div className="text-gray-400 text-sm text-center py-4">暂无部门数据</div>
+        )}
       </ul>
     </div>
   );

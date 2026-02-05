@@ -20,7 +20,7 @@ const SchedulePage: React.FC = (): React.ReactElement => {
     <div className="flex h-full gap-5 p-2.5 bg-white">
       {/* 左侧部门树 */}
       <div className="w-[250px] flex-shrink-0 border-r border-gray-100 pr-5">
-        <DepartmentTree onSelect={setSelectedDeptId} />
+        <DepartmentTree onSelect={setSelectedDeptId} selectedId={selectedDeptId} />
       </div>
 
       {/* 右侧内容区 */}

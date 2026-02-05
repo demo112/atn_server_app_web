@@ -13,7 +13,7 @@ const CorrectionPage: React.FC = () => {
           部门筛选
         </div>
         <div className="flex-1 overflow-auto p-2">
-          <DepartmentTree onSelect={setSelectedDeptId} />
+          <DepartmentTree onSelect={setSelectedDeptId} selectedId={selectedDeptId} />
         </div>
       </div>
 
