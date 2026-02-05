@@ -120,10 +120,11 @@ export class AttendanceScheduler {
 
   async processDailyCalculation(data: { date?: string, employeeIds?: number[] }) {
     const dateStr = data.date || dayjs().subtract(1, 'day').format('YYYY-MM-DD');
-    const targetDate = dayjs(dateStr).startOf('day').toDate();
-    const nextDate = dayjs(dateStr).add(1, 'day').startOf('day').toDate();
+    // Use UTC to ensure consistent date storage (YYYY-MM-DD 00:00:00 UTC)
+    const targetDate = dayjs.utc(dateStr).startOf('day').toDate();
+    const nextDate = dayjs.utc(dateStr).add(1, 'day').startOf('day').toDate();
     
-    logger.info({ date: dateStr }, 'Starting daily calculation');
+    logger.info({ date: dateStr, targetDate }, 'Starting daily calculation');
 
     // Find employees to calculate
     const where: any = {};
@@ -138,6 +139,7 @@ export class AttendanceScheduler {
 
     for (const emp of employees) {
       try {
+        await this.ensureDailyRecordExists(emp.id, targetDate);
         await this.calculateEmployeeDaily(emp.id, targetDate, nextDate);
         successCount++;
       } catch (err) {
@@ -147,6 +149,76 @@ export class AttendanceScheduler {
     }
     
     logger.info({ successCount, failCount, date: dateStr }, 'Daily calculation finished');
+  }
+
+  async ensureDailyRecordExists(employeeId: number, date: Date) {
+    logger.info({ employeeId, date }, 'Ensuring daily record exists');
+    // 1. Check if exists
+    const exists = await prisma.attDailyRecord.findFirst({
+      where: { 
+        employeeId, 
+        workDate: date 
+      }
+    });
+    if (exists) {
+        logger.info('Record already exists');
+        return;
+    }
+
+    // 2. Find schedule
+    const schedule = await prisma.attSchedule.findFirst({
+      where: {
+        employeeId,
+        startDate: { lte: date },
+        endDate: { gte: date }
+      },
+      include: {
+        shift: {
+          include: { periods: true }
+        }
+      }
+    });
+
+    if (!schedule || !schedule.shift) {
+        logger.info('No schedule found');
+        return;
+    }
+
+    // 3. Calculate day of cycle
+    let dayOfCycle = 1;
+    if (schedule.shift.cycleDays === 7) {
+       // Standard Weekly: 0(Sun) -> 7, 1(Mon) -> 1
+       const day = dayjs.utc(date).day(); 
+       dayOfCycle = day === 0 ? 7 : day;
+    } else {
+       // Custom cycle
+       const diff = dayjs.utc(date).diff(dayjs.utc(schedule.startDate), 'day');
+       dayOfCycle = (diff % schedule.shift.cycleDays) + 1;
+    }
+    
+    logger.info({ dayOfCycle, periods: schedule.shift.periods.length }, 'Checking periods');
+
+    // 4. Find periods for this day
+    const shiftPeriods = schedule.shift.periods.filter(p => p.dayOfCycle === dayOfCycle);
+    
+    if (shiftPeriods.length === 0) {
+        logger.info('No periods for this day');
+        return;
+    }
+
+    // 5. Create records
+    for (const sp of shiftPeriods) {
+       logger.info({ periodId: sp.periodId }, 'Creating daily record');
+       await prisma.attDailyRecord.create({
+         data: {
+           employeeId,
+           workDate: date,
+           shiftId: schedule.shiftId,
+           periodId: sp.periodId,
+           status: 'normal', // Default, will be recalculated
+         }
+       });
+    }
   }
 
   async calculateEmployeeDaily(employeeId: number, targetDate: Date, nextDate: Date) {
