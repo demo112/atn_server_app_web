@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDailyRecords, exportStats, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { useToast } from '../../components/common/ToastProvider';
+import { PersonnelSelectionModal, SelectionItem } from '../../components/common/PersonnelSelectionModal';
 
 const DailyStatsReport: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +24,12 @@ const DailyStatsReport: React.FC = () => {
 
   const [startDate, setStartDate] = useState(getYesterday());
   const [endDate, setEndDate] = useState(getYesterday());
-  const [keyword, setKeyword] = useState('');
+  
+  // Selection state
+  const [searchType, setSearchType] = useState<'employee' | 'department'>('employee');
+  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -31,13 +37,23 @@ const DailyStatsReport: React.FC = () => {
   const fetchData = async (p = page, s = pageSize) => {
     setLoading(true);
     try {
-      const res = await getDailyRecords({
+      const params: any = {
         startDate,
         endDate,
-        employeeName: keyword || undefined,
         page: p,
         pageSize: s
-      });
+      };
+
+      if (selectedItems.length > 0) {
+        const item = selectedItems[0];
+        if (item.type === 'department') {
+          params.deptId = item.id;
+        } else {
+          params.employeeId = item.id;
+        }
+      }
+
+      const res = await getDailyRecords(params);
       setData(res.items);
       setTotal(res.total);
     } catch (err) {
@@ -63,12 +79,22 @@ const DailyStatsReport: React.FC = () => {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const blob = await exportStats({
+      const params: any = {
         type: 'daily',
         startDate,
         endDate,
-        employeeName: keyword || undefined,
-      });
+      };
+
+      if (selectedItems.length > 0) {
+        const item = selectedItems[0];
+        if (item.type === 'department') {
+          params.deptId = item.id;
+        } else {
+          params.employeeId = item.id;
+        }
+      }
+
+      const blob = await exportStats(params);
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -193,16 +219,38 @@ const DailyStatsReport: React.FC = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">查询范围</label>
             <div className="flex border border-slate-200 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-              <select className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-200 w-36 py-2.5">
-                <option value="name">按姓名</option>
+              <select 
+                className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-200 w-36 py-2.5"
+                value={searchType}
+                onChange={(e) => {
+                  setSearchType(e.target.value as 'employee' | 'department');
+                  setSelectedItems([]);
+                }}
+              >
+                <option value="employee">按姓名</option>
+                <option value="department">按部门</option>
               </select>
-              <input 
-                type="text" 
-                placeholder="输入员工姓名..." 
-                className="flex-1 text-sm border-none focus:ring-0 py-2.5 px-4"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
+              <div className="flex-1 relative">
+                <input 
+                  type="text" 
+                  readOnly
+                  placeholder={searchType === 'employee' ? "点击选择员工..." : "点击选择部门..."}
+                  className="w-full text-sm border-none focus:ring-0 py-2.5 px-4 cursor-pointer"
+                  value={selectedItems.map(i => i.name).join(', ')}
+                  onClick={() => setIsSelectionModalOpen(true)}
+                />
+                {selectedItems.length > 0 && (
+                  <button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedItems([]);
+                    }}
+                  >
+                    <span className="material-icons-outlined text-sm">close</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -216,7 +264,7 @@ const DailyStatsReport: React.FC = () => {
               onClick={() => {
                 setStartDate(getYesterday());
                 setEndDate(getYesterday());
-                setKeyword('');
+                setSelectedItems([]);
               }}
               className="flex-1 bg-white border border-slate-200 text-slate-600 text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-50 transition active:scale-95"
             >
@@ -224,6 +272,20 @@ const DailyStatsReport: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Personnel Selection Modal */}
+        <PersonnelSelectionModal
+          isOpen={isSelectionModalOpen}
+          onClose={() => setIsSelectionModalOpen(false)}
+          onConfirm={(items) => {
+            setSelectedItems(items);
+            // Optionally auto-search here? Let's stick to explicit search for now as there's a Search button
+          }}
+          selectType={searchType}
+          multiple={false}
+          title={searchType === 'employee' ? "选择员工" : "选择部门"}
+          initialSelected={selectedItems}
+        />
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

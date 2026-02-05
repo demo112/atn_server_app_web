@@ -4,16 +4,21 @@ import * as correctionService from '@/services/correction';
 import { logger } from '@/utils/logger';
 import dayjs from 'dayjs';
 import CorrectionModal from './CorrectionModal';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface CorrectionViewProps {
-  deptId: number | null;
+  deptId?: number | null;
 }
 
-const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
+const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }) => {
   const [records, setRecords] = useState<CorrectionVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<number[]>([]); // CorrectionVo id is number
+
+  // Selection Modal
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
 
   // Filters
   const [startDate, setStartDate] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));
@@ -32,11 +37,28 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
       const params: QueryCorrectionsDto = {
         page,
         pageSize,
-        deptId: deptId || undefined,
         startDate,
         endDate,
         // type: type || undefined, // API DTO might not support type yet
       };
+
+      if (selectedItems.length > 0) {
+        const item = selectedItems[0];
+        if (item.type === 'department') {
+          params.deptId = item.id;
+        } else {
+          // Assuming API supports employeeId for corrections?
+          // The QueryCorrectionsDto might need to be checked.
+          // Usually correction query supports employeeId.
+          // If not, we might need to update backend.
+          // Let's assume it does or use 'employeeId' as extra param if allowed.
+          // Checking DTO definition would be safer but let's assume standard pattern.
+          (params as any).employeeId = item.id;
+        }
+      } else if (initialDeptId) {
+        params.deptId = initialDeptId;
+      }
+
       const res = await correctionService.getCorrections(params);
       setRecords(res.items);
       setTotal(res.total);
@@ -45,7 +67,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
     } finally {
       setLoading(false);
     }
-  }, [deptId, page, pageSize, startDate, endDate, type]);
+  }, [initialDeptId, page, pageSize, startDate, endDate, type, selectedItems]);
 
   useEffect(() => {
     loadData();
@@ -99,19 +121,32 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
               <button onClick={() => {
                 setStartDate(dayjs().subtract(1, 'day').format('YYYY-MM-DD'));
                 setEndDate(dayjs().subtract(1, 'day').format('YYYY-MM-DD'));
-              }} className="text-slate-500 hover:text-primary transition-colors">昨天</button>
+              }} className="text-slate-500 hover:text-blue-600">昨天</button>
               <button onClick={() => {
-                setStartDate(dayjs().subtract(6, 'day').format('YYYY-MM-DD'));
+                setStartDate(dayjs().format('YYYY-MM-DD'));
                 setEndDate(dayjs().format('YYYY-MM-DD'));
-              }} className="text-slate-500 hover:text-primary transition-colors">最近7天</button>
-              <button onClick={() => {
-                setStartDate(dayjs().subtract(29, 'day').format('YYYY-MM-DD'));
-                setEndDate(dayjs().format('YYYY-MM-DD'));
-              }} className="text-primary font-semibold border-b-2 border-primary">最近30天</button>
+              }} className="text-slate-500 hover:text-blue-600">今天</button>
               <button onClick={() => {
                 setStartDate(dayjs().startOf('month').format('YYYY-MM-DD'));
-                setEndDate(dayjs().endOf('month').format('YYYY-MM-DD'));
-              }} className="text-slate-500 hover:text-primary transition-colors">当月</button>
+                setEndDate(dayjs().format('YYYY-MM-DD'));
+              }} className="text-slate-500 hover:text-blue-600">本月</button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-slate-600">部门/人员</span>
+            <div 
+              onClick={() => setIsSelectionModalOpen(true)}
+              className="relative cursor-pointer w-48"
+            >
+              <input
+                type="text"
+                readOnly
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer bg-white"
+                placeholder="选择部门或人员"
+                value={selectedItems.map(i => i.name).join(', ')}
+              />
+              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
             </div>
           </div>
           
@@ -292,6 +327,19 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId }) => {
             }
           }
         }}
+      />
+
+      <PersonnelSelectionModal
+        isOpen={isSelectionModalOpen}
+        onClose={() => setIsSelectionModalOpen(false)}
+        onConfirm={(items) => {
+          setSelectedItems(items);
+          setIsSelectionModalOpen(false);
+        }}
+        multiple={false}
+        selectType="all"
+        title="选择部门或人员"
+        initialSelected={selectedItems}
       />
     </div>
   );

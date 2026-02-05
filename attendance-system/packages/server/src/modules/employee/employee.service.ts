@@ -9,6 +9,8 @@ import {
   BindUserInput 
 } from './employee.dto';
 
+import { departmentService } from '../department/department.service';
+
 export class EmployeeService {
   async create(dto: CreateEmployeeInput) {
     const existing = await prisma.employee.findUnique({ 
@@ -53,7 +55,8 @@ export class EmployeeService {
     }
     
     if (query.deptId) {
-      where.deptId = query.deptId;
+      const deptIds = await departmentService.getSubDepartmentIds(query.deptId);
+      where.deptId = { in: deptIds };
     }
 
     const [items, total] = await Promise.all([

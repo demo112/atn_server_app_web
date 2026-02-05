@@ -16,7 +16,11 @@ export interface CalculationResult {
   workDate: dayjs.Dayjs;
 }
 
+import { createLogger } from '../../../common/logger';
+
 export class AttendanceCalculator {
+  private logger = createLogger('AttendanceCalculator');
+
   /**
    * 计算单日考勤状态
    * @param record 每日记录（包含打卡时间）
@@ -24,6 +28,7 @@ export class AttendanceCalculator {
    * @param leaves 当日请假记录（已通过）
    */
   calculate(record: AttDailyRecord, period: AttTimePeriod, leaves: AttLeave[] = []): CalculationResult {
+    this.logger.debug({ recordId: record.id, workDate: record.workDate }, 'calculate: start');
     const rules = (period.rules as unknown as TimePeriodRules) || {};
     // Use UTC to ensure consistent calculation regardless of server timezone
     const workDate = dayjs.utc(record.workDate);
@@ -79,7 +84,15 @@ export class AttendanceCalculator {
       let currentStart = leaveIntervals[0].start;
       let currentEnd = leaveIntervals[0].end;
       
+      this.logger.debug({ count: leaveIntervals.length }, 'calculate: merging intervals start');
+
       for (let i = 1; i < leaveIntervals.length; i++) {
+        // 防止过多次数循环
+        if (i > 1000) {
+          this.logger.warn('calculate: too many intervals, breaking');
+          break;
+        }
+
         const next = leaveIntervals[i];
         if (next.start.isBefore(currentEnd)) {
           // 重叠或邻接，延长 currentEnd
@@ -95,6 +108,7 @@ export class AttendanceCalculator {
       }
       // 结算最后一段
       mergedCoveredMinutes += currentEnd.diff(currentStart, 'minute');
+      this.logger.debug({ mergedCoveredMinutes }, 'calculate: merging intervals done');
     }
     
     coveredMinutes = mergedCoveredMinutes;

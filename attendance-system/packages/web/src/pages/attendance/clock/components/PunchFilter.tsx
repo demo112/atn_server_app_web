@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UserListVo } from '@attendance/shared';
-import { DepartmentSelect } from '@/components/DepartmentSelect';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface PunchFilterProps {
   params: {
@@ -22,6 +22,41 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
   onReset,
   users,
 }) => {
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
+  const [empModalOpen, setEmpModalOpen] = useState(false);
+  const [deptName, setDeptName] = useState('');
+  const [empName, setEmpName] = useState('');
+
+  // Sync empName with users list if possible
+  React.useEffect(() => {
+    if (params.employeeId && users.length > 0) {
+      const u = users.find(u => u.id === Number(params.employeeId));
+      if (u) setEmpName(u.username);
+    } else if (!params.employeeId) {
+      setEmpName('');
+    }
+  }, [params.employeeId, users]);
+
+  const handleDeptConfirm = (selected: SelectionItem[]) => {
+    if (selected.length > 0) {
+      setParams({ ...params, deptId: selected[0].id });
+      setDeptName(selected[0].name);
+    } else {
+      setParams({ ...params, deptId: undefined });
+      setDeptName('');
+    }
+  };
+
+  const handleEmpConfirm = (selected: SelectionItem[]) => {
+    if (selected.length > 0) {
+      setParams({ ...params, employeeId: selected[0].id });
+      setEmpName(selected[0].name);
+    } else {
+      setParams({ ...params, employeeId: '' });
+      setEmpName('');
+    }
+  };
+
   return (
     <section className="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 items-end shadow-sm rounded-t-lg">
       <div className="space-y-1">
@@ -46,30 +81,51 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-gray-500 dark:text-gray-400">筛选部门</label>
-        <div className="w-48">
-          <DepartmentSelect
-            value={params.deptId}
-            onSelect={(val) => setParams({ ...params, deptId: val })}
+        <div className="w-48 relative">
+          <input
+            readOnly
+            placeholder="选择部门"
+            value={deptName || (params.deptId ? `部门ID: ${params.deptId}` : '')}
+            onClick={() => setDeptModalOpen(true)}
             className="block w-full px-3 py-1.5 text-sm border-gray-300 dark:border-gray-600 bg-transparent rounded focus:ring-primary focus:border-primary dark:text-gray-200 cursor-pointer transition-all"
           />
+          {params.deptId && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setParams({ ...params, deptId: undefined });
+                setDeptName('');
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          )}
         </div>
       </div>
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-gray-500 dark:text-gray-400">筛选员工</label>
-        <div className="relative group">
-          <select
-            className="block w-48 px-3 py-1.5 text-sm border-gray-300 dark:border-gray-600 bg-transparent rounded focus:ring-primary focus:border-primary dark:text-gray-200 cursor-pointer transition-all"
-            value={params.employeeId}
-            onChange={(e) => setParams({ ...params, employeeId: e.target.value })}
-          >
-            <option value="">全部员工</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.username}
-              </option>
-            ))}
-          </select>
+        <div className="w-48 relative">
+          <input
+            readOnly
+            placeholder="全部员工"
+            value={empName || (params.employeeId ? `员工ID: ${params.employeeId}` : '')}
+            onClick={() => setEmpModalOpen(true)}
+            className="block w-full px-3 py-1.5 text-sm border-gray-300 dark:border-gray-600 bg-transparent rounded focus:ring-primary focus:border-primary dark:text-gray-200 cursor-pointer transition-all"
+          />
+          {params.employeeId && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setParams({ ...params, employeeId: '' });
+                setEmpName('');
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          )}
         </div>
       </div>
 
@@ -88,6 +144,24 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
           重置
         </button>
       </div>
+
+      {/* Modals */}
+      <PersonnelSelectionModal
+        isOpen={deptModalOpen}
+        onClose={() => setDeptModalOpen(false)}
+        onConfirm={handleDeptConfirm}
+        multiple={false}
+        selectType="department"
+        title="选择部门"
+      />
+      <PersonnelSelectionModal
+        isOpen={empModalOpen}
+        onClose={() => setEmpModalOpen(false)}
+        onConfirm={handleEmpConfirm}
+        multiple={false}
+        selectType="employee"
+        title="选择员工"
+      />
     </section>
   );
 };

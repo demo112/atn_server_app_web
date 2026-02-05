@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as correctionService from '../../../services/correction';
-import { DepartmentSelect } from '../../../components/DepartmentSelect';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { useToast } from '@/components/common/ToastProvider';
 
@@ -20,24 +20,36 @@ const AttendanceDetailsPage: React.FC = () => {
   const [data, setData] = useState<DailyRecordVo[]>([]);
   const [total, setTotal] = useState(0);
   
+  // Selection Modal State
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
+
   const [params, setParams] = useState({
     page: 1,
     pageSize: 10,
     startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-    deptId: undefined as number | undefined,
-    employeeName: '',
     status: '' as AttendanceStatus | '',
   });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await correctionService.getDailyRecords({
+      const queryParams: any = {
         ...params,
         status: params.status || undefined,
-        employeeName: params.employeeName || undefined,
-      });
+      };
+
+      if (selectedItems.length > 0) {
+        const item = selectedItems[0];
+        if (item.type === 'department') {
+          queryParams.deptId = item.id;
+        } else {
+          queryParams.employeeId = item.id;
+        }
+      }
+
+      const res = await correctionService.getDailyRecords(queryParams);
       setData(res.items || []);
       setTotal(res.total);
     } catch (error) {
@@ -45,7 +57,7 @@ const AttendanceDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [params, toast]);
+  }, [params, selectedItems, toast]);
 
   useEffect(() => {
     fetchData();
@@ -62,10 +74,9 @@ const AttendanceDetailsPage: React.FC = () => {
       pageSize: 10,
       startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
       endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-      deptId: undefined,
-      employeeName: '',
       status: '',
     });
+    setSelectedItems([]);
   };
 
   const handleRecalculate = async () => {
@@ -157,21 +168,20 @@ const AttendanceDetailsPage: React.FC = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">部门</label>
-          <DepartmentSelect
-            value={params.deptId}
-            onChange={(e) => setParams({ ...params, deptId: e.target.value ? Number(e.target.value) : undefined })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">姓名/工号</label>
-          <input
-            type="text"
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-            placeholder="请输入"
-            value={params.employeeName}
-            onChange={(e) => setParams({ ...params, employeeName: e.target.value })}
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">部门/人员</label>
+          <div 
+            onClick={() => setIsSelectionModalOpen(true)}
+            className="relative cursor-pointer"
+          >
+            <input
+              type="text"
+              readOnly
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm cursor-pointer bg-white"
+              placeholder="请选择部门或人员"
+              value={selectedItems.map(i => i.name).join(', ')}
+            />
+            <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">状态</label>
@@ -332,6 +342,18 @@ const AttendanceDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <PersonnelSelectionModal
+        isOpen={isSelectionModalOpen}
+        onClose={() => setIsSelectionModalOpen(false)}
+        onConfirm={(items) => {
+          setSelectedItems(items);
+          setIsSelectionModalOpen(false);
+        }}
+        multiple={false}
+        selectType="all"
+        title="选择部门或人员"
+        initialSelected={selectedItems}
+      />
     </div>
   );
 };

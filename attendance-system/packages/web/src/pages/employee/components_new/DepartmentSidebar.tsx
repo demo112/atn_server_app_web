@@ -76,24 +76,20 @@ const DepartmentItem: React.FC<DepartmentItemProps> = ({
           >
             <span className="material-symbols-outlined text-[16px]">add</span>
           </button>
-          {dept.id !== '-1' && (
-            <>
-              <button 
-                className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-primary transition-colors" 
-                title="编辑部门"
-                onClick={(e) => { e.stopPropagation(); onEdit(dept); }}
-              >
-                <span className="material-symbols-outlined text-[16px]">edit</span>
-              </button>
-              <button 
-                className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-red-500 transition-colors" 
-                title="删除部门"
-                onClick={(e) => { e.stopPropagation(); onDelete(dept); }}
-              >
-                <span className="material-symbols-outlined text-[16px]">delete</span>
-              </button>
-            </>
-          )}
+          <button 
+            className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-primary transition-colors" 
+            title="编辑部门"
+            onClick={(e) => { e.stopPropagation(); onEdit(dept); }}
+          >
+            <span className="material-symbols-outlined text-[16px]">edit</span>
+          </button>
+          <button 
+            className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-red-500 transition-colors" 
+            title="删除部门"
+            onClick={(e) => { e.stopPropagation(); onDelete(dept); }}
+          >
+            <span className="material-symbols-outlined text-[16px]">delete</span>
+          </button>
         </div>
       </div>
       
@@ -136,13 +132,7 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
     setLoading(true);
     try {
       const tree = await departmentService.getTree();
-      const rootNode: Department = {
-        id: '-1',
-        name: '全公司',
-        children: tree.map(mapDepartment),
-        isOpen: true
-      };
-      setDepartments([rootNode]);
+      setDepartments(tree.map(mapDepartment));
     } catch (error) {
       console.error('Failed to fetch departments:', error);
     } finally {
@@ -157,18 +147,12 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
   const handleSelect = (dept: Department) => {
     setSelectedId(dept.id);
     if (onSelect) {
-      // 根节点传空字符串，表示查询所有
-      onSelect(dept.id === '-1' ? '' : dept.id);
+      onSelect(dept.id);
     }
   };
 
   const handleAdd = (dept: Department) => {
-    // 如果是虚拟根节点，作为一级部门创建（parentId = null）
-    if (dept.id === '-1') {
-      setParentDept(null);
-    } else {
-      setParentDept({ id: Number(dept.id), name: dept.name } as DepartmentVO);
-    }
+    setParentDept({ id: Number(dept.id), name: dept.name } as DepartmentVO);
     setCurrentDept(null);
     setModalMode('create');
     setModalVisible(true);

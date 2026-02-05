@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AttendanceGroup } from '../types';
 import SelectionModals from './SelectionModals';
+import { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface GroupFormProps {
   group: AttendanceGroup | null;
@@ -10,6 +11,7 @@ interface GroupFormProps {
 
 const GroupForm: React.FC<GroupFormProps> = ({ group, onCancel, onSave }) => {
   const [modalType, setModalType] = useState<'personnel' | 'shift' | 'device' | null>(null);
+  const [selectedPersonnel, setSelectedPersonnel] = useState<SelectionItem[]>([]);
 
   const SectionTitle = ({ title }: { title: string }) => (
     <div className="flex items-center space-x-2 mb-6">
@@ -57,7 +59,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, onCancel, onSave }) => {
                     placeholder="请选择" 
                     readOnly 
                     type="text" 
-                    defaultValue={group ? `${group.memberCount} 人` : ''}
+                    value={selectedPersonnel.length > 0 ? `${selectedPersonnel.length} 人` : (group ? `${group.memberCount} 人` : '')}
                   />
                   <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">more_horiz</span>
                 </div>
@@ -213,7 +215,18 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, onCancel, onSave }) => {
         </div>
       </div>
       
-      {modalType && <SelectionModals type={modalType} onClose={() => setModalType(null)} />}
+      {modalType && (
+        <SelectionModals 
+          type={modalType} 
+          onClose={() => setModalType(null)}
+          onConfirm={(data) => {
+            if (modalType === 'personnel') {
+              setSelectedPersonnel(data);
+            }
+          }}
+          initialSelected={modalType === 'personnel' ? selectedPersonnel : undefined}
+        />
+      )}
     </div>
   );
 };

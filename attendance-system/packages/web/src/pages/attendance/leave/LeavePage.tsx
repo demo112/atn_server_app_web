@@ -6,8 +6,7 @@ import dayjs from 'dayjs';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/components/common/ToastProvider';
 import StandardModal from '@/components/common/StandardModal';
-import { DepartmentTree } from '@/components/common/DepartmentTree';
-import { EmployeeSelect } from '@/components/common/EmployeeSelect';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 const LeavePage: React.FC = () => {
   const { toast } = useToast();
@@ -16,7 +15,9 @@ const LeavePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
+  // const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null); // Replaced by modal
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LeaveVo | undefined>(undefined);
   
@@ -36,15 +37,24 @@ const LeavePage: React.FC = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await leaveService.getLeaves({
+      const queryParams: any = {
         page,
         pageSize: 10,
-        employeeId: filters.employeeId,
-        deptId: selectedDeptId || undefined,
         type: filters.type,
         startTime: filters.startTime || undefined,
         endTime: filters.endTime || undefined,
-      });
+      };
+
+      if (selectedItems.length > 0) {
+        const item = selectedItems[0];
+        if (item.type === 'department') {
+          queryParams.deptId = item.id;
+        } else {
+          queryParams.employeeId = item.id;
+        }
+      }
+
+      const res = await leaveService.getLeaves(queryParams);
       setData(res.items || []);
       // setTotal(res.total);
     } catch (error) {
@@ -53,7 +63,7 @@ const LeavePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, filters, selectedDeptId, toast]);
+  }, [page, filters, selectedItems, toast]);
 
   useEffect(() => {
     fetchData();
@@ -129,16 +139,6 @@ const LeavePage: React.FC = () => {
 
   return (
     <div className="flex h-full min-h-[calc(100vh-64px)]">
-      <div className="w-64 border-r bg-gray-50 p-4 shrink-0 hidden md:block">
-        <DepartmentTree
-          selectedId={selectedDeptId}
-          onSelect={(id) => {
-            setSelectedDeptId(id);
-            setPage(1);
-            setFilters(prev => ({ ...prev, employeeId: undefined }));
-          }}
-        />
-      </div>
       <div className="flex-1 p-6 overflow-auto">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
@@ -153,12 +153,19 @@ const LeavePage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-4 mb-6">
-            <EmployeeSelect
-              deptId={selectedDeptId}
-              value={filters.employeeId}
-              onChange={val => setFilters({...filters, employeeId: val})}
-              className="w-48"
-            />
+            <div 
+              onClick={() => setIsSelectionModalOpen(true)}
+              className="relative cursor-pointer w-48"
+            >
+              <input
+                type="text"
+                readOnly
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A90E2] cursor-pointer"
+                placeholder="选择部门或人员"
+                value={selectedItems.map(i => i.name).join(', ')}
+              />
+              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+            </div>
           <select
             className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
             value={filters.type || ''}
@@ -315,6 +322,19 @@ const LeavePage: React.FC = () => {
         </StandardModal>
       </div>
       </div>
+      <PersonnelSelectionModal
+        isOpen={isSelectionModalOpen}
+        onClose={() => setIsSelectionModalOpen(false)}
+        onConfirm={(items) => {
+          setSelectedItems(items);
+          setIsSelectionModalOpen(false);
+          setPage(1);
+        }}
+        multiple={false}
+        selectType="all"
+        title="选择部门或人员"
+        initialSelected={selectedItems}
+      />
     </div>
   );
 };

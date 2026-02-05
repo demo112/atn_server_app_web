@@ -198,6 +198,7 @@ const EmployeeList: React.FC = () => {
         open={isEmployeeModalOpen}
         mode={employeeModalMode}
         initialValues={currentEmployee}
+        defaultDeptId={params.deptId}
         onCancel={() => setIsEmployeeModalOpen(false)}
         onOk={handleEmployeeModalOk}
       />

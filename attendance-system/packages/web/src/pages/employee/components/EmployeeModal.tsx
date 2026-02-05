@@ -4,11 +4,13 @@ import dayjs from 'dayjs';
 import { useToast } from '@/components/common/ToastProvider';
 import StandardModal from '@/components/common/StandardModal';
 import { departmentService } from '@/services/department';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface EmployeeModalProps {
   open: boolean;
   mode: 'create' | 'edit';
   initialValues?: EmployeeVo | null;
+  defaultDeptId?: number;
   onCancel: () => void;
   onOk: (values: CreateEmployeeDto | UpdateEmployeeDto) => Promise<void>;
   confirmLoading?: boolean;
@@ -18,6 +20,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   open,
   mode,
   initialValues,
+  defaultDeptId,
   onCancel,
   onOk,
   confirmLoading,
@@ -25,6 +28,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<DepartmentVO[]>([]);
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [formData, setFormData] = useState<{
     employeeNo: string;
     name: string;
@@ -60,6 +64,15 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         try {
           const tree = await departmentService.getTree();
           setDepartments(tree);
+          
+          // 如果是创建模式，且没有指定默认部门（即选中了全公司），且部门树只有一个根节点
+          // 则自动选中该根节点
+          if (mode === 'create' && !defaultDeptId && tree.length === 1) {
+            setFormData(prev => ({
+              ...prev,
+              deptId: tree[0].id
+            }));
+          }
         } catch (error) {
           console.error('Failed to fetch departments:', error);
           // toast.error('Failed to load departments'); // Avoid toast spam if it fails repeatedly
@@ -80,14 +93,23 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         setFormData({
           employeeNo: '',
           name: '',
-          deptId: '',
+          deptId: defaultDeptId || '',
           phone: '',
           email: '',
           hireDate: '',
         });
       }
     }
-  }, [open, mode, initialValues]);
+  }, [open, mode, initialValues, defaultDeptId]);
+
+  // 计算实际生效的默认部门ID（用于显示只读文本）
+  // 1. 外部传入的 defaultDeptId
+  // 2. 或者当部门树只有一个根节点时，该根节点的 ID
+  const effectiveDefaultDeptId = useMemo(() => {
+    if (defaultDeptId) return defaultDeptId;
+    if (departments.length === 1) return departments[0].id;
+    return undefined;
+  }, [defaultDeptId, departments]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -101,19 +123,19 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     try {
       // Basic validation
       if (mode === 'create' && !formData.employeeNo) {
-        toast.error('Please input employee no!');
+        toast.error('请输入工号！');
         return;
       }
       if (!formData.name) {
-        toast.error('Please input name!');
+        toast.error('请输入姓名！');
         return;
       }
       if (!formData.deptId) {
-        toast.error('Please select department!');
+        toast.error('请选择部门！');
         return;
       }
       if (!formData.hireDate) {
-        toast.error('Please select hire date!');
+        toast.error('请选择入职日期！');
         return;
       }
 
@@ -131,7 +153,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
       await onOk(values);
     } catch (error) {
-      toast.error('Submit Failed');
+      toast.error('提交失败');
     } finally {
       setLoading(false);
     }
@@ -155,11 +177,12 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     </div>
   );
 
+
   return (
     <StandardModal
       isOpen={open}
       onClose={onCancel}
-      title={mode === 'create' ? 'Add Employee' : 'Edit Employee'}
+      title={mode === 'create' ? '添加人员' : '编辑人员'}
       footer={footer}
       width="max-w-md"
     >
@@ -167,14 +190,14 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         {mode === 'create' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Employee No <span className="text-red-500">*</span>
+              工号 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="employeeNo"
               value={formData.employeeNo}
               onChange={handleInputChange}
-              placeholder="E.g. E001"
+              placeholder="例如: E001"
               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
             />
           </div>
@@ -182,68 +205,88 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name <span className="text-red-500">*</span>
+            姓名 <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleInputChange}
-            placeholder="Employee Name"
+            placeholder="请输入姓名"
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Department <span className="text-red-500">*</span>
+            部门 <span className="text-red-500">*</span>
           </label>
-          <select
-            name="deptId"
-            value={formData.deptId}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
-          >
-            <option value="">Select Department</option>
-            {departmentOptions.map(dept => (
-              <option key={dept.id} value={dept.id}>
-                {'\u00A0\u00A0'.repeat(dept.level)}{dept.name}
-              </option>
-            ))}
-          </select>
+          {mode === 'create' && effectiveDefaultDeptId ? (
+            <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-700">
+              {departmentOptions.find(d => d.id === effectiveDefaultDeptId)?.name || '加载中...'}
+            </div>
+          ) : (
+            <div 
+              onClick={() => setIsDeptModalOpen(true)}
+              className="relative cursor-pointer"
+            >
+              <input
+                type="text"
+                readOnly
+                placeholder="请选择部门"
+                value={formData.deptId ? departmentOptions.find(d => d.id === formData.deptId)?.name || '' : ''}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow cursor-pointer"
+              />
+              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+            </div>
+          )}
         </div>
+
+        <PersonnelSelectionModal
+          isOpen={isDeptModalOpen}
+          onClose={() => setIsDeptModalOpen(false)}
+          onConfirm={(items) => {
+            if (items.length > 0) {
+              setFormData(prev => ({ ...prev, deptId: Number(items[0].id) }));
+            }
+            setIsDeptModalOpen(false);
+          }}
+          multiple={false}
+          selectType="department"
+          title="选择部门"
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Phone
+            手机号
           </label>
           <input
             type="text"
             name="phone"
             value={formData.phone}
             onChange={handleInputChange}
-            placeholder="Phone Number"
+            placeholder="请输入手机号"
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email
+            邮箱
           </label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleInputChange}
-            placeholder="Email Address"
+            placeholder="请输入邮箱"
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Hire Date <span className="text-red-500">*</span>
+            入职日期 <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
@@ -256,4 +299,5 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       </div>
     </StandardModal>
   );
+
 };

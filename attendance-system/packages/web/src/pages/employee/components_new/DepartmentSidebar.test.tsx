@@ -30,57 +30,38 @@ describe('DepartmentSidebar', () => {
     vi.clearAllMocks();
   });
 
-  it('renders root node correctly', async () => {
+  it('renders department tree correctly', async () => {
     (departmentService.getTree as any).mockResolvedValue(mockTreeData);
     
     render(<DepartmentSidebar />);
     
     await waitFor(() => {
-      expect(screen.getByText('全公司')).toBeInTheDocument();
+      expect(screen.getByText('研发部')).toBeInTheDocument();
+      expect(screen.getByText('市场部')).toBeInTheDocument();
     });
     
-    expect(screen.getByText('研发部')).toBeInTheDocument();
-    expect(screen.getByText('市场部')).toBeInTheDocument();
+    // Should NOT have virtual root "全公司"
+    expect(screen.queryByText('全公司')).not.toBeInTheDocument();
   });
 
-  it('handles root node selection', async () => {
+  it('handles department selection', async () => {
     (departmentService.getTree as any).mockResolvedValue(mockTreeData);
     const onSelect = vi.fn();
     
     render(<DepartmentSidebar onSelect={onSelect} />);
     
     await waitFor(() => {
-      expect(screen.getByText('全公司')).toBeInTheDocument();
+      expect(screen.getByText('研发部')).toBeInTheDocument();
     });
     
-    // Click root node
-    fireEvent.click(screen.getByText('全公司'));
+    // Click a node
+    fireEvent.click(screen.getByText('研发部'));
     
-    // Should call onSelect with empty string
-    expect(onSelect).toHaveBeenCalledWith('');
+    // Should call onSelect with the ID '1'
+    expect(onSelect).toHaveBeenCalledWith('1');
   });
 
-  it('root node has add button but no edit/delete buttons', async () => {
-    (departmentService.getTree as any).mockResolvedValue(mockTreeData);
-    
-    render(<DepartmentSidebar />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('全公司')).toBeInTheDocument();
-    });
-
-    const rootNode = screen.getByText('全公司').closest('.group');
-    expect(rootNode).not.toBeNull();
-    
-    // Check buttons within root node
-    // Note: Buttons are hidden by opacity but present in DOM
-    const buttons = rootNode?.querySelectorAll('button');
-    // Expect only 1 button (Add)
-    expect(buttons?.length).toBe(1);
-    expect(buttons?.[0].title).toBe('添加子部门');
-  });
-
-  it('child node has all buttons', async () => {
+  it('department node has all buttons', async () => {
     (departmentService.getTree as any).mockResolvedValue(mockTreeData);
     
     render(<DepartmentSidebar />);
@@ -89,8 +70,8 @@ describe('DepartmentSidebar', () => {
       expect(screen.getByText('研发部')).toBeInTheDocument();
     });
 
-    const childNode = screen.getByText('研发部').closest('.group');
-    const buttons = childNode?.querySelectorAll('button');
+    const node = screen.getByText('研发部').closest('.group');
+    const buttons = node?.querySelectorAll('button');
     
     // Expect 3 buttons: Add, Edit, Delete
     expect(buttons?.length).toBe(3);

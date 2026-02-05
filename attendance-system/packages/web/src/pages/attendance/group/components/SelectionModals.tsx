@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { MOCK_SHIFTS, MOCK_DEVICES } from '../constants';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface SelectionModalsProps {
   type: 'personnel' | 'shift' | 'device';
   onClose: () => void;
+  onConfirm?: (data: any) => void;
+  initialSelected?: any[];
 }
 
 const DAYS_OF_WEEK = [
@@ -16,7 +19,7 @@ const DAYS_OF_WEEK = [
   { label: '日', value: 'sun' },
 ];
 
-const SelectionModals: React.FC<SelectionModalsProps> = ({ type, onClose }) => {
+const SelectionModals: React.FC<SelectionModalsProps> = ({ type, onClose, onConfirm, initialSelected }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [copyToDays, setCopyToDays] = useState<string[]>([]);
 
@@ -43,6 +46,23 @@ const SelectionModals: React.FC<SelectionModalsProps> = ({ type, onClose }) => {
     device: '选择设备'
   };
 
+  if (type === 'personnel') {
+    return (
+      <PersonnelSelectionModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={(items) => {
+          onConfirm?.(items);
+          onClose();
+        }}
+        multiple={true}
+        selectType="all"
+        title={titles[type]}
+        initialSelected={initialSelected as SelectionItem[]}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white w-full max-w-2xl rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -52,46 +72,7 @@ const SelectionModals: React.FC<SelectionModalsProps> = ({ type, onClose }) => {
         </div>
         
         <div className="p-6">
-          {/* Personnel Selection Logic (Simplified Tree View) */}
-          {type === 'personnel' && (
-            <div className="grid grid-cols-2 gap-4 border border-gray-200 rounded min-h-[400px]">
-              <div className="p-4 border-r border-gray-200 flex flex-col">
-                <div className="mb-4 relative">
-                  <span className="material-icons absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
-                  <input className="w-full text-xs border-gray-200 rounded pl-8" placeholder="搜索部门或人员" type="text" />
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-3">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <span className="material-icons text-xs">arrow_drop_down</span>
-                    <span className="material-icons text-blue-500 text-sm">corporate_fare</span>
-                    <span>公司总部</span>
-                  </div>
-                  <div className="pl-6 space-y-2">
-                    {['技术部', '行政部', '市场部', '研发部'].map(dept => (
-                      <div key={dept} className="flex items-center justify-between p-1 hover:bg-blue-50 rounded group cursor-pointer">
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <span className="material-icons text-xs group-hover:rotate-90 transition">chevron_right</span>
-                          <span className="material-icons text-sm">group</span>
-                          <span>{dept}</span>
-                        </div>
-                        <input type="checkbox" className="rounded text-blue-500 border-gray-300" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col bg-gray-50">
-                <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
-                  <span className="text-xs font-bold text-gray-600">已选 (0)</span>
-                  <button className="text-xs text-blue-500 hover:underline">清空</button>
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <span className="material-icons text-4xl mb-2 opacity-20">inbox</span>
-                  <span className="text-xs">暂未选择任何人员</span>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Personnel Selection Logic handled by PersonnelSelectionModal component above */}
 
           {/* Shift Selection Logic */}
           {type === 'shift' && (
