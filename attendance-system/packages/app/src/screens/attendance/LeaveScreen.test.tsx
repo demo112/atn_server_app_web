@@ -2,6 +2,8 @@ import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import LeaveScreen from './LeaveScreen';
 import { getLeaves, createLeave, cancelLeave } from '../../services/attendance';
+import { getEmployees } from '../../services/employee';
+import { useAuth } from '../../utils/auth';
 import { Alert } from 'react-native';
 import { LeaveType } from '@attendance/shared';
 
@@ -10,6 +12,14 @@ jest.mock('../../services/attendance', () => ({
   getLeaves: jest.fn(),
   createLeave: jest.fn(),
   cancelLeave: jest.fn(),
+}));
+
+jest.mock('../../services/employee', () => ({
+  getEmployees: jest.fn(),
+}));
+
+jest.mock('../../utils/auth', () => ({
+  useAuth: jest.fn(),
 }));
 
 // Mock logger
@@ -43,6 +53,8 @@ describe('LeaveScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getLeaves as jest.Mock).mockResolvedValue(mockLeaves);
+    (useAuth as jest.Mock).mockReturnValue({ user: { role: 'user' } });
+    (getEmployees as jest.Mock).mockResolvedValue({ items: [] });
   });
 
   it('renders correctly and loads data', async () => {
@@ -86,6 +98,56 @@ describe('LeaveScreen', () => {
     
     // Wait for loading to finish
     await waitFor(() => expect(queryByTestId('loading')).toBeNull());
+  });
+
+  it('allows admin to select employee', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: { role: 'admin' } });
+    const mockEmployees = [
+      { id: 101, name: 'John Doe', employeeNo: 'E101', deptName: 'IT' },
+      { id: 102, name: 'Jane Smith', employeeNo: 'E102', deptName: 'HR' },
+    ];
+    (getEmployees as jest.Mock).mockResolvedValue({ items: mockEmployees });
+    (createLeave as jest.Mock).mockResolvedValue({});
+
+    const { getByText, getByTestId } = render(<LeaveScreen />);
+
+    // Wait for employees to load
+    await waitFor(() => {
+      expect(getEmployees).toHaveBeenCalled();
+    });
+
+    fireEvent.press(getByText('+ 新申请'));
+
+    // Should see "选择员工" button
+    expect(getByText('选择员工')).toBeTruthy();
+
+    // Open employee selection
+    fireEvent.press(getByText('选择员工'));
+
+    // Select John Doe
+    await waitFor(() => {
+      expect(getByText('John Doe')).toBeTruthy();
+    });
+    fireEvent.press(getByText('John Doe'));
+
+    // Fill form
+    fireEvent.changeText(getByTestId('input-type'), 'annual');
+    fireEvent.changeText(getByTestId('input-startTime'), '2023-10-05 09:00');
+    fireEvent.changeText(getByTestId('input-endTime'), '2023-10-05 18:00');
+    fireEvent.changeText(getByTestId('input-reason'), 'Admin applying for John');
+
+    fireEvent.press(getByText('提交'));
+
+    await waitFor(() => {
+      expect(createLeave).toHaveBeenCalledWith({
+        employeeId: 101,
+        type: 'annual',
+        startTime: expect.stringContaining('2023-10-05'),
+        endTime: expect.stringContaining('2023-10-05'),
+        reason: 'Admin applying for John',
+      });
+      expect(Alert.alert).toHaveBeenCalledWith('成功', '申请提交成功');
+    });
   });
 
   it('validates that end time is not before start time', async () => {

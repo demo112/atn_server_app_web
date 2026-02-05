@@ -2,17 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, ScrollView, Alert, Modal } from 'react-native';
 import { Text, FAB, Surface, useTheme, Card, Chip, TextInput, Button, ActivityIndicator, RadioButton } from 'react-native-paper';
 import { getLeaves, createLeave, cancelLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
-import { LeaveType } from '@attendance/shared';
+import { getEmployees } from '../../services/employee';
+import { useAuth } from '../../utils/auth';
+import { LeaveType, EmployeeVo } from '@attendance/shared';
 import { logger } from '../../utils/logger';
 import { withAlpha } from '../../utils/colors';
 import { getErrorMessage } from '../../utils/error';
 
 const LeaveScreen = () => {
   const theme = useTheme();
+  const { user } = useAuth();
   const [leaves, setLeaves] = useState<LeaveVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   
+  // Employee selection state
+  const [employees, setEmployees] = useState<EmployeeVo[]>([]);
+  const [employeeModalVisible, setEmployeeModalVisible] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeVo | null>(null);
+
   // Form state
   const [formData, setFormData] = useState<Partial<CreateLeaveDto>>({
     type: LeaveType.annual,
@@ -23,7 +31,19 @@ const LeaveScreen = () => {
 
   useEffect(() => {
     fetchLeaves();
-  }, []);
+    if (user?.role === 'admin') {
+      fetchEmployees();
+    }
+  }, [user]);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await getEmployees({ page: 1, pageSize: 100 }); // Load enough employees
+      setEmployees(res.items || []);
+    } catch (error) {
+      logger.error('Failed to fetch employees', error);
+    }
+  };
 
   const fetchLeaves = async () => {
     setLoading(true);
@@ -48,9 +68,14 @@ const LeaveScreen = () => {
       return;
     }
 
+    if (user?.role === 'admin' && !selectedEmployee) {
+      Alert.alert('提示', '管理员必须选择员工');
+      return;
+    }
+
     try {
       await createLeave({
-        employeeId: 0,
+        employeeId: selectedEmployee?.id || 0,
         type: formData.type,
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
@@ -160,6 +185,19 @@ const LeaveScreen = () => {
             <Text variant="titleLarge" style={styles.modalTitle}>新建申请</Text>
             
             <ScrollView contentContainerStyle={styles.form}>
+              {user?.role === 'admin' && (
+                <View style={{ marginBottom: 16 }}>
+                  <Text variant="titleMedium">员工</Text>
+                  <Button 
+                    mode="outlined" 
+                    onPress={() => setEmployeeModalVisible(true)}
+                    style={{ marginTop: 8 }}
+                  >
+                    {selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.employeeNo})` : '选择员工'}
+                  </Button>
+                </View>
+              )}
+
               <Text variant="titleMedium">类型（年假、病假等）</Text>
               <RadioButton.Group
                 onValueChange={value => setFormData({ ...formData, type: value as LeaveType })}
@@ -222,6 +260,41 @@ const LeaveScreen = () => {
               <Button onPress={() => setModalVisible(false)} style={styles.modalButton}>取消</Button>
               <Button mode="contained" onPress={handleSubmit} style={styles.modalButton}>提交</Button>
             </View>
+          </Surface>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={employeeModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setEmployeeModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Surface style={styles.modalContent}>
+            <Text variant="titleLarge" style={styles.modalTitle}>选择员工</Text>
+            <FlatList
+              data={employees}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <Card 
+                  style={{ marginBottom: 8 }} 
+                  onPress={() => {
+                    setSelectedEmployee(item);
+                    setEmployeeModalVisible(false);
+                  }}
+                >
+                  <Card.Content>
+                    <Text variant="titleMedium">{item.name}</Text>
+                    <Text variant="bodyMedium">{item.employeeNo} | {item.deptName || '无部门'}</Text>
+                  </Card.Content>
+                </Card>
+              )}
+              style={{ maxHeight: 400 }}
+            />
+            <Button mode="outlined" onPress={() => setEmployeeModalVisible(false)} style={{ marginTop: 16 }}>
+              取消
+            </Button>
           </Surface>
         </View>
       </Modal>
