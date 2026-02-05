@@ -94,10 +94,10 @@ git --no-pager diff
 
 | 维度 | 分析内容 | 命令 |
 |------|----------|------|
-| 双方改动 | 各自做了什么修改 | `git log --merge -p <file>` |
-| 共同祖先 | 冲突前的原始状态 | `git show :1:<file>` |
-| 本地版本 | 你的改动 | `git show :2:<file>` |
-| 远程版本 | 对方的改动 | `git show :3:<file>` |
+| 双方改动 | 各自做了什么修改 | `git --no-pager log --merge -p <file>` |
+| 共同祖先 | 冲突前的原始状态 | `git --no-pager show :1:<file>` |
+| 本地版本 | 你的改动 | `git --no-pager show :2:<file>` |
+| 远程版本 | 对方的改动 | `git --no-pager show :3:<file>` |
 
 ### 冲突类型分类
 
