@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Switch, useTheme, IconButton, Surface } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -112,15 +113,17 @@ export default function ShiftEditScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F2F2F7' }]}>
+    <View style={[styles.container, { backgroundColor: '#F2F2F7' }]}> 
       {/* Header */}
-      <Surface style={styles.header} elevation={2}>
-        <IconButton icon="chevron-left" onPress={() => navigation.goBack()} />
-        <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-          {shift ? '编辑班次详情' : '新增班次详情'}
-        </Text>
-        <View style={{ width: 48 }} />
-      </Surface>
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#F2F2F7' }}>
+        <Surface style={styles.header} elevation={2}>
+          <IconButton icon="chevron-left" onPress={() => navigation.goBack()} />
+          <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+            {shift ? '编辑班次详情' : '新增班次详情'}
+          </Text>
+          <View style={{ width: 48 }} />
+        </Surface>
+      </SafeAreaView>
 
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Name Input */}
