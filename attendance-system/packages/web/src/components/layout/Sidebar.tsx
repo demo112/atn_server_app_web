@@ -46,7 +46,7 @@ const Sidebar: React.FC = () => {
       icon: 'bar_chart',
       subItems: [
         { id: 'dashboard', label: '统计报表', path: '/statistics/dashboard' },
-        { id: 'daily-records', label: '打卡记录', path: '/attendance/daily-records' },
+        { id: 'daily-records', label: '打卡记录', path: '/attendance/clock-records' },
       ]
     },
   ];

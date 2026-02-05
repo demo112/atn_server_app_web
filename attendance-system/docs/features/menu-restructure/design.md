@@ -42,7 +42,7 @@ const menuItems: NavItem[] = [
     icon: 'bar_chart',
     subItems: [
       { id: 'dashboard', label: '统计报表', path: '/statistics/dashboard' }, // Renamed from 统计仪表盘
-      { id: 'records', label: '打卡记录', path: '/attendance/daily-records' }, // Moved/Renamed from 每日考勤
+      { id: 'records', label: '打卡记录', path: '/attendance/clock-records' }, // Moved/Renamed from 每日考勤
     ]
   }
 ];
@@ -58,7 +58,7 @@ const menuItems: NavItem[] = [
 ### 2.2 路由 (Routes)
 - 保持 `packages/web/src/routes` 配置不变。
 - 路径映射关系：
-  - `/attendance/daily-records` 继续作为“打卡记录”页面。
+  - `/attendance/clock-records` 作为“打卡记录”页面（原始打卡数据）。
   - `/statistics/dashboard` 继续作为“统计报表”页面。
 
 ## 3. 文件变更清单
