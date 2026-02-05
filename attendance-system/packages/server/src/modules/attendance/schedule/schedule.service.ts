@@ -12,6 +12,10 @@ export class ScheduleService {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new AppError('ERR_INVALID_DATE', 'Invalid date format', 400);
+    }
+
     // 验证日期顺序
     if (start > end) {
       throw new AppError('ERR_INVALID_DATE_RANGE', 'Start date must be before end date', 400);
@@ -101,6 +105,10 @@ export class ScheduleService {
     const { employeeId, shiftId, startDate, endDate, force } = data;
     const start = new Date(startDate);
     const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new AppError('ERR_INVALID_DATE', 'Invalid date format', 400);
+    }
 
     // 检查冲突
     const conflicts = await tx.attSchedule.findMany({
