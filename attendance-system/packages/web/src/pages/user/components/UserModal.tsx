@@ -65,21 +65,23 @@ const UserModal: React.FC<UserModalProps> = ({
   const isEdit = mode === 'edit';
 
   const footer = (
-    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+    <>
       <button
         onClick={onClose}
+        type="button"
         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
       >
         取消
       </button>
       <button
-        onClick={() => onConfirm(formData)}
+        type="submit"
+        form="user-form"
         disabled={loading}
         className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? '提交中...' : '确定'}
       </button>
-    </div>
+    </>
   );
 
   return (
@@ -90,7 +92,7 @@ const UserModal: React.FC<UserModalProps> = ({
       footer={footer}
       width="max-w-lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form id="user-form" onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-4 items-center gap-4">
           <label className="text-right text-sm font-medium text-gray-700">
             <span className="text-red-500 mr-1">*</span>用户名:
