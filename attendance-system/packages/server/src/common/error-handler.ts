@@ -46,6 +46,14 @@ export function errorHandler(
     }
   }
 
+  if (err instanceof Prisma.PrismaClientInitializationError) {
+    logger.error({ err, path: req.path }, 'Database connection failed');
+    return res.status(503).json({
+      success: false,
+      error: { code: 'ERR_DB_CONNECTION', message: '服务暂时不可用(数据库连接失败)' }
+    });
+  }
+
   logger.error({ err, path: req.path }, '未处理异常');
   
   // 临时：写入错误到文件以便调试
