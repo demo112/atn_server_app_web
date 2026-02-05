@@ -25,7 +25,8 @@ const Sidebar: React.FC = () => {
         { id: 'daily', label: '每日考勤', path: '/attendance/daily-records' },
         { id: 'shift', label: '班次管理', path: '/attendance/shifts' },
         { id: 'schedule', label: '排班管理', path: '/attendance/schedule' },
-        { id: 'correction', label: '异常处理', path: '/attendance/correction' },
+        { id: 'correction', label: '补签记录', path: '/attendance/correction' },
+        { id: 'correction-processing', label: '补签处理', path: '/attendance/correction-processing' },
         { id: 'leave', label: '请假管理', path: '/attendance/leave' },
       ]
     },

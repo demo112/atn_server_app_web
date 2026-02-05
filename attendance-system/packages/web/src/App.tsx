@@ -13,6 +13,7 @@ import ShiftPage from '@/pages/attendance/shift/ShiftPage';
 import ClockRecordPage from '@/pages/attendance/clock/ClockRecordPage';
 import TimePeriodPage from '@/pages/attendance/time-period/TimePeriodPage';
 import CorrectionPage from '@/pages/attendance/correction/CorrectionPage';
+import CorrectionProcessingPage from '@/pages/attendance/correction/CorrectionProcessingPage';
 import AttendanceSettingsPage from '@/pages/attendance/settings/AttendanceSettingsPage';
 import LeavePage from '@/pages/attendance/leave/LeavePage';
 import DailyRecords from '@/pages/attendance/DailyRecords';
@@ -68,6 +69,7 @@ export default function App(): React.ReactElement {
                    <Route path="clock-records" element={<ClockRecordPage />} />
                    <Route path="leave" element={<LeavePage />} />
                    <Route path="correction" element={<CorrectionPage />} />
+                   <Route path="correction-processing" element={<CorrectionProcessingPage />} />
                    <Route path="settings" element={<AttendanceSettingsPage />} />
                    <Route path="groups" element={<GroupPage />} />
                    <Route path="daily-records" element={<DailyRecords />} />
