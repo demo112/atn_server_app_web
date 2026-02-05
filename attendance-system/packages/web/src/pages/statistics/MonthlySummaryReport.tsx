@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDepartmentSummary, exportStats, triggerCalculation } from '../../services/statistics';
 import { AttendanceSummaryVo, ExportStatsDto } from '@attendance/shared';
 import { logger } from '../../utils/logger';
+import StandardModal from '../../components/common/StandardModal';
 
 const MonthlySummaryReport: React.FC = () => {
   const navigate = useNavigate();
@@ -13,13 +14,21 @@ const MonthlySummaryReport: React.FC = () => {
   const [data, setData] = useState<AttendanceSummaryVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [calculating, setCalculating] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [searchType, setSearchType] = useState<'dept' | 'emp' | 'group'>('emp');
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // Recalculation Modal State
+  const [recalcModalVisible, setRecalcModalVisible] = useState(false);
+  const [recalcLoading, setRecalcLoading] = useState(false);
+  const [recalcForm, setRecalcForm] = useState({
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+    employeeIds: '',
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -79,30 +88,64 @@ const MonthlySummaryReport: React.FC = () => {
     }
   };
 
-  const handleCalculate = async () => {
-    if (!confirm('确定要重新计算本月考勤吗？这可能需要几分钟。')) return;
-    
-    setCalculating(true);
+  const handleRecalculate = async () => {
+    if (!recalcForm.startDate || !recalcForm.endDate) {
+      alert('请选择日期范围');
+      return;
+    }
+    setRecalcLoading(true);
     try {
+      const params = {
+        startDate: recalcForm.startDate,
+        endDate: recalcForm.endDate,
+        employeeIds: recalcForm.employeeIds ? recalcForm.employeeIds.split(',').map((id: string) => Number(id.trim())) : undefined,
+      };
+
+      await triggerCalculation(params);
+      setRecalcModalVisible(false);
+      
+      // Auto refresh if current month is in range
       const [year, month] = currentMonth.split('-');
       const yearNum = parseInt(year);
       const monthNum = parseInt(month);
       const end = new Date(yearNum, monthNum, 0);
+      const currentMonthStart = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
+      const currentMonthEnd = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
       
-      const startDate = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
-
-      await triggerCalculation({ startDate, endDate });
-      alert('计算任务已触发，请稍后刷新页面查看结果');
-      // 可以选择稍后自动刷新
-      setTimeout(fetchData, 2000);
-    } catch (err) {
-      logger.error('Failed to trigger calculation:', err);
-      alert('触发计算失败');
+      if (
+        (recalcForm.startDate >= currentMonthStart && recalcForm.startDate <= currentMonthEnd) ||
+        (recalcForm.endDate >= currentMonthStart && recalcForm.endDate <= currentMonthEnd) ||
+        (recalcForm.startDate <= currentMonthStart && recalcForm.endDate >= currentMonthEnd)
+      ) {
+        fetchData();
+      }
+      
+      alert('考勤重算已触发，请稍后刷新查看结果');
+    } catch (error) {
+      logger.error('Recalculation failed', error);
+      alert('重算请求失败');
     } finally {
-      setCalculating(false);
+      setRecalcLoading(false);
     }
   };
+
+  const recalcFooter = (
+    <div className="flex justify-end gap-3 mt-6">
+      <button
+        onClick={() => setRecalcModalVisible(false)}
+        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleRecalculate}
+        disabled={recalcLoading}
+        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {recalcLoading ? '计算中...' : '开始重算'}
+      </button>
+    </div>
+  );
 
   useEffect(() => {
     fetchData();
@@ -179,16 +222,11 @@ const MonthlySummaryReport: React.FC = () => {
             <span>{exporting ? '导出中...' : '导出报表'}</span>
           </button>
           <button 
-            onClick={handleCalculate}
-            disabled={calculating}
+            onClick={() => setRecalcModalVisible(true)}
             className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {calculating ? (
-              <span className="material-icons-outlined text-xl animate-spin text-blue-600">sync</span>
-            ) : (
-              <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600 group-hover:rotate-180 transition-transform duration-700">refresh</span>
-            )}
-            <span>{calculating ? '计算中...' : '考勤计算'}</span>
+            <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600 group-hover:rotate-180 transition-transform duration-700">refresh</span>
+            <span>考勤计算</span>
             <span className="material-icons-outlined text-sm text-slate-300 ml-1">help_outline</span>
           </button>
         </div>
@@ -321,6 +359,52 @@ const MonthlySummaryReport: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <StandardModal
+        isOpen={recalcModalVisible}
+        onClose={() => setRecalcModalVisible(false)}
+        title="手动重算考勤"
+        footer={recalcFooter}
+        width="max-w-md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              开始日期 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={recalcForm.startDate}
+              onChange={(e) => setRecalcForm({ ...recalcForm, startDate: e.target.value })}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 sm:text-sm transition-shadow"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              结束日期 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={recalcForm.endDate}
+              onChange={(e) => setRecalcForm({ ...recalcForm, endDate: e.target.value })}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 sm:text-sm transition-shadow"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              员工ID列表 (可选)
+            </label>
+            <input
+              type="text"
+              placeholder="例如: 1, 2, 3"
+              value={recalcForm.employeeIds}
+              onChange={(e) => setRecalcForm({ ...recalcForm, employeeIds: e.target.value })}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 sm:text-sm transition-shadow"
+            />
+            <p className="mt-1 text-xs text-gray-500">多个ID用逗号分隔，不填则重算所有员工</p>
+          </div>
+        </div>
+      </StandardModal>
     </div>
   );
 };
