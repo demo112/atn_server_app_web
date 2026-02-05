@@ -10,8 +10,11 @@ const DailyStatsReport: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [queryDate, setQueryDate] = useState(new Date().toISOString().split('T')[0]);
   const [keyword, setKeyword] = useState('');
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   
-  const fetchData = async () => {
+  const fetchData = async (p = page, s = pageSize) => {
     setLoading(true);
     try {
       // Default to query single day
@@ -19,10 +22,11 @@ const DailyStatsReport: React.FC = () => {
         startDate: queryDate,
         endDate: queryDate,
         employeeName: keyword || undefined,
-        page: 1,
-        pageSize: 100 // Fetch more for report
+        page: p,
+        pageSize: s
       });
       setData(res.items);
+      setTotal(res.total);
     } catch (err) {
       console.error('Failed to fetch daily records:', err);
     } finally {
@@ -32,10 +36,15 @@ const DailyStatsReport: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []); // Initial load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]); // Reload when page/size changes
 
   const handleSearch = () => {
-    fetchData();
+    if (page === 1) {
+      fetchData(1, pageSize);
+    } else {
+      setPage(1);
+    }
   };
 
   const handleExport = async () => {
@@ -304,7 +313,7 @@ const DailyStatsReport: React.FC = () => {
   );
 };
 
-const StatusBadge: React.FC<{ status: string; label: string; style: string }> = ({ status, label, style }) => {
+const StatusBadge: React.FC<{ status: string; label: string; style: string }> = ({ label, style }) => {
   return (
     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${style}`}>
       {label}
