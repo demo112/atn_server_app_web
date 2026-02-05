@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDailyRecords, exportStats, triggerCalculation } from '../../services/statistics';
 import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
-import StandardModal from '../../components/common/StandardModal';
 
 const DailyStatsReport: React.FC = () => {
   const navigate = useNavigate();
@@ -10,16 +9,18 @@ const DailyStatsReport: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
-  // Recalc state
-  const [recalcModalVisible, setRecalcModalVisible] = useState(false);
+  // Recalc state - simplified, no modal
   const [recalcLoading, setRecalcLoading] = useState(false);
-  const [recalcForm, setRecalcForm] = useState({
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-    employeeIds: '',
-  });
 
-  const [queryDate, setQueryDate] = useState(new Date().toISOString().split('T')[0]);
+  // Default to yesterday
+  const getYesterday = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+  };
+
+  const [startDate, setStartDate] = useState(getYesterday());
+  const [endDate, setEndDate] = useState(getYesterday());
   const [keyword, setKeyword] = useState('');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -28,10 +29,9 @@ const DailyStatsReport: React.FC = () => {
   const fetchData = async (p = page, s = pageSize) => {
     setLoading(true);
     try {
-      // Default to query single day
       const res = await getDailyRecords({
-        startDate: queryDate,
-        endDate: queryDate,
+        startDate,
+        endDate,
         employeeName: keyword || undefined,
         page: p,
         pageSize: s
@@ -63,15 +63,15 @@ const DailyStatsReport: React.FC = () => {
     try {
       const blob = await exportStats({
         type: 'daily',
-        startDate: queryDate,
-        endDate: queryDate,
+        startDate,
+        endDate,
         employeeName: keyword || undefined,
       });
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `daily-stats-${queryDate}.xlsx`;
+      a.download = `daily-stats-${startDate}-to-${endDate}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -108,24 +108,19 @@ const DailyStatsReport: React.FC = () => {
   };
 
   const handleRecalculate = async () => {
-    if (!recalcForm.startDate || !recalcForm.endDate) {
+    if (!startDate || !endDate) {
       alert('请选择日期范围');
       return;
     }
     setRecalcLoading(true);
     try {
       const params = {
-        startDate: recalcForm.startDate,
-        endDate: recalcForm.endDate,
-        employeeIds: recalcForm.employeeIds ? recalcForm.employeeIds.split(',').map((id: string) => Number(id.trim())) : undefined,
+        startDate,
+        endDate,
       };
 
       await triggerCalculation(params);
-      setRecalcModalVisible(false);
-      // Refresh data if current query date is within range
-      if (queryDate >= recalcForm.startDate && queryDate <= recalcForm.endDate) {
-        fetchData();
-      }
+      fetchData();
       alert('考勤重算已触发，请稍后刷新查看结果');
     } catch (error) {
       console.error('Recalculation failed', error);
@@ -134,24 +129,6 @@ const DailyStatsReport: React.FC = () => {
       setRecalcLoading(false);
     }
   };
-
-  const recalcFooter = (
-    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-      <button
-        onClick={() => setRecalcModalVisible(false)}
-        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-      >
-        取消
-      </button>
-      <button
-        onClick={handleRecalculate}
-        disabled={recalcLoading}
-        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {recalcLoading ? '计算中...' : '开始重算'}
-      </button>
-    </div>
-  );
 
   return (
     <div className="p-6">
@@ -171,12 +148,21 @@ const DailyStatsReport: React.FC = () => {
         {/* 优化后的查询栏：保留日期和统一的范围查询 */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">查询日期</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">开始日期</label>
             <input 
               type="date" 
               className="text-sm border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full p-2.5" 
-              value={queryDate}
-              onChange={(e) => setQueryDate(e.target.value)}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">结束日期</label>
+            <input 
+              type="date" 
+              className="text-sm border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full p-2.5" 
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -203,11 +189,9 @@ const DailyStatsReport: React.FC = () => {
             </button>
             <button 
               onClick={() => {
-                setQueryDate(new Date().toISOString().split('T')[0]);
+                setStartDate(getYesterday());
+                setEndDate(getYesterday());
                 setKeyword('');
-                // Reset triggers fetch via handleSearch call or just set state and let user click
-                // For better UX, trigger fetch after reset? Or just reset fields.
-                // Let's just reset fields for now.
               }}
               className="flex-1 bg-white border border-slate-200 text-slate-600 text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-50 transition active:scale-95"
             >
@@ -227,10 +211,12 @@ const DailyStatsReport: React.FC = () => {
                {isExporting ? '导出中...' : '导出数据'}
             </button>
             <button 
-              onClick={() => setRecalcModalVisible(true)}
-              className="flex items-center gap-2 px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:border-blue-500 hover:text-blue-600 transition group shadow-sm"
+              onClick={handleRecalculate}
+              disabled={recalcLoading}
+              className="flex items-center gap-2 px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:border-blue-500 hover:text-blue-600 transition group shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-               <span className="material-icons-outlined text-xl group-hover:rotate-180 transition-transform duration-700">refresh</span> 考勤计算
+               <span className={`material-icons-outlined text-xl ${recalcLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`}>refresh</span> 
+               {recalcLoading ? '计算中...' : '考勤计算'}
                <span className="material-icons-outlined text-slate-300 text-base">help_outline</span>
             </button>
           </div>
@@ -370,51 +356,6 @@ const DailyStatsReport: React.FC = () => {
         </div>
       </div>
 
-      <StandardModal
-        isOpen={recalcModalVisible}
-        onClose={() => setRecalcModalVisible(false)}
-        title="手动重算考勤"
-        footer={recalcFooter}
-        width="max-w-md"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              开始日期 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={recalcForm.startDate}
-              onChange={(e) => setRecalcForm({ ...recalcForm, startDate: e.target.value })}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 sm:text-sm transition-shadow"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              结束日期 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={recalcForm.endDate}
-              onChange={(e) => setRecalcForm({ ...recalcForm, endDate: e.target.value })}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 sm:text-sm transition-shadow"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              员工ID列表 (可选)
-            </label>
-            <input
-              type="text"
-              placeholder="例如: 1, 2, 3"
-              value={recalcForm.employeeIds}
-              onChange={(e) => setRecalcForm({ ...recalcForm, employeeIds: e.target.value })}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 sm:text-sm transition-shadow"
-            />
-            <p className="mt-1 text-xs text-gray-500">多个ID用逗号分隔，不填则重算所有员工</p>
-          </div>
-        </div>
-      </StandardModal>
     </div>
   );
 };
