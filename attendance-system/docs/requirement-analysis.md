@@ -1,3 +1,14 @@
+---
+status: locked
+locked_at: 2026-02-05
+locked_by: Trae AI
+change_history:
+  - date: 2026-02-05
+    action: locked
+    by: Trae AI
+    note: Aligned with feature docs
+---
+
 # 需求分析文档
 
 ## 一、业务全景图
@@ -284,43 +295,32 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-    [*] --> 待审批: 提交申请
-    待审批 --> 已通过: 审批通过
-    待审批 --> 已拒绝: 审批拒绝
-    待审批 --> 已撤销: 申请人撤销
+    [*] --> 已通过: 管理员录入
     已通过 --> [*]: 生效并影响考勤
-    已拒绝 --> [*]: 结束
+    已通过 --> 已撤销: 管理员撤销
     已撤销 --> [*]: 结束
 ```
 
 | 状态 | 代码 | 说明 |
 |------|------|------|
-| 待审批 | pending | 已提交，等待审批 |
-| 已通过 | approved | 审批通过，影响考勤计算 |
-| 已拒绝 | rejected | 审批拒绝，不影响考勤 |
-| 已撤销 | cancelled | 申请人主动撤销 |
+| 已通过 | approved | 录入即生效，影响考勤计算 |
+| 已撤销 | cancelled | 管理员撤销 |
 
-### 4.4 请假审批流程
+### 4.4 请假流程
+
+> 注：当前版本不包含审批流，仅支持管理员后台录入。
 
 ```mermaid
 sequenceDiagram
-    participant E as 员工
+    participant A as 管理员
     participant S as 系统
-    participant A as 审批人
     participant C as 考勤计算
     
-    E->>S: 1. 提交请假申请
-    S->>S: 2. 创建请假记录(pending)
-    S->>A: 3. 通知审批人
-    A->>S: 4. 审批通过/拒绝
-    alt 审批通过
-        S->>S: 5a. 更新状态(approved)
-        S->>C: 6a. 触发考勤重算
-        C->>S: 7a. 更新每日记录
-    else 审批拒绝
-        S->>S: 5b. 更新状态(rejected)
-    end
-    S->>E: 8. 通知申请人结果
+    A->>S: 1. 录入请假记录
+    S->>S: 2. 创建记录(approved)
+    S->>C: 3. 触发考勤重算
+    C->>S: 4. 更新每日记录
+    S->>A: 5. 提示录入成功
 ```
 
 ---

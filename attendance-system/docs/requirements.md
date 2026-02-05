@@ -1,3 +1,14 @@
+---
+status: locked
+locked_at: 2026-02-05
+locked_by: Trae AI
+change_history:
+  - date: 2026-02-05
+    action: locked
+    by: Trae AI
+    note: Aligned with feature docs
+---
+
 # 考勤系统需求规格
 
 ## 一、系统概述
@@ -197,3 +208,9 @@
 | P0 | 用户登录 + 基础打卡 | 最小可用 |
 | P1 | 排班 + 考勤处理 + 基础报表 | 核心功能 |
 | P2 | 完整报表 | 完整功能 |
+
+## 五、业务决策
+
+| 序号 | 问题 | 结论 | 备注 |
+|------|------|------|------|
+| 1 | 是否需要审批流程？ | ❌ 否 | 仅管理员录入，无需审批 |
