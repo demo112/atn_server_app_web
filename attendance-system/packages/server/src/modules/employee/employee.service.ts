@@ -1,5 +1,6 @@
 import { prisma } from '../../common/db/prisma';
 import { AppError } from '../../common/errors';
+import { createLogger } from '../../common/logger';
 import { EmployeeStatus } from '@prisma/client';
 import { 
   CreateEmployeeInput, 
@@ -129,31 +130,50 @@ export class EmployeeService {
   }
 
   async delete(id: number) {
+    const logger = createLogger('EmployeeService');
+    logger.info(`Deleting employee ${id}`);
+
     const employee = await this.findOne(id);
     
     // Soft delete logic
     const timestamp = new Date().getTime();
-    const newEmployeeNo = `del_${timestamp}_${employee.employeeNo}`;
+    // Truncate to 50 chars to avoid DB error
+    let newEmployeeNo = `del_${timestamp}_${employee.employeeNo}`;
+    if (newEmployeeNo.length > 50) {
+      newEmployeeNo = newEmployeeNo.substring(0, 50);
+    }
 
-    // Transaction: Update employee status/no AND disconnect user
-    await prisma.$transaction([
-      prisma.employee.update({
-        where: { id },
-        data: {
-          status: EmployeeStatus.deleted,
-          employeeNo: newEmployeeNo,
-        },
-      }),
-      // 如果有关联用户，解绑 (通过将 User.employeeId 设为 null)
-      ...(employee.userId ? [
-        prisma.user.update({
-          where: { id: employee.userId },
-          data: { employeeId: null },
-        })
-      ] : [])
-    ]);
-
-    return { success: true };
+    try {
+      // Transaction: Update employee status/no AND disconnect user
+      await prisma.$transaction(async (tx) => {
+        await tx.employee.update({
+          where: { id },
+          data: {
+            status: EmployeeStatus.deleted,
+            employeeNo: newEmployeeNo,
+          },
+        });
+        
+        if (employee.userId) {
+          try {
+            await tx.user.update({
+              where: { id: employee.userId },
+              data: { employeeId: null },
+            });
+          } catch (err) {
+            logger.warn({ err, userId: employee.userId }, 'Failed to unlink user, maybe already unlinked');
+          }
+        }
+      }, {
+        timeout: 10000 
+      });
+      
+      logger.info(`Employee ${id} deleted successfully`);
+      return { success: true };
+    } catch (error) {
+      logger.error({ err: error, id }, 'Failed to delete employee');
+      throw error;
+    }
   }
 
   async bindUser(id: number, dto: BindUserInput) {
