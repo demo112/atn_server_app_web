@@ -171,29 +171,33 @@ export class DepartmentService {
       throw AppError.notFound('Department');
     }
 
-    // 并行校验子部门和员工
-    const [childCount, employeeCount] = await Promise.all([
-      prisma.department.count({ where: { parentId: id } }),
-      prisma.employee.count({ 
+    // 优化：使用 findFirst 替代 count 进行存在性检查，避免全表/全索引扫描
+    const [child, employee] = await Promise.all([
+      prisma.department.findFirst({ 
+        where: { parentId: id },
+        select: { id: true } 
+      }),
+      prisma.employee.findFirst({ 
         where: { 
           deptId: id,
           status: { not: 'deleted' }
-        } 
+        },
+        select: { id: true }
       })
     ]);
 
     logger.info({ 
       departmentId: id, 
-      childCount, 
-      employeeCount, 
+      hasChild: !!child, 
+      hasEmployee: !!employee, 
       checkDuration: Date.now() - start 
     }, 'Department deletion checks completed');
 
-    if (childCount > 0) {
+    if (child) {
       throw AppError.badRequest('Cannot delete department with sub-departments', 'ERR_DEPT_HAS_CHILDREN');
     }
 
-    if (employeeCount > 0) {
+    if (employee) {
       throw AppError.badRequest('Cannot delete department with employees', 'ERR_DEPT_HAS_EMPLOYEES');
     }
 
