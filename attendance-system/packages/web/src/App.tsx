@@ -6,7 +6,11 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthGuard } from './components/AuthGuard';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
+<<<<<<< HEAD
 import EmployeeList from './pages/employee/EmployeeList';
+=======
+import EmployeeManagement from './pages/employee/EmployeeManagement';
+>>>>>>> 898201e (fix(web): 修复测试类型错误与依赖配置)
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import ShiftPage from '@/pages/attendance/shift/ShiftPage';
 import ClockRecordPage from '@/pages/attendance/clock/ClockRecordPage';
