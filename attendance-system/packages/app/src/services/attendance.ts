@@ -19,7 +19,10 @@ import {
   LeaveVoSchema, 
   CorrectionVoSchema, 
   PaginatedDailyRecordVoSchema, 
-  ScheduleVoSchema
+  ScheduleVoSchema,
+  PaginatedClockRecordSchema,
+  PaginatedCorrectionVoSchema,
+  PaginatedLeaveVoSchema
 } from '../schemas/attendance';
 import { z } from 'zod';
 
@@ -40,9 +43,9 @@ export const clockIn = (data: CreateClockDto): Promise<ClockRecord> => {
  */
 export const getClockRecords = (params: { startTime: string; endTime: string }): Promise<ClockRecord[]> => {
   return validateResponse(
-    request.get<any, ApiResponse<ClockRecord[]>>('/attendance/clock', { params }),
-    z.array(ClockRecordSchema)
-  );
+    request.get<any, ApiResponse<PaginatedResponse<ClockRecord>>>('/attendance/clock', { params }),
+    PaginatedClockRecordSchema
+  ).then(res => res.items);
 };
 
 /**
@@ -50,9 +53,9 @@ export const getClockRecords = (params: { startTime: string; endTime: string }):
  */
 export const getLeaves = (params: LeaveQueryDto): Promise<LeaveVo[]> => {
   return validateResponse(
-    request.get<any, ApiResponse<LeaveVo[]>>('/attendance/leaves', { params }),
-    z.array(LeaveVoSchema)
-  );
+    request.get<any, ApiResponse<PaginatedResponse<LeaveVo>>>('/attendance/leaves', { params }),
+    PaginatedLeaveVoSchema
+  ).then(res => res.items);
 };
 
 /**
@@ -78,11 +81,13 @@ export const cancelLeave = (id: number): Promise<void> => {
 /**
  * 获取补卡记录
  */
-export const getCorrections = (params: any): Promise<CorrectionVo[]> => {
-  return validateResponse(
-    request.get<any, ApiResponse<CorrectionVo[]>>('/attendance/corrections', { params }),
-    z.array(CorrectionVoSchema)
-  );
+export const getCorrections = async (params: any): Promise<CorrectionVo[]> => {
+  const resp = await request.get<any, ApiResponse<PaginatedResponse<CorrectionVo> | CorrectionVo[]>>('/attendance/corrections', { params });
+  if (!resp.success) {
+    throw new Error(resp.error?.message || 'Request failed');
+  }
+  const data = resp.data as any;
+  return Array.isArray(data) ? data : (data?.items ?? []);
 };
 
 /**

@@ -33,6 +33,15 @@ export const validateResponse = async <T>(
 
   const result = schema.safeParse(response.data);
   if (!result.success) {
+    // Fallback: if schema expects array but server wraps in { items }, try parsing items
+    try {
+      if (schema instanceof z.ZodArray && response && typeof response.data === 'object' && response.data && 'items' in (response.data as any)) {
+        const alt = schema.safeParse((response.data as any).items);
+        if (alt.success) {
+          return alt.data as T;
+        }
+      }
+    } catch { /* no-op */ }
     logger.error('Response validation failed:', result.error);
     throw new Error('Response validation failed');
   }
@@ -75,9 +84,9 @@ request.interceptors.response.use(
           break;
       }
     } else if (error.request) {
-      Alert.alert('Network Error', 'Please check your internet connection');
+      Alert.alert('网络错误', '请检查网络连接');
     } else {
-      Alert.alert('Error', 'Request configuration error');
+      Alert.alert('错误', '请求配置错误');
     }
     return Promise.reject(error);
   }

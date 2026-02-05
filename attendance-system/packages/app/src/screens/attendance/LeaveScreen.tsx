@@ -4,6 +4,7 @@ import { Text, FAB, Surface, useTheme, Card, Chip, TextInput, Button, ActivityIn
 import { getLeaves, createLeave, cancelLeave, LeaveVo, CreateLeaveDto } from '../../services/attendance';
 import { LeaveType } from '@attendance/shared';
 import { logger } from '../../utils/logger';
+import { withAlpha } from '../../utils/colors';
 import { getErrorMessage } from '../../utils/error';
 
 const LeaveScreen = () => {
@@ -99,7 +100,7 @@ const LeaveScreen = () => {
             <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{item.type}</Text>
             <Chip 
               mode="flat" 
-              style={{ backgroundColor: statusColor + '20' }} 
+              style={{ backgroundColor: withAlpha(statusColor, 0.12) }} 
               textStyle={{ color: statusColor }}
             >
               {item.status}
@@ -156,7 +157,7 @@ const LeaveScreen = () => {
             <ScrollView contentContainerStyle={styles.form}>
               <TextInput
                 mode="outlined"
-                label="类型 (annual, sick, etc.)"
+                label="类型（年假、病假等）"
                 value={formData.type}
                 onChangeText={(text) => setFormData({...formData, type: text as LeaveType})}
                 style={styles.input}

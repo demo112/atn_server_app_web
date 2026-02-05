@@ -110,7 +110,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Bad Request');
+        expect(Alert.alert).toHaveBeenCalledWith('错误', 'Bad Request');
       }
     });
 
@@ -124,7 +124,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('Session Expired', 'Please login again');
+        expect(Alert.alert).toHaveBeenCalledWith('会话已过期', '请重新登录');
         expect(clearAuth).toHaveBeenCalled();
       }
     });
@@ -139,7 +139,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('Permission Denied', 'You do not have permission to perform this action');
+        expect(Alert.alert).toHaveBeenCalledWith('无权限', '你没有执行此操作的权限');
       }
     });
 
@@ -153,7 +153,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Resource not found');
+        expect(Alert.alert).toHaveBeenCalledWith('错误', '资源不存在');
       }
     });
 
@@ -167,7 +167,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('Server Error', 'Please try again later');
+        expect(Alert.alert).toHaveBeenCalledWith('服务器错误', '请稍后再试');
       }
     });
 
@@ -181,7 +181,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'I am a teapot');
+        expect(Alert.alert).toHaveBeenCalledWith('错误', 'I am a teapot');
       }
     });
 
@@ -195,7 +195,7 @@ describe('request utils', () => {
         try {
           await errorHandler(error);
         } catch (e) {
-          expect(Alert.alert).toHaveBeenCalledWith('Network Error', 'Please check your internet connection');
+          expect(Alert.alert).toHaveBeenCalledWith('网络错误', '请检查网络连接');
         }
       });
 
@@ -208,7 +208,7 @@ describe('request utils', () => {
         try {
           await errorHandler(error);
         } catch (e) {
-          expect(Alert.alert).toHaveBeenCalledWith('Error', 'Request configuration error');
+          expect(Alert.alert).toHaveBeenCalledWith('错误', '请求配置错误');
         }
       });
   });

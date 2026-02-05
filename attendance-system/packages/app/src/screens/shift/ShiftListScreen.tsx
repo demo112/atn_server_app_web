@@ -87,9 +87,8 @@ export default function ShiftListScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={styles.headerContainer}>
-        <Text variant="titleLarge" style={styles.headerTitle}>班次设置</Text>
         <Searchbar
           placeholder="搜索班次"
           onChangeText={setSearchTerm}
@@ -143,7 +142,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     textAlign: 'center',
-    marginBottom: 16,
     fontWeight: 'bold',
   },
   searchbar: {

@@ -13,8 +13,13 @@
     "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@attendance/shared": ["packages/shared/src"],
-      "@attendance/shared/*": ["packages/shared/src/*"]
+      "@attendance/shared": [
+        "packages/shared/src"
+      ],
+      "@attendance/shared/*": [
+        "packages/shared/src/*"
+      ]
     }
-  }
+  },
+  "extends": "expo/tsconfig.base"
 }

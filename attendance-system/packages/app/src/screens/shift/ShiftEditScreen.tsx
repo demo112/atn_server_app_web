@@ -36,6 +36,10 @@ export default function ShiftEditScreen() {
   const route = useRoute();
   const { shift } = route.params as { shift: Shift | null };
 
+  React.useLayoutEffect(() => {
+    (navigation as any).setOptions({ title: shift ? '编辑班次' : '新增班次' });
+  }, [navigation, shift]);
+
   const [name, setName] = useState(shift?.name || '');
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(
     shift?.timeSlots || [{ ...DEFAULT_TIME_SLOT, id: Math.random().toString() }]
@@ -112,15 +116,8 @@ export default function ShiftEditScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F2F2F7' }]}>
-      {/* Header */}
-      <Surface style={styles.header} elevation={2}>
-        <IconButton icon="chevron-left" onPress={() => navigation.goBack()} />
-        <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-          {shift ? '编辑班次详情' : '新增班次详情'}
-        </Text>
-        <View style={{ width: 48 }} />
-      </Surface>
+    <View style={[styles.container, { backgroundColor: '#F2F2F7' }]}> 
+      {/* 使用原生导航栏，移除自定义头部 */}
 
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Name Input */}

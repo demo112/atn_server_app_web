@@ -107,8 +107,8 @@ export const ClockRecordSchema = z.object({
   source: ClockSourceSchema,
   deviceInfo: z.record(z.string(), z.unknown()).optional().nullable().transform(v => v ?? undefined),
   location: z.record(z.string(), z.unknown()).optional().nullable().transform(v => v ?? undefined),
-  operatorId: z.number().optional(),
-  remark: z.string().optional(),
+  operatorId: z.number().nullable().optional().transform(v => v ?? undefined),
+  remark: z.string().nullable().optional().transform(v => v ?? undefined),
   createdAt: z.string(),
   employeeNo: z.string().optional(),
   employeeName: z.string().optional(),
@@ -181,9 +181,9 @@ export const CorrectionVoSchema = z.object({
 export const PaginatedCorrectionVoSchema = z.object({
   items: z.array(CorrectionVoSchema),
   total: z.number(),
-  page: z.number(),
-  pageSize: z.number(),
-  totalPages: z.number(),
+  page: z.number().optional(),
+  pageSize: z.number().optional(),
+  totalPages: z.number().optional(),
 });
 
 export const SupplementResultVoSchema = z.object({

@@ -4,6 +4,7 @@ import { Text, Surface, useTheme, Card, Chip, IconButton } from 'react-native-pa
 import { getDailyRecords, DailyRecordVo } from '../../services/attendance';
 import { useNavigation } from '@react-navigation/native';
 import { logger } from '../../utils/logger';
+import { withAlpha } from '../../utils/colors';
 
 const HistoryScreen = () => {
   const theme = useTheme();
@@ -72,7 +73,7 @@ const HistoryScreen = () => {
             </Text>
             <Chip 
               mode="flat" 
-              style={{ backgroundColor: statusColor + '20' }} 
+              style={{ backgroundColor: withAlpha(statusColor, 0.12) }} 
               textStyle={{ color: statusColor }}
             >
               {getStatusText(item.status)}

@@ -7,6 +7,7 @@ import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { getDailyRecordDetails } from '../../services/statistics';
 import { useAuth } from '../../utils/auth';
 import { logger } from '../../utils/logger';
+import { withAlpha } from '../../utils/colors';
 
 const statusMap: Record<AttendanceStatus, { text: string; color: string }> = {
   normal: { text: '正常', color: '#52c41a' },
@@ -85,7 +86,7 @@ export default function AttendanceRecords() {
         <View style={styles.headerRow}>
           <Text style={styles.nameText}>{item.employeeName} ({item.employeeNo})</Text>
           <Chip 
-            style={{ backgroundColor: statusMap[item.status]?.color + '20' }}
+            style={{ backgroundColor: withAlpha(statusMap[item.status]?.color, 0.12) }}
             textStyle={{ color: statusMap[item.status]?.color, fontSize: 12 }}
           >
             {statusMap[item.status]?.text}

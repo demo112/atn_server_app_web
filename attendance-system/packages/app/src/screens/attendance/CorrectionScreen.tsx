@@ -27,9 +27,13 @@ const CorrectionScreen = () => {
     setLoading(true);
     try {
       const res = await getCorrections({ page: 1, pageSize: 20 });
-      setCorrections(res || []);
+      logger.info('fetchCorrections result shape', { isArray: Array.isArray(res), sample: Array.isArray(res) ? res.slice(0,1) : res });
+      const list = Array.isArray(res)
+        ? res
+        : (res && (res as any).items ? (res as any).items : []);
+      setCorrections(list);
     } catch (error) {
-      logger.error(error);
+      logger.error('fetchCorrections failed', error);
     } finally {
       setLoading(false);
     }
