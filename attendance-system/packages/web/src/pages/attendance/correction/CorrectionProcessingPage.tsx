@@ -120,7 +120,7 @@ const CorrectionProcessingPage: React.FC = () => {
           部门筛选
         </div>
         <div className="flex-1 overflow-auto p-2">
-          <DepartmentTree onSelect={(id) => setParams(prev => ({ ...prev, deptId: id, page: 1 }))} />
+          <DepartmentTree onSelect={(id) => setParams(prev => ({ ...prev, deptId: id ?? undefined, page: 1 }))} />
         </div>
       </div>
 
@@ -197,7 +197,7 @@ const CorrectionProcessingPage: React.FC = () => {
           <table className="w-full text-left text-sm border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium whitespace-nowrap">
               <tr>
-                <th className="px-4 py-3 font-medium">日期</th>
+                <th className="px-4 py-3 font-medium">工作日</th>
                 <th className="px-4 py-3 font-medium">部门</th>
                 <th className="px-4 py-3 font-medium">工号</th>
                 <th className="px-4 py-3 font-medium">姓名</th>
