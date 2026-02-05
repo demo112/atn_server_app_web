@@ -91,13 +91,26 @@
     - **Property 6: 唯一值生成**
     - **Validates: Requirements 5.1, 5.3, 5.4**
 
-- [ ] 4. 实现 Fixtures
-  - [ ] 4.1 实现 auth.fixture.ts
+- [x] 4. 实现 Fixtures
+  - [x] 4.1 实现 auth.fixture.ts
     - 实现 `api` Fixture 提供 ApiClient 实例
     - 实现 `authenticatedPage` Fixture（API 登录 + Token 注入）
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
   
-  - [ ] 4.2 实现 data.fixture.ts
+  - [x] 4.2 实现 data.fixture.ts
+    - 实现 `workerPrefix` Fixture
+    - 实现 `testData` Fixture 自动注入前缀
+    - 实现 `autoClean` Fixture 自动清理数据
+    - _Requirements: 4.1, 4.2, 4.3_
+
+  - [x] 4.3 创建 fixtures/index.ts 统一导出
+  
+  - [x] 4.4 编写 Fixtures 属性测试
+    - **Property 7: Fixture 自动清理**
+    - **Property 8: Worker 隔离性**
+    - **Validates: Requirements 4.3, 4.4**
+
+- [ ] 5. 实现组件对象
     - 实现 `workerPrefix` Fixture 返回 `[W{index}]` 格式前缀
     - 实现 `testData` Fixture 提供 TestDataFactory 并自动清理
     - _Requirements: 4.1, 4.2, 4.3_
