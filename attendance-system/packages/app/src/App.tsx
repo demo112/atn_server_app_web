@@ -149,12 +149,12 @@ export default function App(): React.ReactElement {
         <Stack.Screen 
           name="ShiftList" 
           component={ShiftListScreen} 
-          options={{ headerShown: false }}
+          options={{ title: '班次管理' }}
         />
         <Stack.Screen 
           name="ShiftEdit" 
           component={ShiftEditScreen} 
-          options={{ headerShown: false }}
+          options={{ title: '编辑班次' }}
         />
       </Stack.Navigator>
         </NavigationContainer>
