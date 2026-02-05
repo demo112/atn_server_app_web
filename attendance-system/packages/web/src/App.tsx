@@ -6,7 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthGuard } from './components/AuthGuard';
 import Login from './pages/Login';
 import UserList from './pages/user/UserList';
-import EmployeeManagement from './pages/employee/EmployeeManagement';
+import EmployeeList from './pages/employee/EmployeeList';
 import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
 import ShiftPage from '@/pages/attendance/shift/ShiftPage';
 import ClockRecordPage from '@/pages/attendance/clock/ClockRecordPage';
@@ -60,7 +60,7 @@ export default function App(): React.ReactElement {
               }>
                 <Route index element={<Home />} />
                 <Route path="users" element={<UserList />} />
-                <Route path="employees" element={<EmployeeManagement />} />
+                <Route path="employees" element={<EmployeeList />} />
                 <Route path="attendance">
                    <Route path="time-periods" element={<TimePeriodPage />} />
                    <Route path="shifts" element={<ShiftPage />} />
