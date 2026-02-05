@@ -34,8 +34,8 @@ const scheduleController = new ScheduleController();
 const leaveController = new LeaveController();
 
 // 考勤设置路由
-router.get('/settings', attendanceSettingsController.getSettings);
-router.put('/settings', attendanceSettingsController.updateSettings);
+router.get('/settings', attendanceSettingsController.getSettings.bind(attendanceSettingsController));
+router.put('/settings', attendanceSettingsController.updateSettings.bind(attendanceSettingsController));
 
 // 打卡记录路由
 router.post('/clock', clockController.create.bind(clockController));
