@@ -1,6 +1,6 @@
 import { api, validateResponse } from './api';
 import { z } from 'zod';
-import { Shift, Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto } from '@attendance/shared';
+import { Shift, Schedule, ApiResponse, CreateScheduleDto, BatchCreateScheduleDto, ScheduleQueryDto, PaginatedResponse } from '@attendance/shared';
 import { ScheduleSchema, ShiftSchema, ScheduleVoSchema } from '../schemas/attendance';
 
 export const attendanceService = {
@@ -24,8 +24,19 @@ export const attendanceService = {
 
   // 获取班次列表
   getShifts: async (): Promise<Shift[]> => {
-    const res = await api.get<unknown, ApiResponse<Shift[]>>('/attendance/shifts');
-    return validateResponse(z.array(ShiftSchema), res);
+    // Request a large page size to get all shifts for dropdown
+    const res = await api.get<unknown, ApiResponse<PaginatedResponse<Shift>>>('/attendance/shifts', {
+      params: { page: 1, pageSize: 1000 }
+    });
+    
+    // The backend returns a paginated response, so we need to extract items
+    const PaginatedShiftSchema = z.object({
+      items: z.array(ShiftSchema),
+      total: z.number().optional()
+    });
+    
+    const paginatedData = validateResponse(PaginatedShiftSchema, res);
+    return paginatedData.items;
   },
 
   // 删除排班
