@@ -155,14 +155,8 @@ const AttendanceDetailsPage: React.FC = () => {
             type="date"
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
             value={params.startDate}
-            onChange={(e) => {
-              const newDate = e.target.value;
-              const newParams = { ...params, startDate: newDate };
-              if (params.endDate && newDate > params.endDate) {
-                newParams.endDate = newDate;
-              }
-              setParams(newParams);
-            }}
+            max={params.endDate}
+            onChange={(e) => setParams({ ...params, startDate: e.target.value })}
           />
         </div>
         <div>
@@ -171,14 +165,8 @@ const AttendanceDetailsPage: React.FC = () => {
             type="date"
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
             value={params.endDate}
-            onChange={(e) => {
-              const newDate = e.target.value;
-              const newParams = { ...params, endDate: newDate };
-              if (params.startDate && newDate < params.startDate) {
-                newParams.startDate = newDate;
-              }
-              setParams(newParams);
-            }}
+            min={params.startDate}
+            onChange={(e) => setParams({ ...params, endDate: e.target.value })}
           />
         </div>
         <div>
