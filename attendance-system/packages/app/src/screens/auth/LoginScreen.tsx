@@ -30,7 +30,7 @@ const LoginScreen = () => {
       navigation.replace('Home');
     } catch (error) {
       const msg = getErrorMessage(error);
-      Alert.alert('登录失败', msg);
+      Alert.alert('登录失败', msg, [{ text: '确定' }]);
     } finally {
       setLoading(false);
     }

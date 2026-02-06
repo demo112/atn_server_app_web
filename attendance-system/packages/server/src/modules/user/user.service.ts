@@ -18,17 +18,29 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
+      // Auto create and link employee when not provided, using nested create to avoid extra transaction
+      const hasEmployeeId = typeof dto.employeeId === 'number' && Number.isFinite(dto.employeeId);
       const user = await prisma.user.create({
         data: {
           username: dto.username,
           passwordHash: hashedPassword,
           role: dto.role as any,
-          employeeId: dto.employeeId,
           status: 'active',
+          ...(hasEmployeeId
+            ? { employeeId: dto.employeeId as number }
+            : {
+                employee: {
+                  create: {
+                    employeeNo: `U${Date.now()}`,
+                    name: dto.username,
+                    hireDate: new Date(),
+                  },
+                },
+              }),
         },
       });
 
-      logger.info({ userId: user.id }, 'User created');
+      logger.info({ userId: user?.id, employeeId: user?.employeeId }, 'User created');
 
       return {
         id: user.id,

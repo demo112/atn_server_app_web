@@ -33,12 +33,12 @@ export class LeaveController {
       
       // 如果未指定 employeeId，报错 (管理员必须指定给谁请假)
       if (!targetEmployeeId) {
-           throw new AppError('ERR_INVALID_PARAMS', 'employeeId is required for admin', 400);
+           throw new AppError('ERR_INVALID_PARAMS', '管理员创建请假时必须指定员工（employeeId）', 400);
       }
     } else {
       // 普通员工: 只能给自己申请
       if (!user.employeeId) {
-        throw new AppError('ERR_AUTH_NO_EMPLOYEE', 'No employee linked to current user', 403);
+        throw new AppError('ERR_AUTH_NO_EMPLOYEE', '当前用户未关联员工', 403);
       }
       // 强制覆盖为自己的 ID
       targetEmployeeId = user.employeeId;
@@ -66,7 +66,22 @@ export class LeaveController {
    */
   async getList(req: Request, res: Response) {
     const user = (req as any).user;
-    const query: LeaveQueryDto = req.query;
+    
+    // 手动处理 query 参数类型转换 (Express req.query 默认为 string)
+    const rawQuery = req.query as any;
+    
+    logger.info(`getList query: ${JSON.stringify(rawQuery)}`);
+
+    const query: LeaveQueryDto = {
+      page: rawQuery.page ? Number(rawQuery.page) : 1,
+      pageSize: rawQuery.pageSize ? Number(rawQuery.pageSize) : 20,
+      employeeId: rawQuery.employeeId ? Number(rawQuery.employeeId) : undefined,
+      deptId: rawQuery.deptId ? Number(rawQuery.deptId) : undefined,
+      startTime: rawQuery.startTime as string,
+      endTime: rawQuery.endTime as string,
+      type: rawQuery.type as any,
+      status: rawQuery.status as any,
+    };
 
     // 权限控制
     if (user.role !== 'admin') {
@@ -93,7 +108,7 @@ export class LeaveController {
     const user = (req as any).user;
 
     if (user.role !== 'admin') {
-      throw new AppError('ERR_FORBIDDEN', 'Only admin can update leave records', 403);
+      throw new AppError('ERR_FORBIDDEN', '仅管理员可更新请假记录', 403);
     }
 
     const dto: UpdateLeaveDto = {
@@ -115,7 +130,7 @@ export class LeaveController {
     const user = (req as any).user;
 
     if (user.role !== 'admin') {
-      throw new AppError('ERR_FORBIDDEN', 'Only admin can cancel leave records', 403);
+      throw new AppError('ERR_FORBIDDEN', '仅管理员可撤销请假记录', 403);
     }
 
     const result = await service.cancel(Number(id), user.id);

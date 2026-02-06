@@ -12,6 +12,8 @@ const {
   prismaCreateMock,
   prismaUpdateMock,
   prismaDeleteMock,
+  prismaTransactionMock,
+  employeeCreateMock,
   bcryptHashMock
 } = vi.hoisted(() => ({
   prismaFindUniqueMock: vi.fn(),
@@ -20,12 +22,14 @@ const {
   prismaCreateMock: vi.fn(),
   prismaUpdateMock: vi.fn(),
   prismaDeleteMock: vi.fn(),
+  prismaTransactionMock: vi.fn(),
+  employeeCreateMock: vi.fn(),
   bcryptHashMock: vi.fn(),
 }));
 
 // 2. Mock Implementation
-vi.mock('../../common/db/prisma', () => ({
-  prisma: {
+vi.mock('../../common/db/prisma', () => {
+  const tx = {
     user: {
       findUnique: prismaFindUniqueMock,
       findMany: prismaFindManyMock,
@@ -34,8 +38,18 @@ vi.mock('../../common/db/prisma', () => ({
       update: prismaUpdateMock,
       delete: prismaDeleteMock,
     },
-  },
-}));
+    employee: {
+      create: employeeCreateMock,
+    },
+  } as any;
+  prismaTransactionMock.mockImplementation(async (cb: any) => cb(tx));
+  return {
+    prisma: {
+      ...tx,
+      $transaction: prismaTransactionMock,
+    },
+  };
+});
 
 vi.mock('bcryptjs', () => ({
   default: {
@@ -80,6 +94,7 @@ describe('UserService PBT', () => {
     service = new UserService();
     vi.resetAllMocks();
     bcryptHashMock.mockResolvedValue('hashed_secret');
+    employeeCreateMock.mockResolvedValue({ id: 123 });
   });
 
   afterEach(() => {

@@ -7,6 +7,9 @@
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "android": {
+      "useCleartextTraffic": true
+    },
     "assetBundlePatterns": [
       "**/*"
     ],

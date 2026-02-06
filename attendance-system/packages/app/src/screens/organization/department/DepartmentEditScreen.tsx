@@ -80,10 +80,10 @@ export const DepartmentEditScreen = () => {
 
       if (isEdit) {
         await updateDepartment(route.params.id, data);
-        Alert.alert('成功', '更新成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert('成功', '更新成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       } else {
         await createDepartment(data as CreateDepartmentDto);
-        Alert.alert('成功', '创建成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert('成功', '创建成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       }
     } catch (error) {
       logger.error(error);

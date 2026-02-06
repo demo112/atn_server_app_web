@@ -57,7 +57,7 @@ const HomeScreen = () => {
       <Surface style={[styles.header, { backgroundColor: theme.colors.primary }]} elevation={4}>
         <View>
           <Text variant="headlineMedium" style={styles.headerTitle}>考勤助手</Text>
-          {user && <Text variant="bodyLarge" style={styles.headerSubtitle}>你好, {user.name}</Text>}
+          {user && <Text variant="bodyLarge" style={styles.headerSubtitle}>你好, {user.name || user.username}</Text>}
         </View>
         <IconButton 
           icon="logout" 

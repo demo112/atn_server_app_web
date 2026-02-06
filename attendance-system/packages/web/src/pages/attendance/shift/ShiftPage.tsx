@@ -3,12 +3,11 @@ import { getShifts, deleteShift, createShift, updateShift } from '../../../servi
 import { createTimePeriod, updateTimePeriod } from '../../../services/time-period';
 import type { 
   Shift as BackendShift, 
-  CreateShiftDto, 
-  UpdateShiftDto,
   CreateTimePeriodDto,
   UpdateTimePeriodDto,
   TimePeriod
 } from '@attendance/shared';
+import type { CreateShiftDaysDto, UpdateShiftDaysDto } from '../../../services/shift';
 import ShiftModal from './components/ShiftModal';
 import ShiftTable from './components/ShiftTable';
 import Pagination from './components/Pagination';
@@ -183,26 +182,27 @@ const ShiftPage: React.FC = (): React.ReactElement => {
         periodIds.push(periodId);
       }
 
-      // 2. Create/Update Shift
-      const shiftPeriods = periodIds.map((pid, index) => ({
-        periodId: pid,
-        dayOfCycle: 1, // Daily shift
-        sortOrder: index + 1
-      }));
+      // 2. Create/Update Shift — align with backend contract (days)
+      const days = [
+        {
+          dayOfCycle: 1,
+          periodIds: periodIds,
+        }
+      ];
 
       if (currentShift && currentShift.id) {
-        const updateDto: UpdateShiftDto = {
+        const updateDto: UpdateShiftDaysDto = {
           name: uiData.name,
           cycleDays: 1,
-          periods: shiftPeriods
+          days
         };
         await updateShift(parseInt(currentShift.id), updateDto);
         toast.success('更新成功');
       } else {
-        const createDto: CreateShiftDto = {
+        const createDto: CreateShiftDaysDto = {
           name: uiData.name,
           cycleDays: 1,
-          periods: shiftPeriods
+          days
         };
         await createShift(createDto);
         toast.success('创建成功');

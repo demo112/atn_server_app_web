@@ -57,7 +57,7 @@ const CorrectionScreen = () => {
         await supplementCheckOut({ ...data, checkOutTime: new Date(formData.clockTime).toISOString() });
       }
 
-      Alert.alert('成功', '补卡申请提交成功');
+      Alert.alert('成功', '补卡申请提交成功', [{ text: '确定' }]);
       setModalVisible(false);
       fetchCorrections();
     } catch (error: any) {

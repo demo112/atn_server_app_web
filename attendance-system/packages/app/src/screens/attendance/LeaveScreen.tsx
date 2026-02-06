@@ -77,8 +77,30 @@ const LeaveScreen = () => {
     }
   };
 
+  const isValidLeaveType = (t: unknown): boolean => {
+    return typeof t === 'string' && Object.values(LeaveType).includes(t as LeaveType);
+  };
+
   const handleSubmit = async () => {
-    if (!formData.type || !formData.startTime || !formData.endTime || !formData.reason) {
+    // 记录提交参数，便于定位问题
+    logger.info('leave.submit.formData', {
+      type: formData.type,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      reason: formData.reason
+    });
+
+    // 类型有效性校验（含 business_trip）
+    if (!isValidLeaveType(formData.type)) {
+      Alert.alert('提示', '请选择有效的类型');
+      return;
+    }
+
+    // 基础必填校验（去除前后空格）
+    const start = (formData.startTime || '').trim();
+    const end = (formData.endTime || '').trim();
+    const reason = (formData.reason || '').trim();
+    if (!start || !end || !reason) {
       Alert.alert('提示', '请填写完整信息');
       return;
     }
@@ -94,18 +116,19 @@ const LeaveScreen = () => {
     }
 
     try {
-      await createLeave({
-        employeeId: selectedEmployee?.id || 0,
-        type: formData.type,
-        startTime: new Date(formData.startTime).toISOString(),
-        endTime: new Date(formData.endTime).toISOString(),
-        reason: formData.reason!,
-      });
-      Alert.alert('成功', '申请提交成功');
+      const payload = {
+        employeeId: selectedEmployee?.id ?? (user?.employeeId ?? 0),
+        type: formData.type as LeaveType,
+        startTime: new Date(start).toISOString(),
+        endTime: new Date(end).toISOString(),
+        reason,
+      } as unknown as CreateLeaveDto;
+      await createLeave(payload);
+      Alert.alert('成功', '申请提交成功', [{ text: '确定' }]);
       setModalVisible(false);
       await fetchLeaves();
     } catch (error) {
-      Alert.alert('失败', getErrorMessage(error));
+      Alert.alert('失败', getErrorMessage(error), [{ text: '确定' }]);
     }
   };
 
@@ -121,10 +144,10 @@ const LeaveScreen = () => {
           onPress: async () => {
             try {
               await cancelLeave(id);
-              Alert.alert('成功', '撤销成功');
+              Alert.alert('成功', '撤销成功', [{ text: '确定' }]);
               await fetchLeaves();
             } catch (error) {
-              Alert.alert('失败', getErrorMessage(error));
+              Alert.alert('失败', getErrorMessage(error), [{ text: '确定' }]);
             }
           }
         }
