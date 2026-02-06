@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import { StatisticsService } from './statistics.service';
 import { success } from '../../common/types/response';
-import { GetSummaryDto, DailyRecordQuery, AttendanceStatus, GetDeptStatsDto, GetChartStatsDto, ExportStatsDto } from '@attendance/shared';
+import { GetSummaryDto, DailyRecordQuery, AttendanceStatus, GetDeptStatsDto, GetChartStatsDto, ExportStatsDto, GetDailyStatsQuery } from '@attendance/shared';
 import { AppError } from '../../common/errors';
 import { attendanceScheduler } from '../attendance/attendance-scheduler';
 
@@ -124,6 +124,28 @@ export class StatisticsController {
     };
 
     const data = await this.service.getChartStats(dto);
+    res.json(success(data));
+  };
+
+  getDailyStats = async (req: Request, res: Response) => {
+    const user = (req as any).user;
+    // 权限控制：仅管理员可见
+    if (user.role !== 'admin') {
+      throw new AppError('ERR_FORBIDDEN', 'Only admin can view company daily stats', 403);
+    }
+
+    const { startDate, endDate } = req.query as unknown as GetDailyStatsQuery;
+
+    if (!startDate || !endDate) {
+      throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required', 400);
+    }
+
+    const query: GetDailyStatsQuery = {
+      startDate: startDate as string,
+      endDate: endDate as string,
+    };
+
+    const data = await this.service.getDailyStats(query);
     res.json(success(data));
   };
 

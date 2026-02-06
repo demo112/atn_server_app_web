@@ -13,10 +13,13 @@ import {
   GetDeptStatsDto,
   ChartStatsVo,
   GetChartStatsDto,
-  ExportStatsDto
+  ExportStatsDto,
+  GetDailyStatsQuery,
+  DailyStatsVo
 } from '@attendance/shared';
 import { Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
+import dayjs from 'dayjs';
 
 interface AggregationResult {
   employee_id: number;
@@ -37,6 +40,68 @@ interface AggregationResult {
 
 export class StatisticsService {
   private logger = createLogger('StatisticsService');
+
+  async getDailyStats(query: GetDailyStatsQuery): Promise<DailyStatsVo[]> {
+    const { startDate, endDate } = query;
+    
+    // 1. 获取活跃员工总数 (应到人数)
+    const totalEmployees = await prisma.employee.count({
+      where: { status: 'active' }
+    });
+
+    // 2. 聚合查询每日统计
+    const start = dayjs(startDate).format('YYYY-MM-DD');
+    const end = dayjs(endDate).format('YYYY-MM-DD');
+
+    const rawStats = await prisma.$queryRaw<any[]>`
+      SELECT 
+        DATE_FORMAT(work_date, '%Y-%m-%d') as date,
+        COUNT(CASE WHEN check_in_time IS NOT NULL THEN 1 END) as actualCount,
+        COUNT(CASE WHEN status IN ('late', 'early_leave', 'absent') THEN 1 END) as abnormalCount
+      FROM att_daily_records
+      WHERE work_date >= ${start} AND work_date <= ${end}
+      GROUP BY work_date
+    `;
+
+    // 3. 补全日期
+    const statsMap = new Map();
+    
+    if (Array.isArray(rawStats)) {
+      rawStats.forEach((item: any) => {
+        statsMap.set(item.date, item);
+      });
+    }
+
+    const result: DailyStatsVo[] = [];
+    let current = dayjs(startDate);
+    const endObj = dayjs(endDate);
+
+    while (current.isBefore(endObj) || current.isSame(endObj, 'day')) {
+      const dateStr = current.format('YYYY-MM-DD');
+      const stat = statsMap.get(dateStr);
+
+      const actualCount = stat ? Number(stat.actualCount) : 0;
+      const abnormalCount = stat ? Number(stat.abnormalCount) : 0;
+      const expectedCount = totalEmployees;
+      
+      const attendanceRate = expectedCount > 0 
+        ? Math.round((actualCount / expectedCount) * 100) 
+        : 0;
+
+      result.push({
+        date: dateStr,
+        expectedCount,
+        actualCount,
+        abnormalCount,
+        attendanceRate,
+        totalEmployees
+      });
+
+      current = current.add(1, 'day');
+    }
+
+    return result;
+  }
 
   async getDailyRecords(query: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> {
     this.logger.info({ query }, 'Fetching daily records');

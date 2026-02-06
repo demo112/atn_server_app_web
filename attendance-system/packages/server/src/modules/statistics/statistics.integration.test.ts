@@ -9,6 +9,7 @@ vi.mock('../../common/db/prisma', () => ({
   prisma: {
     employee: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     attDailyRecord: {
       findMany: vi.fn(),
@@ -397,5 +398,54 @@ describe('Statistics Integration Test (SW70)', () => {
         expect(absentDist?.count).toBe(1);
       });
     });
+  describe('Statistics Integration Test (SW73)', () => {
+    describe('Story 1: 全公司考勤统计', () => {
+      it('AC1/AC2: Should return daily stats with correct aggregation', async () => {
+        // Mock Total Employees
+        (prisma.employee.count as any).mockResolvedValue(100);
+
+        // Mock Raw Stats
+        const mockRawStats = [
+          {
+            date: '2023-10-01',
+            actualCount: 80n,
+            abnormalCount: 5n
+          },
+          // Missing 2023-10-02
+          {
+            date: '2023-10-03',
+            actualCount: 90n,
+            abnormalCount: 2n
+          }
+        ];
+        (prisma.$queryRaw as any).mockResolvedValue(mockRawStats);
+
+        const dto = {
+          startDate: '2023-10-01',
+          endDate: '2023-10-03'
+        };
+
+        const result = await service.getDailyStats(dto);
+
+        expect(result).toHaveLength(3);
+
+        // Verify filling logic
+        // Day 1
+        expect(result[0].date).toBe('2023-10-01');
+        expect(result[0].expectedCount).toBe(100);
+        expect(result[0].actualCount).toBe(80);
+        expect(result[0].attendanceRate).toBe(80);
+
+        // Day 2 (Missing)
+        expect(result[1].date).toBe('2023-10-02');
+        expect(result[1].actualCount).toBe(0);
+        expect(result[1].attendanceRate).toBe(0);
+
+        // Day 3
+        expect(result[2].date).toBe('2023-10-03');
+        expect(result[2].actualCount).toBe(90);
+      });
+    });
   });
+});
 });

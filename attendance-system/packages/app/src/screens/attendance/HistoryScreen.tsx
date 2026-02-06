@@ -107,7 +107,13 @@ const HistoryScreen = () => {
         <Text variant="titleLarge" style={{ fontWeight: 'bold' }}>
           {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月
         </Text>
-        <IconButton icon="chevron-right" onPress={() => changeMonth(1)} />
+        <View style={{ flexDirection: 'row' }}>
+          <IconButton 
+            icon="calendar" 
+            onPress={() => navigation.navigate('AttendanceCalendar' as never)} 
+          />
+          <IconButton icon="chevron-right" onPress={() => changeMonth(1)} />
+        </View>
       </Surface>
 
       {loading ? (

@@ -19,6 +19,7 @@ router.get('/monthly', controller.getDepartmentSummary);
 router.get('/card', controller.getCalendar);
 router.get('/departments', controller.getDeptStats);
 router.get('/charts', controller.getChartStats);
+router.get('/daily-summary', controller.getDailyStats);
 router.get('/export', controller.exportStats);
 router.post('/calculate', controller.triggerCalculation);
 router.get('/calculate/:batchId/status', controller.getCalculationStatus);

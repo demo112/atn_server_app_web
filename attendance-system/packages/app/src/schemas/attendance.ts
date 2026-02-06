@@ -199,6 +199,15 @@ export const CalendarDailyVoSchema = z.object({
   isAbnormal: z.boolean(),
 });
 
+export const DailyStatsVoSchema = z.object({
+  date: z.string(),
+  expectedCount: z.number(),
+  actualCount: z.number(),
+  attendanceRate: z.number(),
+  abnormalCount: z.number(),
+  totalEmployees: z.number().optional(),
+});
+
 // Settings Schema
 export const AttendanceSettingsSchema = z.object({
   dailyLimit: z.number().optional(),

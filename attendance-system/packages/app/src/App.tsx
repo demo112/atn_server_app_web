@@ -112,6 +112,16 @@ export default function App(): React.ReactElement {
           options={{ title: '考勤记录' }}
         />
         <Stack.Screen 
+          name="AttendanceCalendar" 
+          component={AttendanceCalendar} 
+          options={{ title: '考勤日历' }}
+        />
+        <Stack.Screen 
+          name="AttendanceRecords" 
+          component={AttendanceRecords} 
+          options={{ title: '每日明细' }}
+        />
+        <Stack.Screen 
           name="Schedule" 
           component={ScheduleScreen} 
           options={{ title: '我的排班' }}
