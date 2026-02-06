@@ -41,8 +41,36 @@ export class DepartmentService {
       const node = map.get(dept.id)!;
       if (dept.parentId && map.has(dept.parentId)) {
         const parent = map.get(dept.parentId)!;
-        parent.children = parent.children || [];
-        parent.children.push(node);
+        
+        // 检查循环引用：向上追溯，看 parent 的祖先链中是否包含当前 node
+        let current = parent;
+        let isCycle = false;
+        let depth = 0;
+        const MAX_DEPTH = 100; // 防止无限循环的安全阀
+
+        while (current && depth < MAX_DEPTH) {
+          if (current.id === node.id) {
+            isCycle = true;
+            break;
+          }
+          if (current.parentId && map.has(current.parentId)) {
+            current = map.get(current.parentId)!;
+          } else {
+            break;
+          }
+          depth++;
+        }
+
+        if (isCycle) {
+          logger.error({ 
+            deptId: dept.id, 
+            parentId: dept.parentId 
+          }, 'Circular reference detected in department tree, treating as root node');
+          roots.push(node);
+        } else {
+          parent.children = parent.children || [];
+          parent.children.push(node);
+        }
       } else {
         roots.push(node);
       }

@@ -236,8 +236,10 @@ describe('DepartmentService', () => {
     it('should delete department', async () => {
       // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
-      prismaMock.department.count.mockResolvedValue(0); // No children, no employees
-      prismaMock.employee.count.mockResolvedValue(0);
+      // @ts-expect-error: mock value
+      prismaMock.department.findFirst.mockResolvedValue(null); // No children
+      // @ts-expect-error: mock value
+      prismaMock.employee.findFirst.mockResolvedValue(null); // No employees
 
       await service.delete(1);
 
@@ -247,7 +249,8 @@ describe('DepartmentService', () => {
     it('should throw if has children', async () => {
       // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
-      prismaMock.department.count.mockResolvedValue(1); // Has children
+      // @ts-expect-error: mock value
+      prismaMock.department.findFirst.mockResolvedValue({ id: 2 } as any); // Has children
 
       await expect(service.delete(1)).rejects.toThrow('Cannot delete department with sub-departments');
     });
@@ -255,8 +258,10 @@ describe('DepartmentService', () => {
     it('should throw if has employees', async () => {
       // @ts-expect-error: mock value
       prismaMock.department.findUnique.mockResolvedValue(existing);
-      prismaMock.department.count.mockResolvedValue(0);
-      prismaMock.employee.count.mockResolvedValue(1); // Has employees
+      // @ts-expect-error: mock value
+      prismaMock.department.findFirst.mockResolvedValue(null);
+      // @ts-expect-error: mock value
+      prismaMock.employee.findFirst.mockResolvedValue({ id: 1 } as any); // Has employees
 
       await expect(service.delete(1)).rejects.toThrow('Cannot delete department with employees');
     });
