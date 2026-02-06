@@ -104,12 +104,30 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
     emp.name.includes(searchTerm) || emp.employeeNo.includes(searchTerm)
   );
 
+  const footer = (
+    <div className="flex justify-end gap-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+      >
+        取消
+      </button>
+      <button
+        onClick={handleConfirm}
+        className="px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
+      >
+        确定
+      </button>
+    </div>
+  );
+
   return (
     <StandardModal
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      onConfirm={handleConfirm}
+      footer={footer}
       width="600px"
     >
       <div className="h-96 flex flex-col">
