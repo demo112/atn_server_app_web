@@ -3,7 +3,7 @@ import { createLogger } from '../../common/logger';
 import { attendanceSettingsService } from './attendance-settings.service';
 import { prisma } from '../../common/db/prisma';
 import { AppError } from '../../common/errors';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { AttendanceCalculator } from './domain/attendance-calculator';
 import { CorrectionType } from '@prisma/client';
@@ -27,6 +27,10 @@ export class AttendanceScheduler {
   private worker: Worker | undefined;
   private calculator: AttendanceCalculator;
   private connection: IORedis | undefined;
+  
+  // Fallback for when Redis is unavailable or incompatible
+  private useInMemory = false;
+  private localBatchStatus = new Map<string, any>();
 
   constructor() {
     this.calculator = new AttendanceCalculator();
@@ -38,7 +42,9 @@ export class AttendanceScheduler {
        try {
          this.connection = await this.createRedisConnection();
        } catch (err) {
-         logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to initialize Redis connection. Attendance Scheduler will be disabled.');
+         logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to initialize Redis connection. Switching to In-Memory Fallback mode.');
+         this.useInMemory = true;
+         // Return here as we can't use BullMQ without Redis
          return;
        }
        
@@ -54,7 +60,8 @@ export class AttendanceScheduler {
                const version = versionMatch[1];
                const majorVersion = parseInt(version.split('.')[0], 10);
                if (majorVersion < 5) {
-                   logger.warn({ version }, 'Redis version is too old (requires >= 5.0.0). Attendance Scheduler will be disabled.');
+                   logger.warn({ version }, 'Redis version is too old (requires >= 5.0.0). Switching to In-Memory Fallback mode.');
+                   this.useInMemory = true;
                    this.queue = undefined;
                    this.worker = undefined;
                    return;
@@ -88,7 +95,8 @@ export class AttendanceScheduler {
           }
         });
        } catch (err) {
-         logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to initialize BullMQ queue/worker. Attendance Scheduler will be disabled (possibly due to Redis version incompatibility).');
+         logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to initialize BullMQ queue/worker. Switching to In-Memory Fallback mode.');
+         this.useInMemory = true;
          this.queue = undefined;
          this.worker = undefined;
          return;
@@ -101,7 +109,12 @@ export class AttendanceScheduler {
   }
 
   async scheduleDailyJob() {
+    if (this.useInMemory) {
+      logger.info('In-Memory mode: Daily job scheduling is not supported yet (requires persistent cron)');
+      return;
+    }
     if (!this.queue) return;
+    
     const settings = await attendanceSettingsService.getSettings();
     const time = settings.auto_calc_time || '05:00';
     const [hour, minute] = time.split(':').map(Number);
@@ -126,9 +139,9 @@ export class AttendanceScheduler {
    * 手动触发计算任务
    */
   async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> {
-    if (!this.queue) {
-      logger.warn('Attendance scheduler not initialized, skipping calculation trigger');
-      throw new AppError('ERR_SERVICE_UNAVAILABLE', '考勤计算服务未就绪（Redis连接失败），请联系管理员', 503);
+    if (!this.queue && !this.useInMemory) {
+      logger.warn('Attendance scheduler not initialized and fallback not enabled');
+      throw new AppError('ERR_SERVICE_UNAVAILABLE', '考勤计算服务未就绪', 503);
     }
 
     const batchId = uuidv4();
@@ -149,6 +162,25 @@ export class AttendanceScheduler {
     
     if (employees.length === 0) {
          throw new Error('No active employees found to calculate');
+    }
+
+    if (this.useInMemory) {
+        // Initial status
+        const status = {
+          id: batchId,
+          status: 'processing',
+          total: daysCount,
+          completed: 0,
+          failed: 0,
+          message: 'Calculation started'
+        };
+        logger.info({ batchId }, 'Starting In-Memory calculation');
+        this.localBatchStatus.set(batchId, status);
+        // Start background processing without awaiting
+        this.runInMemoryCalculation(batchId, data, start, end).catch(err => {
+            logger.error({ err }, 'In-Memory calculation crashed');
+        });
+        return batchId;
     }
 
     const total = daysCount * employees.length;
@@ -195,7 +227,36 @@ export class AttendanceScheduler {
     return batchId;
   }
 
+  private async runInMemoryCalculation(batchId: string, data: any, start: Dayjs, end: Dayjs) {
+      let current = start;
+      while (current.isBefore(end) || current.isSame(end, 'day')) {
+          const dateStr = current.format('YYYY-MM-DD');
+          try {
+              await this.processDailyCalculation({
+                  date: dateStr,
+                  employeeIds: data.employeeIds
+              });
+              await this.updateBatchStatus(batchId, 'completed');
+          } catch (err) {
+              logger.error({ date: dateStr, err }, 'In-Memory day calc failed');
+              await this.updateBatchStatus(batchId, 'failed');
+          }
+          current = current.add(1, 'day');
+          // Yield to event loop to avoid blocking too long
+          await new Promise(resolve => setTimeout(resolve, 0));
+      }
+  }
+
   async getBatchStatus(batchId: string) {
+    if (this.useInMemory) {
+        const status = this.localBatchStatus.get(batchId);
+        if (!status) return null;
+        const progress = status.total > 0 
+          ? Math.round(((status.completed + status.failed) / status.total) * 100) 
+          : 0;
+        return { ...status, progress };
+    }
+
     if (!this.connection) return null;
     const status = await this.connection.hgetall(`attendance:batch:${batchId}`);
     
@@ -221,6 +282,21 @@ export class AttendanceScheduler {
   }
 
   async updateBatchStatus(batchId: string, type: 'completed' | 'failed') {
+      if (this.useInMemory) {
+          const status = this.localBatchStatus.get(batchId);
+          if (!status) return;
+          
+          if (type === 'completed') status.completed++;
+          if (type === 'failed') status.failed++;
+          
+          if (status.completed + status.failed >= status.total) {
+              status.status = status.failed > 0 ? 'completed_with_errors' : 'completed';
+              status.message = 'Calculation finished';
+          }
+          // Map holds reference, so no need to set back
+          return;
+      }
+
       if (!this.connection) return;
       const key = `attendance:batch:${batchId}`;
       
@@ -479,7 +555,7 @@ export class AttendanceScheduler {
       const isDefaultPort = parseInt(String(config.port)) === 6379;
 
       if (isLocalhost && isDefaultPort) {
-         logger.warn('Failed to connect to local Redis. Attendance Scheduler will be disabled.');
+         logger.warn('Failed to connect to local Redis. Switching to Fallback.');
          throw error;
       }
 
