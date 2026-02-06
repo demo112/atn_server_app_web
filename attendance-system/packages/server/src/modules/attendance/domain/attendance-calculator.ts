@@ -246,6 +246,12 @@ export class AttendanceCalculator {
 
   private combineDateAndTime(date: dayjs.Dayjs, timeStr: string): dayjs.Dayjs {
     const [hours, minutes] = timeStr.split(':').map(Number);
-    return date.hour(hours).minute(minutes).second(0).millisecond(0);
+    // Shift time is in Local Time (UTC+8), convert to UTC
+    // e.g. 09:00 Local -> 01:00 UTC
+    // Current date is UTC 00:00. Setting hour(9) makes it UTC 09:00.
+    // So we subtract 8 hours.
+    // TODO: Make timezone configurable
+    const timezoneOffset = 8;
+    return date.hour(hours).minute(minutes).second(0).millisecond(0).subtract(timezoneOffset, 'hour');
   }
 }
