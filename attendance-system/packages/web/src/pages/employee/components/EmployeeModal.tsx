@@ -98,7 +98,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     }
   }, [open, mode, initialValues, defaultDeptId]);
 
-  // Removed effectiveDefaultDeptId
+  const isDeptLocked = !!defaultDeptId;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -132,6 +132,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       const values: any = {
         ...formData,
         hireDate: formData.hireDate,
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
       };
 
       if (mode === 'edit') {
@@ -199,17 +201,20 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               部门 <span className="text-red-500">*</span>
             </label>
             <div 
-              onClick={() => setIsDeptModalOpen(true)}
-              className="relative cursor-pointer"
+              onClick={() => !isDeptLocked && setIsDeptModalOpen(true)}
+              className={`relative ${isDeptLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <input
                 type="text"
                 readOnly
+                disabled={isDeptLocked}
                 placeholder="请选择部门"
                 value={formData.deptId ? departmentOptions.find(d => d.id === formData.deptId)?.name || '' : ''}
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#409eff]/50 focus:border-[#409eff] sm:text-sm transition-shadow cursor-pointer"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#409eff]/50 focus:border-[#409eff] sm:text-sm transition-shadow ${isDeptLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
               />
-              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+              {!isDeptLocked && (
+                <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+              )}
             </div>
             
             <PersonnelSelectionModal

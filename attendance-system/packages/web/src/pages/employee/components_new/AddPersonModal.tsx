@@ -7,12 +7,15 @@ import { employeeService } from '../../../services/employee';
 interface AddPersonModalProps {
   onClose: () => void;
   onSuccess?: () => void;
+  defaultDeptId?: number;
+  defaultDeptName?: string;
 }
 
-const AddPersonModal: React.FC<AddPersonModalProps> = ({ onClose, onSuccess }) => {
+const AddPersonModal: React.FC<AddPersonModalProps> = ({ onClose, onSuccess, defaultDeptId, defaultDeptName }) => {
   const [activeTab, setActiveTab] = useState<ModalTab>(ModalTab.BASIC_INFO);
   const [formData, setFormData] = useState<FormData>({
-    department: '',
+    deptId: defaultDeptId,
+    department: defaultDeptName || '',
     enableCloudAccount: false,
     sendInviteSms: false,
     name: '',
@@ -55,7 +58,11 @@ const AddPersonModal: React.FC<AddPersonModalProps> = ({ onClose, onSuccess }) =
   const renderContent = () => {
     switch (activeTab) {
       case ModalTab.BASIC_INFO:
-        return <BasicInfoForm data={formData} onChange={handleInputChange} />;
+        return <BasicInfoForm 
+          data={formData} 
+          onChange={handleInputChange} 
+          isDeptLocked={!!defaultDeptId}
+        />;
       case ModalTab.FACE_PHOTO:
         return (
           <div className="flex flex-col items-center justify-center h-full space-y-4 py-12">

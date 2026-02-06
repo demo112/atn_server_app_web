@@ -5,9 +5,10 @@ import PersonnelSelectionModal from '@/components/common/PersonnelSelectionModal
 interface BasicInfoFormProps {
   data: FormData;
   onChange: (field: keyof FormData, value: any) => void;
+  isDeptLocked?: boolean;
 }
 
-const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
+const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange, isDeptLocked = false }) => {
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
 
   return (
@@ -19,17 +20,22 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
         </label>
         <div className="col-span-3">
           <div 
-            onClick={() => setIsDeptModalOpen(true)}
-            className="relative cursor-pointer"
+            onClick={() => !isDeptLocked && setIsDeptModalOpen(true)}
+            className={`relative ${isDeptLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <input
               type="text"
               readOnly
               placeholder="请选择部门"
               value={data.department || ''}
-              className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors cursor-pointer"
+              disabled={isDeptLocked}
+              className={`w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors ${
+                isDeptLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'cursor-pointer'
+              }`}
             />
-            <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+            {!isDeptLocked && (
+              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+            )}
           </div>
         </div>
       </div>

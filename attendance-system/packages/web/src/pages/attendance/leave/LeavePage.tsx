@@ -9,8 +9,7 @@ import {
 } from '../../../services/leave';
 import { LeaveVo, CreateLeaveDto, LeaveStatus, LeaveType } from '@attendance/shared';
 import PersonnelSelectionModal, { SelectionItem } from '../../../components/common/PersonnelSelectionModal';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import dayjs from 'dayjs';
 
 // 状态标签颜色映射
 const statusColors: Record<LeaveStatus, string> = {
@@ -287,10 +286,10 @@ const LeavePage: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">
-                      {format(new Date(leave.startTime), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                      {dayjs(leave.startTime).format('YYYY-MM-DD HH:mm')}
                     </td>
                     <td className="p-4 text-gray-600">
-                      {format(new Date(leave.endTime), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                      {dayjs(leave.endTime).format('YYYY-MM-DD HH:mm')}
                     </td>
                     <td className="p-4 text-gray-600">
                       {((new Date(leave.endTime).getTime() - new Date(leave.startTime).getTime()) / (1000 * 60 * 60 * 24)).toFixed(1)}

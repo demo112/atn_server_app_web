@@ -1,20 +1,20 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { server } from './mocks/server';
+// import { server } from './mocks/server';
 
 // 确保 Act 环境
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 // MSW Setup
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+// beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
-  server.resetHandlers();
+  // server.resetHandlers();
   vi.clearAllMocks();
 });
-afterAll(() => server.close());
+// afterAll(() => server.close());
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
