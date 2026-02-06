@@ -123,6 +123,47 @@ export class TestDataFactory {
     return schedule;
   }
 
+  async createDailyRecord(employeeId: number, date: string) {
+    if (!this.api) throw new Error('API client not set');
+    // 1. Trigger recalculate to ensure record exists
+    await this.api.recalculate({
+      startDate: date,
+      endDate: date,
+      employeeIds: [employeeId]
+    });
+    
+    // 2. Get record
+    const records = await this.api.getDailyRecords({
+      employeeId,
+      startDate: date,
+      endDate: date
+    });
+    
+    const item = Array.isArray(records) ? records[0] : (records.items && records.items[0]);
+    if (!item) {
+      throw new Error(`Failed to create/find daily record for employee ${employeeId} on ${date}`);
+    }
+    return item;
+  }
+
+  async createCorrection(data: { employeeId: number; date: string; time: string; remark?: string }) {
+    if (!this.api) throw new Error('API client not set');
+    
+    // 1. Ensure DailyRecord exists
+    const dailyRecord = await this.createDailyRecord(data.employeeId, data.date);
+    
+    // 2. Create Correction (Supplement Check-In)
+    const res = await this.api.supplementCheckIn({
+      dailyRecordId: dailyRecord.id,
+      checkInTime: `${data.date} ${data.time}`, // format? ISO? Controller expects ISO usually, or 'YYYY-MM-DD HH:mm:ss'?
+      // DTO says checkInTime: string. Service does dayjs(dto.checkInTime).toDate().
+      // dayjs parses ISO or standard formats.
+      remark: data.remark || 'Test Correction'
+    });
+    
+    return res;
+  }
+
   /** 清理本工厂创建的所有数据 */
   async cleanup(): Promise<void> {
     if (!this.api) return;

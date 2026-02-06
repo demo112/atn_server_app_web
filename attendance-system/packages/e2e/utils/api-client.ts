@@ -125,6 +125,51 @@ export class ApiClient {
     return this.delete(`/api/v1/employees/${id}`);
   }
 
+  // Correction
+  async supplementCheckIn(data: any) {
+    const res = await this.post('/api/v1/attendance/corrections/check-in', data);
+    return res.data;
+  }
+
+  async supplementCheckOut(data: any) {
+    const res = await this.post('/api/v1/attendance/corrections/check-out', data);
+    return res.data;
+  }
+
+  async getCorrections(params?: any) {
+    const res = await this.get('/api/v1/attendance/corrections', params);
+    return res.data;
+  }
+
+  async updateCorrection(id: number, data: any) {
+    const res = await this.request.put(`${this.baseUrl}/api/v1/attendance/corrections/${id}`, {
+      data,
+      headers: {
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+    if (!res.ok()) {
+      const body = await res.text();
+      throw new Error(`Update Correction Failed: ${res.status()} ${body}`);
+    }
+    return res.json();
+  }
+
+  async deleteCorrection(id: number) {
+    return this.delete(`/api/v1/attendance/corrections/${id}`);
+  }
+
+  async getDailyRecords(params?: any) {
+    const res = await this.get('/api/v1/attendance/daily', params);
+    return res.data;
+  }
+
+  // Clock
+  async clock(data: any) {
+    const res = await this.post('/api/v1/attendance/clock', data);
+    return res.data;
+  }
+
   // Attendance
   async createTimePeriod(data: any) {
     const res = await this.post('/api/v1/attendance/time-periods', data);

@@ -15,9 +15,10 @@ export const dataFixtures = {
     await use(prefix);
   },
 
-  testData: async ({ workerPrefix }: Fixtures, use: (r: TestDataFactory) => Promise<void>) => {
+  testData: async ({ workerPrefix, api }: Fixtures, use: (r: TestDataFactory) => Promise<void>) => {
     const workerIndex = parseInt(workerPrefix.replace(/\D/g, ''), 10);
     const factory = new TestDataFactory(workerIndex);
+    factory.setApi(api);
     await use(factory);
   },
 
