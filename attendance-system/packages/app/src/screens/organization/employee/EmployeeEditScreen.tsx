@@ -73,7 +73,7 @@ export const EmployeeEditScreen = () => {
           hireDate,
         };
         await updateEmployee(route.params.id, data);
-        Alert.alert('成功', '更新成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert('成功', '更新成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       } else {
         const data: CreateEmployeeDto = {
           name,
@@ -84,7 +84,7 @@ export const EmployeeEditScreen = () => {
           email: email || undefined,
         };
         await createEmployee(data);
-        Alert.alert('成功', '创建成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert('成功', '创建成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       }
     } catch (error) {
       logger.error(error);

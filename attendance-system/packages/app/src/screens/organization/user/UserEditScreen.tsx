@@ -161,7 +161,7 @@ export const UserEditScreen = () => {
           status,
         };
         await updateUser(route.params.id, data);
-        Alert.alert('成功', '更新成功', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert('成功', '更新成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       } else {
         const data: CreateUserDto = {
           username,
@@ -175,7 +175,7 @@ export const UserEditScreen = () => {
         if (createEmployeeMode && newEmployeeId) {
           msg += ` 并已关联人员 "${employeeName}"`;
         }
-        Alert.alert('成功', msg, [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert('成功', msg, [{ text: '确定', onPress: () => navigation.goBack() }]);
       }
     } catch (error) {
       logger.error(error);

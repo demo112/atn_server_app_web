@@ -62,11 +62,11 @@ const ClockInScreen = () => {
         deviceInfo: { deviceId: 'mock-device', model: 'App' },
       };
       await clockIn(dto);
-      Alert.alert('成功', `打卡成功 (${type === 'sign_in' ? '上班' : '下班'})`);
+      Alert.alert('成功', `打卡成功 (${type === 'sign_in' ? '上班' : '下班'})`, [{ text: '确定' }]);
       loadTodayRecords();
     } catch (error) {
       const msg = getErrorMessage(error);
-      Alert.alert('失败', msg);
+      Alert.alert('失败', msg, [{ text: '确定' }]);
     } finally {
       setLoading(false);
     }

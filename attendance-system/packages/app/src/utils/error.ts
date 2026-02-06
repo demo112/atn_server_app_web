@@ -27,6 +27,9 @@ export const getErrorMessage = (error: unknown): string => {
       return translations[code];
     }
   const phraseMap: Array<{ test: (msg: string) => boolean; zh: string }> = [
+    { test: (m) => m.includes('Invalid credentials'), zh: '账号或密码错误' },
+    { test: (m) => m.includes('Leave time overlaps with existing record'), zh: '请假时间与已有记录重叠' },
+    { test: (m) => m.includes('Start time must be before end time'), zh: '开始时间必须早于结束时间' },
     { test: (m) => m.includes('employeeId is required for admin'), zh: '管理员创建请假时必须指定员工（employeeId）' },
     { test: (m) => m.includes('No employee linked'), zh: '当前用户未关联员工' },
     { test: (m) => m.includes('Only admin can update leave records'), zh: '仅管理员可更新请假记录' },

@@ -44,8 +44,8 @@ test.describe('登录功能', () => {
     // 使用错误密码登录
     await loginPage.login('admin', 'wrongpassword');
 
-    // 验证显示错误提示
-    await loginPage.expectError('Invalid credentials');
+    // 验证显示错误提示（中文）
+    await loginPage.expectError('账号或密码错误');
 
     // 验证仍在登录页
     await expect(loginPage.page).toHaveURL(/\/login/);
