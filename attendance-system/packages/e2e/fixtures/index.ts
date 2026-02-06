@@ -8,6 +8,7 @@ import { LayoutPage } from '../pages/layout.page';
 import { SchedulePage } from '../pages/schedule.page';
 import { ShiftPage } from '../pages/shift.page';
 import { ClockRecordPage } from '../pages/clock-record.page';
+import { EmployeePage } from '../pages/employee.page';
 
 // Combine all fixture types
 export type E2EFixtures = AuthFixtures & DataFixtures & {
@@ -18,6 +19,7 @@ export type E2EFixtures = AuthFixtures & DataFixtures & {
   schedulePage: SchedulePage;
   shiftPage: ShiftPage;
   clockRecordPage: ClockRecordPage;
+  employeePage: EmployeePage;
 };
 
 // Extend the base test with our fixtures
@@ -44,6 +46,9 @@ export const test = base.extend<E2EFixtures>({
   },
   clockRecordPage: async ({ authenticatedPage }, use) => {
     await use(new ClockRecordPage(authenticatedPage));
+  },
+  employeePage: async ({ authenticatedPage }, use) => {
+    await use(new EmployeePage(authenticatedPage));
   },
 });
 

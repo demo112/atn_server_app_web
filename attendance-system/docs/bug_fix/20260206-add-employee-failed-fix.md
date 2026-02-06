@@ -7,22 +7,24 @@
 ## 设计锚定
 - **所属规格**：UA2
 - **原设计意图**：
-  - API 应监听在配置的端口（3000）上。
+  - Server 端口应由环境变量控制（规范为 3001）。
   - 人员信息不包含“职位”字段。
 - **当前偏离**：
-  - Server 端口配置不一致（3001 vs 3000）。
+  - 前端请求端口与 Server 监听端口不一致。
   - `employee.dto.ts` 和 `employee.service.ts` 包含 `position` 处理逻辑。
 
 ## 根因分析
-1. **连接拒绝**：`packages/server/.env` 配置了 `PORT=3001`，导致前端（请求 3000）无法连接。
+1. **连接拒绝**：`packages/server/.env` 配置与前端代理配置不一致，或代码强制使用了错误端口。
 2. **需求偏离**：开发过程中引入了未定义的 `position` 字段。
 
 ## 修复方案
-1. **端口修正**：在 `packages/server/src/index.ts` 中强制设置端口为 3000。
+1. **端口修正**：
+   - 撤销 `packages/server/src/index.ts` 中的端口强制逻辑，恢复为 `process.env.PORT || 3000`。
+   - 确认 `packages/server/.env` 应配置为 `PORT=3001`（需手动修改）。
 2. **字段清理**：从 DTO 和 Service 中移除 `position` 字段。
 
 ## 验证结果
-- [x] Server 启动端口确认（代码强制 3000）。
+- [x] Server 启动端口确认（读取环境变量）。
 - [x] 单元测试 `EmployeeService.create` 通过（无 position 字段）。
 - [x] 编译通过 (`npm run build`).
 
@@ -31,4 +33,4 @@
 - [ ] api-contract.md：无需更新
 
 ## 提交信息
-fix(server): 强制端口为 3000 并移除冗余 position 字段
+fix(server): 恢复 Server 端口环境变量读取逻辑并移除冗余 position 字段

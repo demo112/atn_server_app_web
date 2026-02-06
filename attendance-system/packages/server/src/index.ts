@@ -43,20 +43,8 @@ try {
   logger.info('Starting server initialization...');
   log('Initializing server configuration...');
 
-  // Enforce PORT 3000 as per project rules
-  if (process.env.PORT && process.env.PORT !== '3000') {
-    log(`WARNING: PORT in .env is ${process.env.PORT}, but enforcing 3000 per project rules.`);
-  }
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
   const HOST = '0.0.0.0';
-
-  log(`Configuration: PORT=${PORT}, HOST=${HOST}`);
-  logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
-
-  // Keep process alive hack
-  setInterval(() => {
-    // Heartbeat
-  }, 1000 * 60);
 
   const server = app.listen(PORT, HOST, () => {
     log(`[Startup] Server started on http://${HOST}:${PORT}`);

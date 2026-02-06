@@ -29,7 +29,7 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
   const loadData = async (): Promise<void> => {
     try {
         const [empRes, shiftRes] = await Promise.all([
-            employeeService.getEmployees({ pageSize: 100 }), 
+            employeeService.getEmployees({ pageSize: 1000 }), 
             attendanceService.getShifts()
         ]);
         setEmployees(empRes.items || []);
@@ -95,8 +95,9 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
     >
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">选择员工</label>
+            <label htmlFor="employeeId" className="block text-sm font-medium text-gray-700">选择员工</label>
             <select 
+                id="employeeId"
                 value={formData.employeeId} 
                 onChange={e => setFormData({...formData, employeeId: e.target.value})}
                 required
@@ -112,8 +113,9 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">选择班次</label>
+            <label htmlFor="shiftId" className="block text-sm font-medium text-gray-700">选择班次</label>
             <select 
+                id="shiftId"
                 value={formData.shiftId} 
                 onChange={e => setFormData({...formData, shiftId: e.target.value})}
                 required
@@ -130,8 +132,9 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">开始日期</label>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">开始日期</label>
                 <input 
+                    id="startDate"
                     type="date" 
                     value={formData.startDate} 
                     onChange={e => setFormData({...formData, startDate: e.target.value})} 
@@ -140,8 +143,9 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
                 />
             </div>
             <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">结束日期</label>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">结束日期</label>
                 <input 
+                    id="endDate"
                     type="date" 
                     value={formData.endDate} 
                     onChange={e => setFormData({...formData, endDate: e.target.value})} 

@@ -17,6 +17,10 @@ function getServerPort() {
 }
 
 const SERVER_PORT = getServerPort();
+// Set API_BASE_URL for ApiClient
+if (!process.env.API_BASE_URL) {
+  process.env.API_BASE_URL = `http://127.0.0.1:${SERVER_PORT}`;
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
