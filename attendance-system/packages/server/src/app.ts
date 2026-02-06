@@ -6,7 +6,7 @@ import cors from 'cors';
 console.log('DEBUG: app.ts - Start imports');
 
 console.log('DEBUG: app.ts - Importing modules/attendance');
-import { attendanceRouter } from './modules/attendance';
+import { attendanceRouter, leaveRouter } from './modules/attendance';
 console.log('DEBUG: app.ts - Importing modules/auth');
 import { authRouter } from './modules/auth';
 console.log('DEBUG: app.ts - Importing modules/user');
@@ -49,6 +49,7 @@ app.use('/api/v1/employees', employeeRouter);
 app.use('/api/v1/departments', departmentRouter);
 app.use('/api/v1/statistics', statisticsRouter);
 app.use('/api/v1/attendance', attendanceRouter);
+app.use('/api/v1/leaves', leaveRouter);
 
 // 错误处理中间件
 app.use(errorHandler);
