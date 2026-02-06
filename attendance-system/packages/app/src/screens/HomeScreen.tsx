@@ -73,7 +73,6 @@ const HomeScreen = () => {
           <MenuItem title="请假/出差" icon="airplane-takeoff" route="Leave" />
           <MenuItem title="补卡申请" icon="file-document-edit" route="Correction" />
           <MenuItem title="考勤记录" icon="chart-bar" route="History" />
-          <MenuItem title="我的排班" icon="calendar-clock" route="Schedule" />
         </View>
 
         {isAdmin && (
