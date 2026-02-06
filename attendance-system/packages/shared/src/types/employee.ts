@@ -46,7 +46,6 @@ export interface CreateEmployeeDto {
   hireDate: string // YYYY-MM-DD
   phone?: string
   email?: string
-  position?: string // 暂未在 Schema 中定义，预留
 }
 
 // 更新员工 DTO
