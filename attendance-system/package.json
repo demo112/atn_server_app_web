@@ -6,6 +6,7 @@
     "dev": "pnpm -r dev",
     "dev:trae": "npx --yes concurrently -k -n \"SERVER,WEB,APP\" -c \"blue,green,magenta\" \"pnpm --filter @attendance/server dev\" \"pnpm --filter @attendance/web dev\" \"pnpm --filter @attendance/app start\"",
     "dev:services": "npx --yes concurrently -k -n \"SERVER,WEB\" -c \"blue,green\" \"npm run dev -w @attendance/server\" \"npm run dev -w @attendance/web\"",
+    "start:all": "node scripts/start-all.js",
     "dev:app": "pnpm --filter @attendance/app start",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
