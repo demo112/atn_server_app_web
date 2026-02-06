@@ -110,8 +110,9 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
     >
       <div className="space-y-4">
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">名称 <span className="text-red-500">*</span></label>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">名称 <span className="text-red-500">*</span></label>
           <input 
+            id="name"
             type="text" 
             value={formData.name} 
             onChange={e => setFormData({...formData, name: e.target.value})}
@@ -121,8 +122,9 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">类型 <span className="text-red-500">*</span></label>
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700">类型 <span className="text-red-500">*</span></label>
           <select 
+            id="type"
             value={formData.type} 
             onChange={e => setFormData({...formData, type: Number(e.target.value)})}
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
@@ -134,8 +136,9 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">上班时间 {formData.type === 0 && <span className="text-red-500">*</span>}</label>
+            <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">上班时间 {formData.type === 0 && <span className="text-red-500">*</span>}</label>
             <input 
+              id="startTime"
               type="time" 
               value={formData.startTime} 
               onChange={e => setFormData({...formData, startTime: e.target.value})}
@@ -144,8 +147,9 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">下班时间 {formData.type === 0 && <span className="text-red-500">*</span>}</label>
+            <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">下班时间 {formData.type === 0 && <span className="text-red-500">*</span>}</label>
             <input 
+              id="endTime"
               type="time" 
               value={formData.endTime} 
               onChange={e => setFormData({...formData, endTime: e.target.value})}
@@ -157,8 +161,9 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">午休开始</label>
+            <label htmlFor="restStartTime" className="block text-sm font-medium text-gray-700">午休开始</label>
             <input 
+              id="restStartTime"
               type="time" 
               value={formData.restStartTime} 
               onChange={e => setFormData({...formData, restStartTime: e.target.value})}
@@ -166,8 +171,9 @@ export const TimePeriodDialog: React.FC<TimePeriodDialogProps> = ({
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">午休结束</label>
+            <label htmlFor="restEndTime" className="block text-sm font-medium text-gray-700">午休结束</label>
             <input 
+              id="restEndTime"
               type="time" 
               value={formData.restEndTime} 
               onChange={e => setFormData({...formData, restEndTime: e.target.value})}

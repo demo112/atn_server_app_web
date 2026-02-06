@@ -3,7 +3,8 @@
   "compilerOptions": {
     "moduleResolution": "Node16",
     "module": "Node16",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "noEmit": false
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/__tests__/**/*", "src/test/**/*"]

@@ -12,7 +12,7 @@ export class ModalComponent {
     this.title = this.root.locator('h2#modal-title');
     this.closeButton = this.root.locator('button[aria-label="Close"]');
     // Common button names in Chinese/English
-    this.confirmButton = this.root.locator('button').filter({ hasText: /确定|Confirm|OK/i });
+    this.confirmButton = this.root.locator('button').filter({ hasText: /确定|确认|Confirm|OK/i });
     this.cancelButton = this.root.locator('button').filter({ hasText: /取消|Cancel/i });
   }
 

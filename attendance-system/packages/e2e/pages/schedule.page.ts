@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { BasePage } from './base.page';
+import dayjs from 'dayjs';
 
 export class SchedulePage extends BasePage {
   readonly url = '/attendance/schedule';
@@ -7,14 +8,32 @@ export class SchedulePage extends BasePage {
   readonly deptTree: Locator;
   readonly calendar: Locator;
   readonly calendarCells: Locator;
-  readonly calendarDataItems: Locator;
+  readonly calendarHeader: Locator;
+  readonly prevMonthBtn: Locator;
+  readonly nextMonthBtn: Locator;
+  
+  // Buttons
+  readonly createBtn: Locator;
+  readonly batchCreateBtn: Locator;
+
+  // Dialogs
+  readonly dialog: Locator;
+  readonly dialogSubmitBtn: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.deptTree = page.locator('ul.space-y-1'); // DepartmentTree container
-    this.calendar = page.locator('.grid.grid-cols-7'); // Calendar body
-    this.calendarCells = this.calendar.locator('.bg-white.p-1\\.5'); // Day cells
-    this.calendarDataItems = this.calendar.locator('.bg-blue-50'); // Schedule data blocks
+    this.deptTree = page.locator('ul.space-y-1');
+    this.calendar = page.locator('.grid.grid-cols-7');
+    this.calendarCells = this.calendar.locator('.bg-white.p-1\\.5');
+    this.calendarHeader = page.locator('.text-lg.font-bold.text-gray-800'); // "2026年 2月"
+    this.prevMonthBtn = page.getByRole('button', { name: '< 上个月' });
+    this.nextMonthBtn = page.getByRole('button', { name: '下个月 >' });
+
+    this.createBtn = page.getByRole('button', { name: '+ 新建排班' });
+    this.batchCreateBtn = page.getByRole('button', { name: '批量排班' });
+    
+    this.dialog = page.getByRole('dialog');
+    this.dialogSubmitBtn = this.dialog.getByRole('button', { name: /提交/ });
   }
 
   /**
@@ -31,8 +50,151 @@ export class SchedulePage extends BasePage {
     const node = this.getDeptNode(name);
     await expect(node).toBeVisible();
     await node.click();
-    // Wait for calendar to load (indicated by loading text or data appearing)
-    await expect(this.page.locator('text=当前部门:')).toBeVisible();
+    
+    // Wait for calendar to be visible (it means a dept is selected)
+    // The calendar component renders when deptId is truthy
+    await expect(this.calendar).toBeVisible();
+    
+    // Wait for loading to finish (if any)
+    await expect(this.page.locator('text=Loading...')).not.toBeVisible();
+  }
+
+  /**
+   * Navigate calendar to specific month
+   */
+  async navigateToMonth(dateStr: string) {
+    const targetDate = dayjs(dateStr);
+    const targetYear = targetDate.year();
+    const targetMonth = targetDate.month(); // 0-11
+
+    // Get current calendar month
+    // Header format: "2026年 2月"
+    const headerText = await this.calendarHeader.textContent();
+    if (!headerText) throw new Error('Cannot read calendar header');
+    
+    const [yearStr, monthStr] = headerText.replace('年', '').replace('月', '').split(' ');
+    let currentYear = parseInt(yearStr.trim());
+    let currentMonth = parseInt(monthStr.trim()) - 1; // Convert to 0-11
+
+    // Limit iterations to avoid infinite loop
+    let maxIterations = 24; 
+    while ((currentYear !== targetYear || currentMonth !== targetMonth) && maxIterations > 0) {
+      if (currentYear < targetYear || (currentYear === targetYear && currentMonth < targetMonth)) {
+        await this.nextMonthBtn.click();
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+      } else {
+        await this.prevMonthBtn.click();
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+      }
+      
+      // Wait for update
+      await this.page.waitForTimeout(200); // Small wait for React state update
+      maxIterations--;
+    }
+    
+    if (maxIterations === 0) {
+        throw new Error(`Failed to navigate to ${dateStr}`);
+    }
+  }
+
+  /**
+   * Filter/Show calendar for date range
+   * Actually navigates to the start date's month
+   */
+  async filterByDate(startDate: string, endDate: string) {
+      await this.navigateToMonth(startDate);
+  }
+
+  /**
+   * Open Create Schedule Dialog
+   */
+  async openCreateDialog() {
+    await this.createBtn.click();
+    await expect(this.dialog).toBeVisible();
+    await expect(this.dialog).toContainText('新建排班');
+  }
+
+  /**
+   * Open Batch Schedule Dialog
+   */
+  async openBatchDialog() {
+    await this.batchCreateBtn.click();
+    await expect(this.dialog).toBeVisible();
+    await expect(this.dialog).toContainText('批量排班');
+  }
+
+  /**
+   * Fill Create Schedule Form
+   */
+  async fillCreateForm(data: {
+    employeeName?: string; 
+    shiftName: string;
+    startDate: string;
+    endDate: string;
+    force?: boolean;
+  }) {
+    if (data.employeeName) {
+      const select = this.dialog.locator('select').nth(0); // First select is Employee
+      // Use regex to match "Name (Code)" pattern
+      // Playwright selectOption with label matches exactly or by substring? 
+      // Documentation says: label: "label" | RegExp
+      // So we can use regex.
+      await select.selectOption({ label: new RegExp(data.employeeName) });
+    }
+
+    // Shift select
+    const shiftSelect = this.dialog.locator('select').nth(1);
+    await shiftSelect.selectOption({ label: data.shiftName });
+
+    await this.dialog.locator('label:has-text("开始日期")').locator('..').locator('input').fill(data.startDate);
+    await this.dialog.locator('label:has-text("结束日期")').locator('..').locator('input').fill(data.endDate);
+
+    if (data.force) {
+      await this.dialog.getByLabel('强制覆盖').check();
+    } else {
+      await this.dialog.getByLabel('强制覆盖').uncheck();
+    }
+  }
+
+  /**
+   * Fill Batch Schedule Form
+   */
+  async fillBatchForm(data: {
+    shiftName: string;
+    startDate: string;
+    endDate: string;
+    force?: boolean;
+    includeSub?: boolean;
+  }) {
+    // Batch dialog only has Shift select, Dept is pre-selected or selected in tree?
+    // BatchScheduleDialog likely takes deptId from props or allows selection.
+    // Based on BatchScheduleDialog usage in SchedulePage.tsx: deptId={selectedDeptId || undefined}
+    // So it uses the currently selected department.
+    // We should ensure a department is selected BEFORE opening dialog.
+    
+    await this.dialog.locator('label:has-text("选择班次")').locator('..').locator('select').selectOption({ label: data.shiftName });
+    await this.dialog.locator('label:has-text("开始日期")').locator('..').locator('input').fill(data.startDate);
+    await this.dialog.locator('label:has-text("结束日期")').locator('..').locator('input').fill(data.endDate);
+
+    if (data.force) {
+      await this.dialog.getByLabel('强制覆盖').check();
+    }
+    if (data.includeSub) {
+      await this.dialog.getByLabel('包含子部门').check();
+    }
+  }
+
+  async submitDialog() {
+    await this.dialogSubmitBtn.click();
+    await expect(this.dialog).not.toBeVisible();
   }
 
   /**
@@ -40,11 +202,12 @@ export class SchedulePage extends BasePage {
    */
   async expectScheduleInCell(day: number, employeeName: string, shiftName: string) {
     // Find cell with the day number
-    const cell = this.calendarCells.filter({ hasText: new RegExp(`^${day}$`, 'm') });
+    // We need to match exact number in .font-bold
+    const cell = this.calendarCells.filter({ hasText: String(day) }).first();
     await expect(cell).toBeVisible();
     
     // Check for employee/shift text inside that cell
-    const dataItem = cell.locator('.bg-blue-50', { hasText: employeeName });
+    const dataItem = cell.locator('.bg-blue-50').filter({ hasText: employeeName });
     await expect(dataItem).toBeVisible();
     await expect(dataItem).toContainText(shiftName);
   }

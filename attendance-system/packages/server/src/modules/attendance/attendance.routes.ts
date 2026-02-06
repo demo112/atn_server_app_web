@@ -7,7 +7,6 @@ import { AttendanceShiftController } from './attendance-shift.controller';
 import { AttendanceClockController } from './attendance-clock.controller';
 import { AttendanceCorrectionController } from './attendance-correction.controller';
 import { ScheduleController } from './schedule/schedule.controller';
-import { LeaveController } from './leave.controller';
 import { attendanceScheduler } from './attendance-scheduler';
 
 const router = Router();
@@ -58,7 +57,6 @@ const shiftController = new AttendanceShiftController();
 const clockController = new AttendanceClockController();
 const correctionController = new AttendanceCorrectionController();
 const scheduleController = new ScheduleController();
-const leaveController = new LeaveController();
 
 // 考勤设置路由
 router.get('/settings', attendanceSettingsController.getSettings.bind(attendanceSettingsController));
@@ -95,11 +93,5 @@ router.post('/schedules', scheduleController.create.bind(scheduleController));
 router.post('/schedules/batch', scheduleController.batchCreate.bind(scheduleController));
 router.get('/schedules', scheduleController.getOverview.bind(scheduleController));
 router.delete('/schedules/:id', scheduleController.delete.bind(scheduleController));
-
-// 请假管理路由
-router.post('/leaves', leaveController.create.bind(leaveController));
-router.get('/leaves', leaveController.getList.bind(leaveController));
-router.put('/leaves/:id', leaveController.update.bind(leaveController));
-router.delete('/leaves/:id', leaveController.cancel.bind(leaveController));
 
 export const attendanceRouter: Router = router;

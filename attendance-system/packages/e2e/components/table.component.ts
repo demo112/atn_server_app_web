@@ -24,7 +24,7 @@ export class TableComponent {
 
   /** 获取数据行数 */
   async getDataRowCount(): Promise<number> {
-    await this.rows.first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    await this.rows.first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
     return await this.rows.count();
   }
 

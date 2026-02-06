@@ -227,6 +227,24 @@ export class LeaveService {
   }
 
   /**
+   * 触发重新计算
+   */
+  private async triggerRecalculation(employeeId: number, startTime: Date, endTime: Date) {
+    const startDate = dayjs(startTime).format('YYYY-MM-DD');
+    const endDate = dayjs(endTime).format('YYYY-MM-DD');
+    
+    try {
+      await attendanceScheduler.triggerCalculation({
+        startDate,
+        endDate,
+        employeeIds: [employeeId]
+      });
+    } catch (err) {
+      this.logger.error({ err, employeeId, startDate, endDate }, 'Failed to trigger recalculation');
+    }
+  }
+
+  /**
    * 撤销 (软删除)
    */
   async cancel(id: number, operatorId: number) {
@@ -247,21 +265,11 @@ export class LeaveService {
     
     this.logger.info(`Cancelled leave record: ID ${id}`);
 
-    return this.mapToVo(updated);
-  }
-
-  /**
-   * 触发重算
-   */
-  private async triggerRecalculation(employeeId: number, startTime: Date, endTime: Date) {
-    try {
-      await attendanceScheduler.triggerCalculation({
-        employeeIds: [employeeId],
-        startDate: dayjs(startTime).format('YYYY-MM-DD'),
-        endDate: dayjs(endTime).format('YYYY-MM-DD')
-      });
-    } catch (err) {
-      this.logger.error({ err, employeeId }, 'Failed to trigger attendance recalculation');
+    // 如果原记录是已通过，需要重算
+    if (record.status === LeaveStatus.approved) {
+       await this.triggerRecalculation(record.employeeId, record.startTime, record.endTime);
     }
+
+    return this.mapToVo(updated);
   }
 }
