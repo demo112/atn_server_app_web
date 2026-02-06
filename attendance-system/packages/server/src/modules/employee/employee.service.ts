@@ -20,8 +20,8 @@ export class EmployeeService {
       throw AppError.conflict('Employee No already exists', 'ERR_EMPLOYEE_EXISTS');
     }
 
-    // Exclude fields not in Prisma model (e.g. position) and handle relations
-    const { deptId, position, ...rest } = dto;
+    // Exclude fields not in Prisma model and handle relations
+    const { deptId, ...rest } = dto;
     
     const employee = await prisma.employee.create({
       data: {
@@ -130,7 +130,7 @@ export class EmployeeService {
     // Check existence
     await this.findOne(id);
 
-    const { deptId, position, ...rest } = dto;
+    const { deptId, ...rest } = dto;
     const data: any = { ...rest };
     
     if (dto.hireDate) {

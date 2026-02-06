@@ -1,275 +1,329 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { LeaveVo, LeaveType, LeaveStatus } from '@attendance/shared';
-import * as leaveService from '@/services/leave';
-import { LeaveDialog } from './components/LeaveDialog';
-import Pagination from './components/Pagination';
-import dayjs from 'dayjs';
-import { logger } from '@/utils/logger';
-import { useToast } from '@/components/common/ToastProvider';
-import StandardModal from '@/components/common/StandardModal';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import React, { useState, useEffect } from 'react';
+import { useToast } from '../../../components/common/ToastProvider';
+import { 
+  getLeaves, 
+  createLeave, 
+  updateLeave, 
+  deleteLeave,
+  cancelLeave 
+} from '../../../services/leave';
+import { LeaveVo, CreateLeaveDto, LeaveStatus, LeaveType } from '@attendance/shared';
+import PersonnelSelectionModal, { SelectionItem } from '../../../components/common/PersonnelSelectionModal';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+
+// 状态标签颜色映射
+const statusColors: Record<LeaveStatus, string> = {
+  [LeaveStatus.pending]: 'bg-yellow-100 text-yellow-800',
+  [LeaveStatus.approved]: 'bg-green-100 text-green-800',
+  [LeaveStatus.rejected]: 'bg-red-100 text-red-800',
+  [LeaveStatus.cancelled]: 'bg-gray-100 text-gray-800',
+};
+
+// 状态显示文本映射
+const statusLabels: Record<LeaveStatus, string> = {
+  [LeaveStatus.pending]: '待审批',
+  [LeaveStatus.approved]: '已通过',
+  [LeaveStatus.rejected]: '已拒绝',
+  [LeaveStatus.cancelled]: '已撤销',
+};
+
+// 请假类型显示文本映射
+const leaveTypeLabels: Record<LeaveType, string> = {
+  [LeaveType.annual]: '年假',
+  [LeaveType.sick]: '病假',
+  [LeaveType.personal]: '事假',
+  [LeaveType.business_trip]: '出差',
+  [LeaveType.maternity]: '产假',
+  [LeaveType.paternity]: '陪产假',
+  [LeaveType.marriage]: '婚假',
+  [LeaveType.bereavement]: '丧假',
+  [LeaveType.other]: '其他',
+};
 
 const LeavePage: React.FC = () => {
-  const { toast } = useToast();
-  const [data, setData] = useState<LeaveVo[]>([]);
-  const [total, setTotal] = useState(0);
+  // const { user } = useAuth(); // Unused
+  const { showToast } = useToast();
+  const [leaves, setLeaves] = useState<LeaveVo[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  // const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null); // Replaced by modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<LeaveVo | undefined>(undefined);
-  
-  // Confirm Modal state
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [itemToCancel, setItemToCancel] = useState<number | null>(null);
-  const [confirmLoading, setConfirmLoading] = useState(false);
-
-  // Filters
-  const [filters, setFilters] = useState({
-    employeeId: undefined as number | undefined,
-    type: undefined as LeaveType | undefined,
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<CreateLeaveDto>({
+    employeeId: 0,
+    type: LeaveType.personal,
     startTime: '',
-    endTime: ''
+    endTime: '',
+    reason: '',
   });
+  
+  // 筛选状态
+  const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  const fetchData = useCallback(async () => {
-    if (filters.startTime && filters.endTime && filters.startTime > filters.endTime) {
-      toast.warning('开始时间不能晚于结束时间');
-      return;
-    }
+  // 分页状态
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
 
+  const fetchLeaves = async () => {
     try {
       setLoading(true);
-      const queryParams: any = {
+      const employeeIds = selectedItems
+        .filter(i => i.type === 'employee')
+        .map(i => parseInt(i.id));
+        
+      const res = await getLeaves({
         page,
         pageSize,
-        type: filters.type,
-        startTime: filters.startTime || undefined,
-        endTime: filters.endTime || undefined,
-      };
-
-      if (selectedItems.length > 0) {
-        const item = selectedItems[0];
-        if (item.type === 'department') {
-          queryParams.deptId = item.id;
-        } else {
-          queryParams.employeeId = item.id;
-        }
+        employeeId: employeeIds.length > 0 ? employeeIds[0] : undefined, // 目前API只支持单个
+        startTime: startDate ? `${startDate}T00:00:00` : undefined,
+        endTime: endDate ? `${endDate}T23:59:59` : undefined
+      });
+      if (res && res.items) {
+        setLeaves(res.items);
+        setTotal(res.meta.total);
       }
-
-      const res = await leaveService.getLeaves(queryParams);
-      setData(res.items || []);
-      setTotal(res.total);
     } catch (error) {
-      logger.error('Failed to fetch leaves', error);
-      toast.error('加载请假列表失败');
+      showToast('获取列表失败', 'error');
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, filters, selectedItems, toast]);
+  };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchLeaves();
+  }, [page, selectedItems, startDate, endDate]);
 
-  const handleCreate = (): void => {
-    setSelectedItem(undefined);
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (item: LeaveVo): void => {
-    if (item.status === LeaveStatus.cancelled) {
-      toast.warning('已撤销记录不可编辑');
-      return;
-    }
-    setSelectedItem(item);
-    setIsDialogOpen(true);
-  };
-
-  const handleCancelClick = (id: number): void => {
-    setItemToCancel(id);
-    setConfirmModalOpen(true);
-  };
-
-  const handleConfirmCancel = async (): Promise<void> => {
-    if (!itemToCancel) return;
-    setConfirmLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await leaveService.cancelLeave(itemToCancel);
-      toast.success('撤销成功');
-      fetchData();
-      setConfirmModalOpen(false);
-    } catch (err) {
-      logger.error('Leave cancellation failed', err);
-      toast.error('撤销失败');
-    } finally {
-      setConfirmLoading(false);
-      setItemToCancel(null);
+      if (editingId) {
+        await updateLeave(editingId, formData);
+        showToast('更新成功', 'success');
+      } else {
+        await createLeave(formData);
+        showToast('创建成功', 'success');
+      }
+      setIsModalOpen(false);
+      resetForm();
+      fetchLeaves();
+    } catch (error) {
+      showToast(editingId ? '更新失败' : '创建失败', 'error');
     }
   };
 
-  const getTypeLabel = (type: LeaveType) => {
-    const labels: Record<string, string> = {
-      [LeaveType.annual]: '年假',
-      [LeaveType.sick]: '病假',
-      [LeaveType.personal]: '事假',
-      [LeaveType.business_trip]: '出差',
-      [LeaveType.other]: '其他'
-    };
-    return labels[type] || type;
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('确定要删除吗？')) return;
+    try {
+      await deleteLeave(id);
+      showToast('删除成功', 'success');
+      fetchLeaves();
+    } catch (error) {
+      showToast('删除失败', 'error');
+    }
   };
 
-  const getTypeColor = (type: LeaveType) => {
-    const colors: Record<string, string> = {
-      [LeaveType.annual]: 'bg-blue-100 text-blue-800',
-      [LeaveType.sick]: 'bg-orange-100 text-orange-800',
-      [LeaveType.personal]: 'bg-cyan-100 text-cyan-800',
-      [LeaveType.business_trip]: 'bg-green-100 text-green-800',
-      [LeaveType.other]: 'bg-gray-100 text-gray-800'
-    };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+  const handleCancel = async (id: number) => {
+    if (!window.confirm('确定要撤销吗？')) return;
+    try {
+      await cancelLeave(id, '管理员撤销'); // SW67: 管理员操作无需原因输入，默认原因
+      showToast('撤销成功', 'success');
+      fetchLeaves();
+    } catch (error) {
+      showToast('撤销失败', 'error');
+    }
   };
 
-  const getStatusColor = (status: LeaveStatus) => {
-    const colors: Record<string, string> = {
-      [LeaveStatus.pending]: 'bg-yellow-100 text-yellow-800',
-      [LeaveStatus.approved]: 'bg-green-100 text-green-800',
-      [LeaveStatus.rejected]: 'bg-red-100 text-red-800',
-      [LeaveStatus.cancelled]: 'bg-gray-100 text-gray-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+  const resetForm = () => {
+    setFormData({
+      employeeId: 0,
+      type: LeaveType.personal,
+      startTime: '',
+      endTime: '',
+      reason: '',
+    });
+    setEditingId(null);
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (leave: LeaveVo) => {
+    setEditingId(leave.id);
+    setFormData({
+      employeeId: leave.employeeId,
+      type: leave.type,
+      startTime: new Date(leave.startTime).toISOString().slice(0, 16),
+      endTime: new Date(leave.endTime).toISOString().slice(0, 16),
+      reason: leave.reason || '',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSelectionConfirm = (items: SelectionItem[]) => {
+    setSelectedItems(items);
+    // 如果是创建模式，自动填充第一个选中的员工ID
+    if (isModalOpen && items.length > 0 && items[0].type === 'employee') {
+      setFormData(prev => ({ ...prev, employeeId: parseInt(items[0].id) }));
+    }
+    setIsSelectionModalOpen(false);
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[calc(100vh-64px)] overflow-hidden">
-      <div className="flex-1 flex flex-col p-6 min-h-0">
-        <div className="flex flex-col flex-1 bg-white rounded-lg shadow-sm p-6 min-h-0">
-          <div className="flex-shrink-0">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">请假/出差管理</h1>
-              <button
-                onClick={handleCreate}
-                className="flex items-center gap-2 px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
-              >
-                <span className="material-icons text-xl">add</span>
-                <span>申请请假</span>
-              </button>
-            </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">请假/出差管理</h1>
+        <button
+          onClick={openCreateModal}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+        >
+          <span className="material-icons text-sm">add</span>
+          新增记录
+        </button>
+      </div>
 
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div 
-                onClick={() => setIsSelectionModalOpen(true)}
-                className="relative cursor-pointer w-48"
-              >
-                <input
-                  type="text"
-                  readOnly
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A90E2] cursor-pointer"
-                  placeholder="选择部门或人员"
-                  value={selectedItems.map(i => i.name).join(', ')}
-                />
-                <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
-              </div>
-              <select
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-                value={filters.type || ''}
-                onChange={e => setFilters({...filters, type: e.target.value ? e.target.value as LeaveType : undefined})}
-              >
-                <option value="">所有类型</option>
-                <option value={LeaveType.annual}>年假</option>
-                <option value={LeaveType.sick}>病假</option>
-                <option value={LeaveType.personal}>事假</option>
-                <option value={LeaveType.business_trip}>出差</option>
-                <option value={LeaveType.other}>其他</option>
-              </select>
-              <div className="flex items-center gap-2">
-                <input
-                  type="datetime-local"
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-                  value={filters.startTime}
-                  max={filters.endTime}
-                  onChange={e => setFilters({...filters, startTime: e.target.value})}
-                />
-                <span className="text-gray-500">-</span>
-                <input
-                  type="datetime-local"
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-                  value={filters.endTime}
-                  min={filters.startTime}
-                  onChange={e => setFilters({...filters, endTime: e.target.value})}
-                />
-              </div>
-              <button
-                onClick={() => setPage(1)}
-                className="px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
-              >
-                查询
-              </button>
+      {/* 筛选栏 */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">员工筛选</label>
+            <div 
+              onClick={() => !isModalOpen && setIsSelectionModalOpen(true)}
+              className="relative cursor-pointer"
+            >
+              <input
+                type="text"
+                readOnly
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                placeholder="选择员工..."
+                value={selectedItems.map(i => i.name).join(', ')}
+              />
+              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">search</span>
             </div>
           </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+            <input
+              type="date"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
 
-          <div className="flex-1 overflow-auto min-h-0 border rounded-lg">
-            <table className="w-full text-left border-collapse min-w-[1000px] relative">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-gray-50 text-gray-600 shadow-sm">
-                <th className="p-4 font-medium">员工ID</th>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+            <input
+              type="date"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+
+          <button
+            onClick={() => {
+              setSelectedItems([]);
+              setStartDate('');
+              setEndDate('');
+            }}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            重置
+          </button>
+        </div>
+      </div>
+
+      {/* 列表表格 */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
+            <thead>
+              <tr className="bg-gray-50 text-gray-600 border-b">
+                <th className="p-4 font-medium">员工</th>
                 <th className="p-4 font-medium">类型</th>
                 <th className="p-4 font-medium">开始时间</th>
                 <th className="p-4 font-medium">结束时间</th>
-                <th className="p-4 font-medium">时长(小时)</th>
+                <th className="p-4 font-medium">时长(天)</th>
+                <th className="p-4 font-medium">原因</th>
                 <th className="p-4 font-medium">状态</th>
-                <th className="p-4 font-medium">操作</th>
+                <th className="p-4 font-medium text-right">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">
+                  <td colSpan={8} className="p-8 text-center text-gray-500">
                     加载中...
                   </td>
                 </tr>
-              ) : data.length === 0 ? (
+              ) : leaves.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">
+                  <td colSpan={8} className="p-8 text-center text-gray-500">
                     暂无数据
                   </td>
                 </tr>
               ) : (
-                data.map(item => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="p-4">{item.employeeId}</td>
+                leaves.map((leave) => (
+                  <tr key={leave.id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getTypeColor(item.type)}`}>
-                        {getTypeLabel(item.type)}
-                      </span>
-                    </td>
-                    <td className="p-4">{dayjs(item.startTime).format('YYYY-MM-DD HH:mm')}</td>
-                    <td className="p-4">{dayjs(item.endTime).format('YYYY-MM-DD HH:mm')}</td>
-                    <td className="p-4">{dayjs(item.endTime).diff(dayjs(item.startTime), 'hour', true).toFixed(1)}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(item.status)}`}>
-                        {item.status}
-                      </span>
+                      <div className="font-medium text-gray-900">
+                        {leave.employeeName || `ID: ${leave.employeeId}`}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {leave.deptName}
+                      </div>
                     </td>
                     <td className="p-4">
-                      <div className="flex gap-3">
-                        <button 
-                          onClick={() => handleEdit(item)}
-                          className="text-[#4A90E2] hover:text-[#357ABD]"
-                        >
-                          编辑
-                        </button>
-                        <button 
-                          onClick={() => handleCancelClick(item.id)}
-                          className="text-red-500 hover:text-red-700"
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        leave.type === LeaveType.business_trip ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {leaveTypeLabels[leave.type] || leave.type}
+                      </span>
+                    </td>
+                    <td className="p-4 text-gray-600">
+                      {format(new Date(leave.startTime), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                    </td>
+                    <td className="p-4 text-gray-600">
+                      {format(new Date(leave.endTime), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                    </td>
+                    <td className="p-4 text-gray-600">
+                      {((new Date(leave.endTime).getTime() - new Date(leave.startTime).getTime()) / (1000 * 60 * 60 * 24)).toFixed(1)}
+                    </td>
+                    <td className="p-4 text-gray-600 max-w-xs truncate" title={leave.reason || ''}>
+                      {leave.reason}
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[leave.status]}`}>
+                        {statusLabels[leave.status] || leave.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right space-x-2">
+                      {leave.status === LeaveStatus.approved && (
+                        <button
+                          onClick={() => handleCancel(leave.id)}
+                          className="text-orange-600 hover:text-orange-900 text-sm font-medium"
                         >
                           撤销
                         </button>
-                      </div>
+                      )}
+                      <button
+                        onClick={() => openEditModal(leave)}
+                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        onClick={() => handleDelete(leave.id)}
+                        className="text-red-600 hover:text-red-900 text-sm font-medium"
+                      >
+                        删除
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -277,67 +331,138 @@ const LeavePage: React.FC = () => {
             </tbody>
           </table>
         </div>
-
-        <div className="flex-shrink-0 flex justify-end mt-4">
-          <Pagination
-            current={page}
-            pageSize={pageSize}
-            total={total}
-            onChange={(p, ps) => {
-              setPage(p);
-              if (ps) setPageSize(ps);
-            }}
-          />
+        
+        {/* 分页 */}
+        <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            共 <span className="font-medium">{total}</span> 条记录
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 bg-white hover:bg-gray-50"
+            >
+              上一页
+            </button>
+            <span className="px-3 py-1 text-sm text-gray-600 self-center">
+              第 {page} 页
+            </span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={leaves.length < pageSize}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 bg-white hover:bg-gray-50"
+            >
+              下一页
+            </button>
+          </div>
         </div>
-
-        <LeaveDialog 
-          isOpen={isDialogOpen} 
-          onClose={() => setIsDialogOpen(false)} 
-          onSuccess={() => {
-            setIsDialogOpen(false);
-            fetchData();
-          }}
-          initialData={selectedItem}
-        />
-
-        <StandardModal
-          isOpen={confirmModalOpen}
-          onClose={() => setConfirmModalOpen(false)}
-          title="确认撤销"
-          footer={
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setConfirmModalOpen(false)}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmCancel}
-                disabled={confirmLoading}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
-              >
-                {confirmLoading ? '处理中...' : '确定'}
-              </button>
-            </div>
-          }
-        >
-          <p className="text-gray-600">确定要撤销这条记录吗？</p>
-        </StandardModal>
       </div>
-      </div>
+
+      {/* 创建/编辑弹窗 */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">
+              {editingId ? '编辑记录' : '新增记录'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  员工 ID (手动输入或使用筛选器选择)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    required
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.employeeId}
+                    onChange={(e) => setFormData({...formData, employeeId: parseInt(e.target.value)})}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsSelectionModalOpen(true)}
+                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                  >
+                    选择
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.type}
+                  onChange={(e) => setFormData({...formData, type: e.target.value as LeaveType})}
+                >
+                  {Object.values(LeaveType).map(type => (
+                    <option key={type} value={type}>{leaveTypeLabels[type]}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">原因</label>
+                <textarea
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.reason}
+                  onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  保存
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 人员选择弹窗 */}
       <PersonnelSelectionModal
         isOpen={isSelectionModalOpen}
         onClose={() => setIsSelectionModalOpen(false)}
-        onConfirm={(items) => {
-          setSelectedItems(items);
-          setIsSelectionModalOpen(false);
-          setPage(1);
-        }}
+        onConfirm={handleSelectionConfirm}
         multiple={false}
-        selectType="all"
-        title="选择部门或人员"
-        initialSelected={selectedItems}
+        title="选择员工"
       />
     </div>
   );

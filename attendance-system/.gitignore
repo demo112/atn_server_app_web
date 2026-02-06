@@ -15,3 +15,9 @@ coverage
 # Expo native directories
 packages/app/android/
 packages/app/ios/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

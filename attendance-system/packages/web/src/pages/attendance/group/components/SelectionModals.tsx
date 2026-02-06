@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MOCK_SHIFTS, MOCK_DEVICES } from '../constants';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface SelectionModalsProps {
   type: 'personnel' | 'shift' | 'device';

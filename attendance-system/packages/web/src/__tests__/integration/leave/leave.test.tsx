@@ -67,6 +67,7 @@ const mockLeaves = [
     reason: 'Vacation',
     status: LeaveStatus.approved,
     createdAt: '2023-04-20T10:00:00Z',
+    updatedAt: '2023-04-20T10:00:00Z',
   },
   {
     id: 2,
@@ -78,6 +79,7 @@ const mockLeaves = [
     reason: 'Sick leave',
     status: LeaveStatus.pending,
     createdAt: '2023-05-09T08:00:00Z',
+    updatedAt: '2023-05-09T08:00:00Z',
   },
 ];
 
@@ -85,12 +87,15 @@ describe('Leave Integration Test', () => {
   // const user = userEvent.setup();
 
   beforeEach(() => {
-    (leaveService.getLeaves as any).mockResolvedValue({
+    vi.mocked(leaveService.getLeaves).mockResolvedValue({
       items: mockLeaves,
-      total: 2,
-      page: 1,
-      pageSize: 10,
+      meta: {
+        total: 2,
+        page: 1,
+        pageSize: 10,
+      }
     });
+    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ ...mockLeaves[0], status: LeaveStatus.cancelled });
   });
 
   it('renders leave list correctly', async () => {
@@ -160,7 +165,7 @@ describe('Leave Integration Test', () => {
 
   it('cancels a leave request', async () => {
     const user = userEvent.setup();
-    vi.mocked(leaveService.cancelLeave).mockResolvedValue();
+    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ ...mockLeaves[0], status: LeaveStatus.cancelled });
 
     renderWithProviders(<LeavePage />);
 

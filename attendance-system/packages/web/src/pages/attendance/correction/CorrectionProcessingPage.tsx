@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as correctionService from '../../../services/correction';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 import { useToast } from '@/components/common/ToastProvider';
 import { CheckInDialog } from './components/CheckInDialog';
 import { CheckOutDialog } from './components/CheckOutDialog';
@@ -44,7 +44,6 @@ const CorrectionProcessingPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<DailyRecordVo | null>(null);
 
   // Selection Modal State
-  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
 
   // Filter State

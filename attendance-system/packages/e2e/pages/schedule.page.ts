@@ -142,20 +142,45 @@ export class SchedulePage extends BasePage {
     force?: boolean;
   }) {
     if (data.employeeName) {
-      const select = this.dialog.locator('select').nth(0); // First select is Employee
-      // Use regex to match "Name (Code)" pattern
-      // Playwright selectOption with label matches exactly or by substring? 
-      // Documentation says: label: "label" | RegExp
-      // So we can use regex.
-      await select.selectOption({ label: new RegExp(data.employeeName) });
+      const select = this.dialog.getByLabel('选择员工');
+      // Wait for options to populate (async fetch)
+      // Expect at least one option with value (excluding placeholder if possible, or just wait for specific option)
+      try {
+        const option = select.locator('option').filter({ hasText: data.employeeName }).first();
+        await expect(option).toBeAttached({ timeout: 10000 });
+      } catch (e) {
+        const options = await select.locator('option').allInnerTexts();
+        console.log(`[Debug] Failed to find employee "${data.employeeName}". Available options:`, options);
+        throw e;
+      }
+      const option = select.locator('option').filter({ hasText: data.employeeName }).first();
+      const value = await option.getAttribute('value');
+      if (!value) {
+        throw new Error(`Employee option containing "${data.employeeName}" not found`);
+      }
+      await select.selectOption(value);
     }
 
     // Shift select
-    const shiftSelect = this.dialog.locator('select').nth(1);
-    await shiftSelect.selectOption({ label: data.shiftName });
+    const shiftSelect = this.dialog.getByLabel('选择班次');
+    try {
+      const shiftOption = shiftSelect.locator('option').filter({ hasText: data.shiftName }).first();
+      await expect(shiftOption).toBeAttached({ timeout: 10000 });
+    } catch (e) {
+      const options = await shiftSelect.locator('option').allInnerTexts();
+      const msg = `[Debug] Failed to find shift "${data.shiftName}". Available options: ${JSON.stringify(options)}`;
+      console.log(msg);
+      throw new Error(msg + "\nOriginal Error: " + (e instanceof Error ? e.message : String(e)));
+    }
+    const shiftOption = shiftSelect.locator('option').filter({ hasText: data.shiftName }).first();
+    const shiftValue = await shiftOption.getAttribute('value');
+    if (!shiftValue) {
+      throw new Error(`Shift option "${data.shiftName}" not found`);
+    }
+    await shiftSelect.selectOption(shiftValue);
 
-    await this.dialog.locator('label:has-text("开始日期")').locator('..').locator('input').fill(data.startDate);
-    await this.dialog.locator('label:has-text("结束日期")').locator('..').locator('input').fill(data.endDate);
+    await this.dialog.getByLabel('开始日期').fill(data.startDate);
+    await this.dialog.getByLabel('结束日期').fill(data.endDate);
 
     if (data.force) {
       await this.dialog.getByLabel('强制覆盖').check();
@@ -174,15 +199,26 @@ export class SchedulePage extends BasePage {
     force?: boolean;
     includeSub?: boolean;
   }) {
-    // Batch dialog only has Shift select, Dept is pre-selected or selected in tree?
-    // BatchScheduleDialog likely takes deptId from props or allows selection.
-    // Based on BatchScheduleDialog usage in SchedulePage.tsx: deptId={selectedDeptId || undefined}
-    // So it uses the currently selected department.
-    // We should ensure a department is selected BEFORE opening dialog.
-    
-    await this.dialog.locator('label:has-text("选择班次")').locator('..').locator('select').selectOption({ label: data.shiftName });
-    await this.dialog.locator('label:has-text("开始日期")').locator('..').locator('input').fill(data.startDate);
-    await this.dialog.locator('label:has-text("结束日期")').locator('..').locator('input').fill(data.endDate);
+    // Batch dialog only has Shift select
+    const shiftSelect = this.dialog.getByLabel('选择班次');
+    try {
+      const shiftOption = shiftSelect.locator('option').filter({ hasText: data.shiftName }).first();
+      await expect(shiftOption).toBeAttached({ timeout: 10000 });
+    } catch (e) {
+      const options = await shiftSelect.locator('option').allInnerTexts();
+      const msg = `[Debug] Failed to find shift "${data.shiftName}". Available options: ${JSON.stringify(options)}`;
+      console.log(msg);
+      throw new Error(msg + "\nOriginal Error: " + (e instanceof Error ? e.message : String(e)));
+    }
+    const shiftOption = shiftSelect.locator('option').filter({ hasText: data.shiftName }).first();
+    const shiftValue = await shiftOption.getAttribute('value');
+    if (!shiftValue) {
+      throw new Error(`Shift option "${data.shiftName}" not found`);
+    }
+    await shiftSelect.selectOption(shiftValue);
+
+    await this.dialog.getByLabel('开始日期').fill(data.startDate);
+    await this.dialog.getByLabel('结束日期').fill(data.endDate);
 
     if (data.force) {
       await this.dialog.getByLabel('强制覆盖').check();

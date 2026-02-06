@@ -34,7 +34,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
   initialSelected = [],
 }) => {
   const { toast } = useToast();
-  
+
   // Left: Department Tree selection
   const [activeDeptId, setActiveDeptId] = useState<number | null>(null);
 
@@ -107,7 +107,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
          type: 'department',
          data: node
        };
-       
+
        if (!multiple) {
           setSelectedItems([item]);
        } else {
@@ -151,7 +151,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
   // Let's keep it consistent: Left is filter, Middle is list.
   // But for departments, there is no "list".
   // Special case: selectType === 'department'
-  
+
   return (
     <StandardModal
       isOpen={isOpen}
@@ -311,3 +311,5 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
     </StandardModal>
   );
 };
+
+export default PersonnelSelectionModal;

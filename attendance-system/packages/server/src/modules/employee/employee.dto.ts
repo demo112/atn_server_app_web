@@ -8,7 +8,6 @@ export const createEmployeeSchema = z.object({
   hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
   phone: z.string().optional(),
   email: z.string().email().optional(),
-  position: z.string().optional(),
 });
 
 export const updateEmployeeSchema = z.object({
@@ -17,7 +16,6 @@ export const updateEmployeeSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email().optional(),
   hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  position: z.string().optional(),
 });
 
 export const getEmployeesSchema = QueryParamsSchema.extend({

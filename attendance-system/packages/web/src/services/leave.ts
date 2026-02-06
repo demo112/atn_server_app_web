@@ -1,25 +1,69 @@
 import { api, validateResponse } from './api';
+import { ApiResponse, LeaveVo, CreateLeaveDto, LeaveQueryDto, LeaveType, LeaveStatus } from '@attendance/shared';
 import { z } from 'zod';
-import { 
-  LeaveVo, 
-  CreateLeaveDto, 
-  LeaveQueryDto, 
-  ApiResponse, 
-  PaginatedResponse 
-} from '@attendance/shared';
-import { PaginatedLeaveVoSchema, LeaveVoSchema } from '../schemas/attendance';
 
-export const getLeaves = async (params: LeaveQueryDto): Promise<PaginatedResponse<LeaveVo>> => {
-  const res = await api.get<unknown, ApiResponse<PaginatedResponse<LeaveVo>>>('/leaves', { params });
-  return validateResponse(PaginatedLeaveVoSchema, res);
+// Zod schemas for validation
+const LeaveVoSchema = z.object({
+  id: z.number(),
+  employeeId: z.number(),
+  type: z.nativeEnum(LeaveType),
+  startTime: z.string(),
+  endTime: z.string(),
+  reason: z.string().nullable().optional(),
+  status: z.nativeEnum(LeaveStatus),
+  approverId: z.number().nullable().optional(),
+  approvedAt: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  employeeName: z.string().optional(),
+  deptName: z.string().optional(),
+  approverName: z.string().optional(),
+});
+
+export const getLeaves = async (query: LeaveQueryDto & { departmentId?: number }) => {
+  // 转换参数类型，确保是数字
+  const params = {
+    ...query,
+    employeeId: query.employeeId ? Number(query.employeeId) : undefined,
+    departmentId: query.departmentId ? Number(query.departmentId) : undefined,
+  };
+  
+  const res = await api.get<unknown, ApiResponse<{ items: LeaveVo[], meta: any }>>('/leaves', { 
+    params 
+  });
+  
+  // 对于列表数据，我们信任后端返回，只做基本的结构检查
+  if (!res.success) {
+    throw new Error(res.error?.message || 'Failed to fetch leaves');
+  }
+  return res.data;
 };
 
 export const createLeave = async (data: CreateLeaveDto): Promise<LeaveVo> => {
   const res = await api.post<unknown, ApiResponse<LeaveVo>>('/leaves', data);
-  return validateResponse(LeaveVoSchema, res);
+  return validateResponse(LeaveVoSchema, res) as unknown as LeaveVo;
 };
 
-export const cancelLeave = async (id: number): Promise<void> => {
-  const res = await api.delete<unknown, ApiResponse<void>>(`/leaves/${id}`);
-  return validateResponse(z.void(), res);
+export const updateLeave = async (id: number, data: Partial<CreateLeaveDto>): Promise<LeaveVo> => {
+  const res = await api.put<unknown, ApiResponse<LeaveVo>>(`/leaves/${id}`, data);
+  return validateResponse(LeaveVoSchema, res) as unknown as LeaveVo;
+};
+
+export const deleteLeave = async (id: number): Promise<void> => {
+  await api.delete<unknown, ApiResponse<void>>(`/leaves/${id}`);
+};
+
+export const cancelLeave = async (id: number, reason: string): Promise<LeaveVo> => {
+  const res = await api.post<unknown, ApiResponse<LeaveVo>>(`/leaves/${id}/cancel`, { reason });
+  return validateResponse(LeaveVoSchema, res) as unknown as LeaveVo;
+};
+
+export const approveLeave = async (id: number, comment?: string): Promise<LeaveVo> => {
+  const res = await api.post<unknown, ApiResponse<LeaveVo>>(`/leaves/${id}/approve`, { comment });
+  return validateResponse(LeaveVoSchema, res) as unknown as LeaveVo;
+};
+
+export const rejectLeave = async (id: number, comment: string): Promise<LeaveVo> => {
+  const res = await api.post<unknown, ApiResponse<LeaveVo>>(`/leaves/${id}/reject`, { comment });
+  return validateResponse(LeaveVoSchema, res) as unknown as LeaveVo;
 };

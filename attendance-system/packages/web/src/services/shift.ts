@@ -16,12 +16,12 @@ export type UpdateShiftDaysDto = Partial<CreateShiftDaysDto>;
 export const getShifts = async (params?: { name?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Shift>> => {
   const res = await api.get<unknown, ApiResponse<PaginatedResponse<Shift>>>('/attendance/shifts', { params });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return validateResponse(createPaginatedResponseSchema(ShiftSchema) as any, res);
+  return validateResponse(createPaginatedResponseSchema(ShiftSchema) as any, res) as unknown as PaginatedResponse<Shift>;
 };
 
 export const getShift = async (id: number): Promise<Shift> => {
   const res = await api.get<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`);
-  return validateResponse(ShiftSchema, res);
+  return validateResponse(ShiftSchema, res) as unknown as Shift;
 };
 
 // Create returns AttShiftVo (with days), frontend does not rely on response here — avoid strict validation

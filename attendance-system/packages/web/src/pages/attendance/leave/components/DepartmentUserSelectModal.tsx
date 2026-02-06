@@ -1,6 +1,6 @@
 import React from 'react';
 import { EmployeeVo } from '@attendance/shared';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface Props {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface Props {
 
 export const DepartmentUserSelectModal: React.FC<Props> = ({ isOpen, onClose, onSelect }) => {
   const handleConfirm = (selected: SelectionItem[]) => {
-    if (selected.length > 0 && selected[0].type === 'employee') {
+    if (selected.length > 0 && selected[0].type === 'employee' && selected[0].data) {
       onSelect(selected[0].data as EmployeeVo);
     }
   };

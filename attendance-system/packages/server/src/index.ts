@@ -43,16 +43,8 @@ try {
   logger.info('Starting server initialization...');
   log('Initializing server configuration...');
 
-  const PORT = parseInt(process.env.PORT || '3001', 10);
+  const PORT = process.env.PORT || 3000;
   const HOST = '0.0.0.0';
-
-  log(`Configuration: PORT=${PORT}, HOST=${HOST}`);
-  logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
-
-  // Keep process alive hack
-  setInterval(() => {
-    // Heartbeat
-  }, 1000 * 60);
 
   const server = app.listen(PORT, HOST, () => {
     log(`[Startup] Server started on http://${HOST}:${PORT}`);

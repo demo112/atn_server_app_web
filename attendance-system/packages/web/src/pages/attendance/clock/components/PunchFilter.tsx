@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserListVo } from '@attendance/shared';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface PunchFilterProps {
   params: {

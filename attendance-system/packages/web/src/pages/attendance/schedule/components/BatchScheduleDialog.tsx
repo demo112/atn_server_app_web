@@ -113,8 +113,9 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">开始日期</label>
+                <label htmlFor="batchStartDate" className="block text-sm font-medium text-gray-700">开始日期</label>
                 <input 
+                    id="batchStartDate"
                     type="date" 
                     value={formData.startDate} 
                     onChange={e => setFormData({...formData, startDate: e.target.value})} 
@@ -123,8 +124,9 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
                 />
             </div>
             <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">结束日期</label>
+                <label htmlFor="batchEndDate" className="block text-sm font-medium text-gray-700">结束日期</label>
                 <input 
+                    id="batchEndDate"
                     type="date" 
                     value={formData.endDate} 
                     onChange={e => setFormData({...formData, endDate: e.target.value})} 

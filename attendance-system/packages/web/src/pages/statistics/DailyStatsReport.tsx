@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDailyRecords, exportStats, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { useToast } from '../../components/common/ToastProvider';
-import { PersonnelSelectionModal, SelectionItem } from '../../components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '../../components/common/PersonnelSelectionModal';
 
 const DailyStatsReport: React.FC = () => {
   const navigate = useNavigate();

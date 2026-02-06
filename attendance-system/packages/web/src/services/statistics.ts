@@ -27,7 +27,7 @@ export const getDepartmentSummary = async (params: GetSummaryDto): Promise<Atten
 
 export const getDailyRecords = async (params: DailyRecordQuery): Promise<PaginatedResponse<DailyRecordVo>> => {
   const res = await api.get('/statistics/daily', { params });
-  return validateResponse(PaginatedDailyRecordVoSchema, res);
+  return validateResponse(PaginatedDailyRecordVoSchema, res) as unknown as PaginatedResponse<DailyRecordVo>;
 };
 
 export const getCalendar = async (year: number, month: number, employeeId?: number): Promise<CalendarDailyVo[]> => {

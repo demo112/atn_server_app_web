@@ -3,7 +3,7 @@ import { CreateEmployeeDto, UpdateEmployeeDto, EmployeeVo, DepartmentVO } from '
 import dayjs from 'dayjs';
 import { useToast } from '@/components/common/ToastProvider';
 import { departmentService } from '@/services/department';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal from '@/components/common/PersonnelSelectionModal';
 
 interface EmployeeModalProps {
   open: boolean;
@@ -225,7 +225,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               selectType="department"
               title="选择部门"
               initialSelected={formData.deptId ? [{
-                id: formData.deptId,
+                id: String(formData.deptId),
                 name: departmentOptions.find(d => d.id === formData.deptId)?.name || '',
                 type: 'department'
               }] : []}

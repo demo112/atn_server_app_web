@@ -5,14 +5,18 @@ import { AppError } from '../../common/errors';
 import { EmployeeStatus } from '@prisma/client';
 
 // Mock logger
-vi.mock('../../common/logger', () => ({
-  logger: {
+vi.mock('../../common/logger', () => {
+  const mockLogger = {
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
     debug: vi.fn(),
-  },
-}));
+  };
+  return {
+    logger: mockLogger,
+    createLogger: vi.fn(() => mockLogger),
+  };
+});
 
 // Mock prisma
 vi.mock('../../common/db/prisma', () => ({
@@ -28,7 +32,16 @@ vi.mock('../../common/db/prisma', () => ({
       update: vi.fn(),
       findUnique: vi.fn(),
     },
-    $transaction: vi.fn((actions) => Promise.all(actions)),
+    $transaction: vi.fn((arg) => {
+      if (Array.isArray(arg)) {
+        return Promise.all(arg);
+      }
+      if (typeof arg === 'function') {
+        // Pass the mock client itself as tx
+        return arg(prisma);
+      }
+      return Promise.resolve(arg);
+    }),
   },
 }));
 
@@ -45,14 +58,23 @@ describe('EmployeeService', () => {
 
   describe('create', () => {
     it('should create employee if not exists', async () => {
-      const dto = { employeeNo: 'E001', name: 'Test' };
+      const dto = { employeeNo: 'E001', name: 'Test', deptId: 1 };
       (prisma.employee.findUnique as any).mockResolvedValue(null);
       (prisma.employee.create as any).mockResolvedValue({ ...dto, id: 1, status: 'active' });
 
       const result = await service.create(dto as any);
       expect(result).toBeDefined();
+      
+      const { deptId, ...rest } = dto;
       expect(prisma.employee.create).toHaveBeenCalledWith({
-        data: { ...dto, status: EmployeeStatus.active },
+        data: {
+          ...rest,
+          hireDate: undefined,
+          status: EmployeeStatus.active,
+          department: {
+            connect: { id: deptId }
+          }
+        },
       });
     });
 

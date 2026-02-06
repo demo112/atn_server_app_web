@@ -90,10 +90,11 @@ const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose, onConfirm, ini
             <div className="bg-slate-50 dark:bg-slate-800/40 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label htmlFor="shiftName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                     <span className="text-red-500 mr-1">*</span>班次名称
                 </label>
                 <input 
+                    id="shiftName"
                     type="text" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}

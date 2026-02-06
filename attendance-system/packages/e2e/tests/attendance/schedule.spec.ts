@@ -15,7 +15,7 @@ test.describe('排班管理 (SW65)', () => {
     shiftPage = new ShiftPage(authenticatedPage);
     
     // 1. 准备基础数据：班次
-    shiftName = `早班-${testData.workerPrefix}`;
+    shiftName = `早班-${testData.prefix}-${Date.now()}`;
     await shiftPage.goto();
     await shiftPage.create({
       name: shiftName,
@@ -24,11 +24,14 @@ test.describe('排班管理 (SW65)', () => {
     });
 
     // 2. 准备基础数据：员工和部门
-    departmentName = `Dept-${testData.workerPrefix}`;
-    // 使用 testData 辅助函数创建员工（会自动创建关联部门）
+    departmentName = `Dept-${testData.prefix}-${Date.now()}`;
+    const department = await testData.createDepartment({ name: departmentName });
+    
+    // 使用 testData 辅助函数创建员工
     const employee = await testData.createEmployee({
-      name: `Emp-${testData.workerPrefix}`,
-      phone: testData.generatePhone()
+      name: `Emp-${Date.now()}`,
+      phone: testData.generatePhone(),
+      deptId: department.id
     });
     employeeName = employee.name;
     
@@ -119,6 +122,9 @@ test.describe('排班管理 (SW65)', () => {
         
         const startDate = dayjs().add(1, 'month').format('YYYY-MM-DD');
         const endDate = dayjs().add(1, 'month').add(5, 'day').format('YYYY-MM-DD');
+
+        // 必须先选择部门，否则无法打开批量排班弹窗
+        await schedulePage.selectDept(departmentName);
 
         await schedulePage.openBatchDialog();
         
