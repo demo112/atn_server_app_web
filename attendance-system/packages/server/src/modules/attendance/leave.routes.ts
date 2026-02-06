@@ -21,4 +21,7 @@ router.put('/:id', leaveController.update.bind(leaveController));
 // 撤销/删除请假记录
 router.delete('/:id', leaveController.cancel.bind(leaveController));
 
+// 兼容前端使用的取消路径
+router.post('/:id/cancel', leaveController.cancel.bind(leaveController));
+
 export { router as leaveRouter };
