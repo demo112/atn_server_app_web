@@ -203,13 +203,8 @@ const DailyStatsReport: React.FC = () => {
               type="date" 
               className="text-sm border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full p-2.5" 
               value={startDate}
-              onChange={(e) => {
-                const newDate = e.target.value;
-                setStartDate(newDate);
-                if (endDate && newDate > endDate) {
-                  setEndDate(newDate);
-                }
-              }}
+              max={endDate}
+              onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -218,13 +213,8 @@ const DailyStatsReport: React.FC = () => {
               type="date" 
               className="text-sm border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full p-2.5" 
               value={endDate}
-              onChange={(e) => {
-                const newDate = e.target.value;
-                setEndDate(newDate);
-                if (startDate && newDate < startDate) {
-                  setStartDate(newDate);
-                }
-              }}
+              min={startDate}
+              onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">

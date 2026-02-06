@@ -22,7 +22,7 @@
 - **相关代码**：上述文件的 `onChange` 处理函数。
 
 ## 修复方案
-- **修复思路**：在 `onChange` 事件中添加联动逻辑。当修改一端日期导致范围非法时，自动将另一端日期同步为当前选择的日期。
+- **修复思路**：使用 `input[type="date"]` 的 `min` 和 `max` 属性进行限制。当选择开始日期时，自动限制结束日期的最小值为开始日期；当选择结束日期时，自动限制开始日期的最大值为结束日期。
 - **改动文件**：
     - `packages/web/src/pages/statistics/DailyStatsReport.tsx`
     - `packages/web/src/pages/attendance/details/AttendanceDetailsPage.tsx`
