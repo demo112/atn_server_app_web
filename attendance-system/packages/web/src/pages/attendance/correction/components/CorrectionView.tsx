@@ -233,7 +233,8 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
                     加载中...
                   </td>
                 </tr>
-              ) : records.map(record => (
+              ) : records.length > 0 ? (
+                records.map(record => (
                 <tr key={record.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-5 py-4">
                     <input 
@@ -272,16 +273,20 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              ) : (
+                <tr>
+                  <td colSpan={9}>
+                    <div className="py-20 text-center text-slate-400">
+                      <span className="material-icons text-6xl mb-2 opacity-20">search_off</span>
+                      <p>暂无记录</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-          {!loading && records.length === 0 && (
-            <div className="py-20 text-center text-slate-400">
-              <span className="material-icons text-6xl mb-2 opacity-20">search_off</span>
-              <p>暂无记录</p>
-            </div>
-          )}
         </div>
       </div>
 

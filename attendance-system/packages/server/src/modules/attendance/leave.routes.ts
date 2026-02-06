@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { authMiddleware as authenticate } from '../../common/middleware/auth';
 import { LeaveController } from './leave.controller';
 
-const router = Router();
+const router: Router = Router();
 const leaveController = new LeaveController();
 
 // 所有请假路由都需要认证

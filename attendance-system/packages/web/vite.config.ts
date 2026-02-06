@@ -28,10 +28,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@attendance/shared/src': path.resolve(__dirname, '../shared/src'),
       '@attendance/shared': path.resolve(__dirname, '../shared/src/index.ts'),
-      react: path.resolve(__dirname, '../../node_modules/react'),
-      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
-      'react/jsx-runtime': path.resolve(__dirname, '../../node_modules/react/jsx-runtime.js'),
-      'react/jsx-dev-runtime': path.resolve(__dirname, '../../node_modules/react/jsx-dev-runtime.js'),
     }
   },
   server: {

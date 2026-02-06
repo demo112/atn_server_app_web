@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { LeaveVo, LeaveType, LeaveStatus } from '@attendance/shared';
 import * as leaveService from '@/services/leave';
 import { LeaveDialog } from './components/LeaveDialog';
+import Pagination from './components/Pagination';
 import dayjs from 'dayjs';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/components/common/ToastProvider';
@@ -11,10 +12,11 @@ import { PersonnelSelectionModal, SelectionItem } from '@/components/common/Pers
 const LeavePage: React.FC = () => {
   const { toast } = useToast();
   const [data, setData] = useState<LeaveVo[]>([]);
-  // const [total, setTotal] = useState(0); // Unused
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   // const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null); // Replaced by modal
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
@@ -35,11 +37,16 @@ const LeavePage: React.FC = () => {
   });
 
   const fetchData = useCallback(async () => {
+    if (filters.startTime && filters.endTime && filters.startTime > filters.endTime) {
+      toast.warning('开始时间不能晚于结束时间');
+      return;
+    }
+
     try {
       setLoading(true);
       const queryParams: any = {
         page,
-        pageSize: 10,
+        pageSize,
         type: filters.type,
         startTime: filters.startTime || undefined,
         endTime: filters.endTime || undefined,
@@ -56,14 +63,14 @@ const LeavePage: React.FC = () => {
 
       const res = await leaveService.getLeaves(queryParams);
       setData(res.items || []);
-      // setTotal(res.total);
+      setTotal(res.total);
     } catch (error) {
       logger.error('Failed to fetch leaves', error);
       toast.error('加载请假列表失败');
     } finally {
       setLoading(false);
     }
-  }, [page, filters, selectedItems, toast]);
+  }, [page, pageSize, filters, selectedItems, toast]);
 
   useEffect(() => {
     fetchData();
@@ -183,6 +190,7 @@ const LeavePage: React.FC = () => {
               type="datetime-local"
               className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
               value={filters.startTime}
+              max={filters.endTime}
               onChange={e => setFilters({...filters, startTime: e.target.value})}
             />
             <span className="text-gray-500">-</span>
@@ -190,6 +198,7 @@ const LeavePage: React.FC = () => {
               type="datetime-local"
               className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
               value={filters.endTime}
+              min={filters.startTime}
               onChange={e => setFilters({...filters, endTime: e.target.value})}
             />
           </div>
@@ -267,23 +276,16 @@ const LeavePage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination - Simple implementation */}
-        <div className="flex justify-end mt-4 gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            上一页
-          </button>
-          <span className="px-3 py-1">第 {page} 页</span>
-          <button
-            disabled={data.length < 10} // Approximate check
-            onClick={() => setPage(p => p + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            下一页
-          </button>
+        <div className="flex justify-end mt-4">
+          <Pagination
+            current={page}
+            pageSize={pageSize}
+            total={total}
+            onChange={(p, ps) => {
+              setPage(p);
+              if (ps) setPageSize(ps);
+            }}
+          />
         </div>
 
         <LeaveDialog 

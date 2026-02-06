@@ -1,32 +1,74 @@
-console.log('DEBUG: Starting index.ts');
-process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
-process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
-
 import 'reflect-metadata';
-import 'dotenv/config';
-import { app } from './app';
-import { logger } from './common/logger';
+import * as fs from 'fs';
+import * as path from 'path';
 
-logger.info('Starting server initialization...');
+// Startup logger
+const logPath = path.join(process.cwd(), 'startup.log');
+const log = (msg: string) => {
+  const time = new Date().toISOString();
+  try {
+    fs.appendFileSync(logPath, `[${time}] ${msg}\n`);
+  } catch (e) {
+    console.error('Failed to write to log file:', e);
+  }
+  console.log(msg);
+};
 
-const PORT = parseInt(process.env.PORT || '3001', 10);
-const HOST = '0.0.0.0';
+log('DEBUG: Index.ts loaded - Starting application');
 
-logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
+try {
+  log('Importing dotenv/config...');
+  require('dotenv/config');
+  log('dotenv imported');
 
-// Keep process alive hack - explicitly required to prevent premature exit
-// likely due to empty event loop when Redis connection fails
-setInterval(() => {
-  // Heartbeat to keep process alive
-}, 1000 * 60);
+  log('Importing app...');
+  const { app } = require('./app');
+  log('app imported');
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`[Startup] Server started on http://${HOST}:${PORT}`);
-  logger.info({ port: PORT, env: process.env.NODE_ENV }, 'Server started');
-});
+  log('Importing logger...');
+  const { logger } = require('./common/logger');
+  log('logger imported');
 
-server.on('error', (err) => {
-  console.error('[Startup] Server listen error:', err);
-  logger.error({ err }, 'Server listen error');
+  process.on('uncaughtException', (err) => {
+    log(`Uncaught Exception: ${err.message}\n${err.stack}`);
+    console.error('Uncaught Exception:', err);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    log(`Unhandled Rejection: ${reason}`);
+    console.error('Unhandled Rejection:', reason);
+  });
+
+  logger.info('Starting server initialization...');
+  log('Initializing server configuration...');
+
+  const PORT = parseInt(process.env.PORT || '3001', 10);
+  const HOST = '0.0.0.0';
+
+  log(`Configuration: PORT=${PORT}, HOST=${HOST}`);
+  logger.info({ port: PORT, host: HOST }, 'Attempting to listen on port...');
+
+  // Keep process alive hack
+  setInterval(() => {
+    // Heartbeat
+  }, 1000 * 60);
+
+  const server = app.listen(PORT, HOST, () => {
+    log(`[Startup] Server started on http://${HOST}:${PORT}`);
+    console.log(`[Startup] Server started on http://${HOST}:${PORT}`);
+    logger.info({ port: PORT, env: process.env.NODE_ENV }, 'Server started');
+  });
+
+  server.on('error', (err: any) => {
+    log(`[Startup] Server listen error: ${err.message}`);
+    console.error('[Startup] Server listen error:', err);
+    logger.error({ err }, 'Server listen error');
+    process.exit(1);
+  });
+
+} catch (error: any) {
+  log(`CRITICAL ERROR during startup: ${error.message}\n${error.stack}`);
+  console.error('CRITICAL ERROR:', error);
   process.exit(1);
-});
+}
