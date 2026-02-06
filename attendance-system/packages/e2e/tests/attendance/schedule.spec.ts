@@ -11,6 +11,12 @@ test.describe('排班管理 (SW65)', () => {
   let departmentName: string;
 
   test.beforeEach(async ({ authenticatedPage, testData }) => {
+    // 监听浏览器控制台日志
+    authenticatedPage.on('console', msg => {
+      if (msg.type() === 'error' || msg.text().includes('[AttendanceService]') || msg.text().includes('[Debug]'))
+        console.log(`[Browser Console] ${msg.text()}`);
+    });
+
     schedulePage = new SchedulePage(authenticatedPage);
     shiftPage = new ShiftPage(authenticatedPage);
     
@@ -38,6 +44,11 @@ test.describe('排班管理 (SW65)', () => {
     // 3. 进入排班页面
     await schedulePage.goto();
     await schedulePage.waitForLoad();
+    // Select department to enable calendar and ensure data context
+    await schedulePage.selectDept(departmentName);
+    
+    // Wait for data to settle (reduce flakiness)
+    await authenticatedPage.waitForTimeout(1000);
   });
 
   test.describe('个人排班', () => {
@@ -83,7 +94,7 @@ test.describe('排班管理 (SW65)', () => {
         endDate: dayjs(endDate).add(1, 'day').format('YYYY-MM-DD'),
         force: false
       });
-      await schedulePage.submitDialog();
+      await schedulePage.dialogSubmitBtn.click();
 
       await schedulePage.toast.expectError('排班冲突');
     });
@@ -123,9 +134,6 @@ test.describe('排班管理 (SW65)', () => {
         const startDate = dayjs().add(1, 'month').format('YYYY-MM-DD');
         const endDate = dayjs().add(1, 'month').add(5, 'day').format('YYYY-MM-DD');
 
-        // 必须先选择部门，否则无法打开批量排班弹窗
-        await schedulePage.selectDept(departmentName);
-
         await schedulePage.openBatchDialog();
         
         // 假设 Page Object 封装了部门选择
@@ -145,7 +153,7 @@ test.describe('排班管理 (SW65)', () => {
         // await schedulePage.selectDepartment(departmentName); 
         
         await schedulePage.submitDialog();
-        await schedulePage.toast.expectSuccess('批量排班任务已提交');
+        await schedulePage.toast.expectSuccess(/批量排班成功/);
     });
   });
 });

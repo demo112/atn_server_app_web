@@ -1,22 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
-import fs from 'fs';
 
-function getServerPort() {
-  try {
-    const envPath = path.resolve(__dirname, '../server/.env');
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf-8');
-      const match = content.match(/^PORT=(\d+)/m);
-      if (match) return parseInt(match[1], 10);
-    }
-  } catch (e) {
-    console.warn('Failed to load server .env, using default port 3001');
-  }
-  return 3001;
-}
-
-const SERVER_PORT = getServerPort();
+const SERVER_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 // Set API_BASE_URL for ApiClient
 if (!process.env.API_BASE_URL) {
   process.env.API_BASE_URL = `http://127.0.0.1:${SERVER_PORT}`;
@@ -79,6 +63,9 @@ export default defineConfig({
       port: SERVER_PORT,
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe',
+      env: {
+        PORT: String(SERVER_PORT),
+      },
     },
     {
       command: 'pnpm --filter @attendance/web dev',

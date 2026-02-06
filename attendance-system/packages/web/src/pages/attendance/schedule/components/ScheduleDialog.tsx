@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { attendanceService } from '@/services/attendance';
 import { employeeService } from '@/services/employee';
 import { EmployeeVo, Shift } from '@attendance/shared';
@@ -61,7 +62,11 @@ export const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ isOpen, onClose,
       onClose();
     } catch (err) {
       logger.error('Schedule creation failed', err);
-      toast.error('创建失败');
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        toast.error('排班冲突');
+      } else {
+        toast.error('创建失败');
+      }
     } finally {
       setLoading(false);
     }

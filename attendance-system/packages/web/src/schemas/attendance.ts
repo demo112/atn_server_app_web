@@ -10,10 +10,10 @@ export const TimePeriodRulesSchema = z.object({
   maxWorkHours: z.number().min(0).nullable().optional(),
   lateGraceMinutes: z.number().min(0).nullable().optional(),
   earlyLeaveGraceMinutes: z.number().min(0).nullable().optional(),
-  checkInStartOffset: z.number().min(0).nullable().optional(),
-  checkInEndOffset: z.number().min(0).nullable().optional(),
-  checkOutStartOffset: z.number().min(0).nullable().optional(),
-  checkOutEndOffset: z.number().min(0).nullable().optional(),
+  checkInStartOffset: z.number().nullable().optional(),
+  checkInEndOffset: z.number().nullable().optional(),
+  checkOutStartOffset: z.number().nullable().optional(),
+  checkOutEndOffset: z.number().nullable().optional(),
   absentTime: z.number().min(0).nullable().optional(),
 });
 

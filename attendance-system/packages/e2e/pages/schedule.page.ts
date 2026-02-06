@@ -1,10 +1,12 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { BasePage } from './base.page';
+import { ToastComponent } from '../components/toast.component';
 import dayjs from 'dayjs';
 
 export class SchedulePage extends BasePage {
   readonly url = '/attendance/schedule';
 
+  readonly toast: ToastComponent;
   readonly deptTree: Locator;
   readonly calendar: Locator;
   readonly calendarCells: Locator;
@@ -22,6 +24,7 @@ export class SchedulePage extends BasePage {
 
   constructor(page: Page) {
     super(page);
+    this.toast = new ToastComponent(page);
     this.deptTree = page.locator('ul.space-y-1');
     this.calendar = page.locator('.grid.grid-cols-7');
     this.calendarCells = this.calendar.locator('.bg-white.p-1\\.5');
@@ -129,6 +132,21 @@ export class SchedulePage extends BasePage {
     await this.batchCreateBtn.click();
     await expect(this.dialog).toBeVisible();
     await expect(this.dialog).toContainText('批量排班');
+  }
+
+  /**
+   * High-level create method (CRUD style)
+   */
+  async create(data: {
+    employeeName?: string;
+    shiftName: string;
+    startDate: string;
+    endDate: string;
+    force?: boolean;
+  }) {
+    await this.openCreateDialog();
+    await this.fillCreateForm(data);
+    await this.submitDialog();
   }
 
   /**

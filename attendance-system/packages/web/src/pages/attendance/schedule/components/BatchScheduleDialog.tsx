@@ -27,7 +27,9 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
 
   const loadData = async (): Promise<void> => {
       try {
+          console.log('[BatchScheduleDialog] Loading shifts...');
           const res = await attendanceService.getShifts();
+          console.log(`[BatchScheduleDialog] Loaded ${res.length} shifts`);
           setShifts(res);
       } catch (e) {
           logger.error('Failed to load shifts', e);
@@ -95,8 +97,9 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
     >
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">选择班次</label>
+            <label htmlFor="batchShiftId" className="block text-sm font-medium text-gray-700">选择班次</label>
             <select 
+                id="batchShiftId"
                 value={formData.shiftId} 
                 onChange={e => setFormData({...formData, shiftId: e.target.value})} 
                 required 
