@@ -28,6 +28,8 @@ describe('AttendanceCorrectionService', () => {
     });
 
     service = new AttendanceCorrectionService();
+    // Default: employee exists unless overridden in specific test
+    mockPrisma.employee.findUnique.mockResolvedValue({ id: 100 } as any);
   });
 
   const mockPeriod = {
@@ -95,6 +97,26 @@ describe('AttendanceCorrectionService', () => {
       
       const dto = { dailyRecordId: '1', checkInTime: '2024-02-01T09:00:00Z' };
       await expect(service.checkIn(dto, 999)).rejects.toThrow('Period not found');
+    });
+
+    it('should throw ERR_EMPLOYEE_NOT_FOUND when employee missing', async () => {
+      mockPrisma.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
+      // employee not found
+      mockPrisma.employee.findUnique.mockResolvedValue(null as any);
+
+      const dto = { dailyRecordId: '1', checkInTime: '2024-02-01T09:00:00Z' };
+      await expect(service.checkIn(dto, 999)).rejects.toBeInstanceOf(AppError);
+      await expect(service.checkIn(dto, 999)).rejects.toMatchObject({ code: 'ERR_EMPLOYEE_NOT_FOUND', statusCode: 404 });
+    });
+
+    it('should map Prisma P2003 to ERR_INVALID_PARAM', async () => {
+      mockPrisma.attDailyRecord.findUnique.mockResolvedValue(mockRecord as any);
+      // Simulate FK violation on create
+      mockPrisma.attCorrection.create.mockRejectedValue({ code: 'P2003' } as any);
+
+      const dto = { dailyRecordId: '1', checkInTime: '2024-02-01T09:00:00Z', remark: 'x' };
+      await expect(service.checkIn(dto, 999)).rejects.toBeInstanceOf(AppError);
+      await expect(service.checkIn(dto, 999)).rejects.toMatchObject({ code: 'ERR_INVALID_PARAM', statusCode: 400 });
     });
   });
 

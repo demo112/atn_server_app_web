@@ -62,17 +62,45 @@ async function runTests() {
     });
     console.log('Status:', login.status);
     
-    if (login.data && login.data.token) {
+    const loginPayload = login.data && login.data.success ? login.data.data : login.data;
+    if (loginPayload && loginPayload.token) {
         console.log('Response: Login Success, Token received');
-        console.log('User:', login.data.user);
+        console.log('User:', loginPayload.user);
         
-        const token = login.data.token;
+        const token = loginPayload.token;
         console.log('\n--- 3. Get Current User Profile ---');
         const profile = await request('/api/v1/auth/me', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         console.log('Status:', profile.status);
         console.log('Response:', profile.data);
+
+      console.log('\n--- 4. Fetch Daily Records (for correction) ---');
+      const daily = await request('/api/v1/attendance/daily?page=1&pageSize=10', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      console.log('Status:', daily.status);
+      const dailyPayload = daily.data && daily.data.success ? daily.data.data : daily.data;
+      console.log('Count:', dailyPayload?.items?.length);
+      const firstId = dailyPayload?.items?.[0]?.id;
+      console.log('First dailyRecordId:', firstId);
+
+      if (firstId) {
+        console.log('\n--- 5. Submit Correction: check-in ---');
+        const nowIso = new Date().toISOString();
+        const checkInRes = await request('/api/v1/attendance/corrections/check-in', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }, {
+          dailyRecordId: String(firstId),
+          checkInTime: nowIso,
+          remark: 'API test'
+        });
+        console.log('Status:', checkInRes.status);
+        console.log('Response:', checkInRes.data);
+      } else {
+        console.log('No daily record available to test correction.');
+      }
     } else {
         console.log('Response:', login.data);
     }

@@ -32,36 +32,59 @@ export class AttendanceCorrectionService {
     const recordId = BigInt(dto.dailyRecordId);
     const checkInTime = dayjs(dto.checkInTime).toDate();
 
-    return await prisma.$transaction(async (tx) => {
-      // 1. 获取 DailyRecord 以确定 EmployeeId
-      const dailyRecord = await tx.attDailyRecord.findUnique({
-        where: { id: recordId }
-      });
-      if (!dailyRecord) {
-        throw new AppError('ERR_RECORD_NOT_FOUND', 'Daily record not found', 404);
-      }
-
-      // 2. 创建补签记录
-      const correction = await tx.attCorrection.create({
-        data: {
-          employeeId: dailyRecord.employeeId,
-          dailyRecordId: recordId,
-          type: CorrectionType.check_in,
-          correctionTime: checkInTime,
-          operatorId,
-          remark: dto.remark
+    try {
+      return await prisma.$transaction(async (tx) => {
+        // 1. 获取 DailyRecord 以确定 EmployeeId
+        const dailyRecord = await tx.attDailyRecord.findUnique({
+          where: { id: recordId }
+        });
+        if (!dailyRecord) {
+          throw new AppError('ERR_RECORD_NOT_FOUND', 'Daily record not found', 404);
         }
-      });
-      this.logger.info({ correctionId: correction.id }, 'checkIn: correction created');
+        // 1.1 保障 employee 外键有效，避免触发数据库外键错误
+        const employee = await tx.employee.findUnique({ where: { id: dailyRecord.employeeId } });
+        if (!employee) {
+          throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
+        }
 
-      // 3. 重算考勤
-      const updatedRecord = await this.recalculateDailyRecord(recordId, tx);
-      
-      return {
-        success: true,
-        dailyRecord: this.toDailyRecordVo(updatedRecord)
-      };
-    });
+        // 2. 创建补签记录
+        let correction: AttCorrection;
+        try {
+          correction = await tx.attCorrection.create({
+            data: {
+              employeeId: dailyRecord.employeeId,
+              dailyRecordId: recordId,
+              type: CorrectionType.check_in,
+              correctionTime: checkInTime,
+              operatorId,
+              remark: dto.remark
+            }
+          });
+        } catch (err) {
+          const code = (err as any)?.code;
+          if (code === 'P2003') {
+            throw new AppError('ERR_INVALID_PARAM', '关联员工或每日记录不存在', 400);
+          }
+          throw err;
+        }
+        this.logger.info({ correctionId: correction.id }, 'checkIn: correction created');
+
+        // 3. 重算考勤
+        const updatedRecord = await this.recalculateDailyRecord(recordId, tx);
+        
+        return {
+          success: true,
+          dailyRecord: this.toDailyRecordVo(updatedRecord)
+        };
+      });
+    } catch (error) {
+      const code = (error as any)?.code;
+      if (code === 'P2003') {
+        throw new AppError('ERR_INVALID_PARAM', '关联员工或每日记录不存在', 400);
+      }
+      this.logger.error(error, 'checkIn: failed');
+      throw error;
+    }
   }
 
   /**
@@ -83,18 +106,31 @@ export class AttendanceCorrectionService {
         if (!dailyRecord) {
           throw new AppError('ERR_RECORD_NOT_FOUND', 'Daily record not found', 404);
         }
+        // 1.1 保障 employee 外键有效
+        const employee = await tx.employee.findUnique({ where: { id: dailyRecord.employeeId } });
+        if (!employee) {
+          throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
+        }
 
         // 2. 创建补签记录
-        const correction = await tx.attCorrection.create({
-          data: {
-            employeeId: dailyRecord.employeeId,
-            dailyRecordId: recordId,
-            type: CorrectionType.check_out,
-            correctionTime: checkOutTime,
-            operatorId,
-            remark: dto.remark
+        let correction: AttCorrection;
+        try {
+          correction = await tx.attCorrection.create({
+            data: {
+              employeeId: dailyRecord.employeeId,
+              dailyRecordId: recordId,
+              type: CorrectionType.check_out,
+              correctionTime: checkOutTime,
+              operatorId,
+              remark: dto.remark
+            }
+          });
+        } catch (err) {
+          if ((err as any)?.code === 'P2003') {
+            throw new AppError('ERR_INVALID_PARAM', '关联员工或每日记录不存在', 400);
           }
-        });
+          throw err;
+        }
         this.logger.info({ correctionId: correction.id }, 'checkOut: correction created');
 
         // 3. 重算考勤
