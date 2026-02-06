@@ -158,8 +158,6 @@ const MonthlySummaryReport: React.FC = () => {
     }
   };
 
-  // Logic removed
-
   useEffect(() => {
     fetchData();
   }, [currentMonth]);

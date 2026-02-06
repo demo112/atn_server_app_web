@@ -1,13 +1,13 @@
 # 考勤计算按钮自动参数修复记录
 
 ## 问题描述
-- **现象**：在月度汇总报表中点击"考勤计算"按钮后，需要手动选择日期和输入人员ID，操作繁琐且容易出错。
+- **现象**：在月度汇总报表/月度考勤卡表中点击"考勤计算"按钮后，需要手动选择日期和输入人员ID，操作繁琐且容易出错。
 - **复现步骤**：
-  1. 进入月度汇总报表页面
+  1. 进入月度汇总报表或月度考勤卡表页面
   2. 筛选特定月份或人员
   3. 点击"考勤计算"按钮
   4. 弹出模态框要求重新输入日期和人员ID
-- **影响范围**：月度汇总报表页面的考勤重算功能
+- **影响范围**：月度汇总报表、月度考勤卡表页面的考勤重算功能
 
 ## 设计锚定
 - **所属规格**：SW62 (考勤统计)
@@ -18,7 +18,7 @@
 - **直接原因**：前端模态框设计为独立表单，未与页面筛选状态联动。
 - **根本原因**：后端计算接口仅支持 `employeeIds` 列表，不支持按照部门名称或员工姓名模糊匹配进行批量计算，导致前端无法直接传递页面筛选条件。
 - **相关代码**：
-  - Frontend: `MonthlySummaryReport.tsx`
+  - Frontend: `MonthlySummaryReport.tsx`, `MonthlyCardReport.tsx`
   - Backend: `attendance-scheduler.ts`, `statistics.controller.ts`
 
 ## 修复方案
@@ -31,6 +31,7 @@
   - `packages/server/src/modules/attendance/attendance-scheduler.ts` (Logic update)
   - `packages/server/src/modules/statistics/statistics.controller.ts` (Controller update)
   - `packages/web/src/pages/statistics/MonthlySummaryReport.tsx` (UI/UX update)
+  - `packages/web/src/pages/statistics/MonthlyCardReport.tsx` (UI/UX update)
 
 ## 验证结果
 - [x] 原问题已解决：代码逻辑已更新，模态框已移除，点击直接触发计算。
@@ -42,4 +43,4 @@
 - [ ] api-contract.md：无需更新 (内部 API 变更)
 
 ## 提交信息
-fix(statistics): 优化考勤计算按钮，自动继承页面筛选条件
+fix(statistics): 优化考勤计算按钮，自动继承页面筛选条件并移除确认弹窗
