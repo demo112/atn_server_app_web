@@ -25,6 +25,7 @@ const Sidebar: React.FC = () => {
       subItems: [
         { id: 'setting', label: '考勤设置', path: '/attendance/settings' },
         { id: 'shift', label: '班次管理', path: '/attendance/shifts' },
+        { id: 'schedule', label: '排班管理', path: '/attendance/schedule' },
       ]
     },
     { 
