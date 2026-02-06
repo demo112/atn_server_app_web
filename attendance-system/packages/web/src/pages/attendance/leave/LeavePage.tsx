@@ -72,7 +72,7 @@ const LeavePage: React.FC = () => {
       setLoading(true);
       const employeeIds = selectedItems
         .filter(i => i.type === 'employee')
-        .map(i => parseInt(i.id));
+        .map(i => parseInt(String(i.id)));
         
       const res = await getLeaves({
         page,
@@ -168,7 +168,7 @@ const LeavePage: React.FC = () => {
     setSelectedItems(items);
     // 如果是创建模式，自动填充第一个选中的员工ID
     if (isModalOpen && items.length > 0 && items[0].type === 'employee') {
-      setFormData(prev => ({ ...prev, employeeId: parseInt(items[0].id) }));
+      setFormData(prev => ({ ...prev, employeeId: parseInt(String(items[0].id)) }));
     }
     setIsSelectionModalOpen(false);
   };

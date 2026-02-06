@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import StandardModal from './StandardModal';
 import { DepartmentTree } from './DepartmentTree';
 import { employeeService } from '@/services/employee';
@@ -289,7 +289,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {selectedItems.map((item, idx) => (
+            {selectedItems.map((item) => (
               <div key={`${item.type}-${item.id}`} className="bg-white p-2 rounded border border-gray-200 shadow-sm flex justify-between items-center group">
                 <div className="flex items-center gap-2 overflow-hidden">
                   <span className="material-icons text-gray-400 text-sm">
