@@ -384,7 +384,7 @@ export class StatisticsService {
       'missing': '缺',
     };
 
-    return employees.map(emp => {
+    const result = employees.map(emp => {
       const agg = aggregations.find(a => Number(a.employee_id) === emp.id);
       const dailyMap = dailyStatusMap.get(emp.id);
       
@@ -419,6 +419,12 @@ export class StatisticsService {
         daily
       };
     });
+
+    // Safety check: ensure no BigInt remains
+    // This handles the case where Number() might have been missed or new fields added
+    return JSON.parse(JSON.stringify(result, (key, value) => 
+      typeof value === 'bigint' ? Number(value) : value
+    ));
   }
 
   async exportDepartmentSummary(dto: GetSummaryDto): Promise<Buffer> {

@@ -143,8 +143,19 @@ describe('StatisticsService', () => {
         }
       ]);
 
-      // Mock Daily Records for Grid
-      mockPrisma.attDailyRecord.findMany.mockResolvedValue([]);
+      // Mock Daily Records for Grid (findMany)
+      mockPrisma.attDailyRecord.findMany.mockResolvedValue([
+        {
+            employeeId: 1,
+            workDate: new Date('2023-01-01'),
+            status: 'normal'
+        },
+        {
+            employeeId: 1,
+            workDate: new Date('2023-01-02'),
+            status: 'late'
+        }
+      ] as any);
 
       // Execute
       const result = await service.getDepartmentSummary({

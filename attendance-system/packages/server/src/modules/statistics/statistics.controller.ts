@@ -76,22 +76,27 @@ export class StatisticsController {
   };
 
   getDepartmentSummary = async (req: Request, res: Response) => {
-    const { startDate, endDate, deptId, employeeId } = req.query as unknown as GetSummaryDto;
+    try {
+      const { startDate, endDate, deptId, employeeId } = req.query as unknown as GetSummaryDto;
 
-    if (!startDate || !endDate) {
-      throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required', 400);
+      if (!startDate || !endDate) {
+        throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required', 400);
+      }
+
+      // Convert query params to correct types
+      const dto: GetSummaryDto = {
+        startDate: startDate as string,
+        endDate: endDate as string,
+        deptId: deptId ? Number(deptId) : undefined,
+        employeeId: employeeId ? Number(employeeId) : undefined,
+      };
+
+      const data = await this.service.getDepartmentSummary(dto);
+      res.json(success(data));
+    } catch (error) {
+      console.error('getDepartmentSummary error:', error);
+      res.status(500).json({ success: false, message: error instanceof Error ? error.message : 'Internal Server Error' });
     }
-
-    // Convert query params to correct types
-    const dto: GetSummaryDto = {
-      startDate: startDate as string,
-      endDate: endDate as string,
-      deptId: deptId ? Number(deptId) : undefined,
-      employeeId: employeeId ? Number(employeeId) : undefined,
-    };
-
-    const data = await this.service.getDepartmentSummary(dto);
-    res.json(success(data));
   };
 
   getDeptStats = async (req: Request, res: Response) => {
