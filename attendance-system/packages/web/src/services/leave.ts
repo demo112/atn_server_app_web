@@ -1,5 +1,5 @@
 import { api, validateResponse } from './api';
-import { ApiResponse, LeaveVo, CreateLeaveDto, LeaveQueryDto, LeaveType, LeaveStatus } from '@attendance/shared';
+import { ApiResponse, LeaveVo, CreateLeaveDto, LeaveQueryDto, LeaveType, LeaveStatus, PaginatedResponse } from '@attendance/shared';
 import { z } from 'zod';
 
 // Zod schemas for validation
@@ -28,7 +28,7 @@ export const getLeaves = async (query: LeaveQueryDto & { departmentId?: number }
     departmentId: query.departmentId ? Number(query.departmentId) : undefined,
   };
   
-  const res = await api.get<unknown, ApiResponse<{ items: LeaveVo[], meta: any }>>('/leaves', { 
+  const res = await api.get<unknown, ApiResponse<PaginatedResponse<LeaveVo>>>('/leaves', { 
     params 
   });
   

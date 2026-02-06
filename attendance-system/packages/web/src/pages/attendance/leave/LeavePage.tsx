@@ -83,7 +83,7 @@ const LeavePage: React.FC = () => {
       });
       if (res && res.items) {
         setLeaves(res.items);
-        setTotal(res.meta.total);
+        setTotal(res.total);
       }
     } catch (error) {
       showToast('获取列表失败', 'error');

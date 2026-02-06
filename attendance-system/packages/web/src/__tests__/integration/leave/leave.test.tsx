@@ -89,11 +89,10 @@ describe('Leave Integration Test', () => {
   beforeEach(() => {
     vi.mocked(leaveService.getLeaves).mockResolvedValue({
       items: mockLeaves,
-      meta: {
-        total: 2,
-        page: 1,
-        pageSize: 10,
-      }
+      total: 2,
+      page: 1,
+      pageSize: 10,
+      totalPages: 1
     });
     vi.mocked(leaveService.cancelLeave).mockResolvedValue({ ...mockLeaves[0], status: LeaveStatus.cancelled });
   });
