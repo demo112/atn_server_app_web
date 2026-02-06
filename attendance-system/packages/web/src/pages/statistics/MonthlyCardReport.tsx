@@ -233,13 +233,33 @@ const MonthlyCardReport: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end border-b border-slate-100 pb-8 mb-6">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">统计月份</label>
-            <div className="flex items-center border border-slate-300 rounded-lg px-4 py-2.5 bg-white focus-within:ring-1 focus-within:ring-blue-500 transition-all shadow-sm">
-              <input 
-                type="month" 
-                className="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-medium" 
-                value={currentMonth}
-                onChange={(e) => setCurrentMonth(e.target.value)}
-              />
+            <div className="flex gap-2">
+              <select 
+                className="text-sm border border-slate-300 rounded-lg py-2.5 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
+                value={currentMonth.split('-')[0]}
+                onChange={(e) => {
+                  const newYear = e.target.value;
+                  const month = currentMonth.split('-')[1];
+                  setCurrentMonth(`${newYear}-${month}`);
+                }}
+              >
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
+                  <option key={year} value={year}>{year}年</option>
+                ))}
+              </select>
+              <select 
+                className="text-sm border border-slate-300 rounded-lg py-2.5 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
+                value={parseInt(currentMonth.split('-')[1])}
+                onChange={(e) => {
+                  const year = currentMonth.split('-')[0];
+                  const newMonth = String(e.target.value).padStart(2, '0');
+                  setCurrentMonth(`${year}-${newMonth}`);
+                }}
+              >
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                  <option key={month} value={month}>{month}月</option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
