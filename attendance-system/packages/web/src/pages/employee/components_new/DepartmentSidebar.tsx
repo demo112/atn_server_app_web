@@ -148,6 +148,13 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
     fetchDepartments();
   }, [fetchDepartments]);
 
+  // Default select the first department if available
+  useEffect(() => {
+    if (departments.length > 0 && !selectedId) {
+      handleSelect(departments[0]);
+    }
+  }, [departments]);
+
   // Search effect
   useEffect(() => {
     if (!searchText.trim()) {
@@ -276,22 +283,6 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
         ) : (
           // Tree View
           <>
-            <div 
-              className={`flex items-center px-2 py-1.5 rounded cursor-pointer text-sm transition-colors mb-0.5 ${
-                selectedId === '' 
-                  ? 'bg-blue-50 text-blue-600 font-medium' 
-                  : 'hover:bg-gray-50 text-gray-600'
-              }`}
-              onClick={() => handleSelect({ id: '', name: '全部部门' })}
-            >
-              <div className="flex items-center p-0.5 mr-1">
-                <span className="w-4"></span>
-              </div>
-              <span className={`material-icons text-sm mr-2 ${selectedId === '' ? 'text-blue-500' : 'text-gray-400'}`}>
-                domain
-              </span>
-              <span className="flex-1 truncate">全部部门</span>
-            </div>
             {departments.map(dept => (
               <DepartmentItem 
                 key={dept.id} 
