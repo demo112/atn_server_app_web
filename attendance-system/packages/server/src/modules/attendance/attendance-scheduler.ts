@@ -46,28 +46,53 @@ export class AttendanceScheduler {
          logger.error({ err }, 'Redis connection error');
        });
 
-       this.queue = new Queue('attendance-calculation', { connection: this.connection });
-       
-       this.worker = new Worker('attendance-calculation', async (job) => {
-        logger.info({ jobId: job.id, name: job.name }, 'Processing job');
-        if (job.name === 'daily-calculation') {
-          await this.processDailyCalculation(job.data);
-        }
-      }, { connection: this.connection });
+       // Check Redis version before initializing BullMQ
+       try {
+           const info = await this.connection.info();
+           const versionMatch = info.match(/redis_version:(\d+\.\d+\.\d+)/);
+           if (versionMatch) {
+               const version = versionMatch[1];
+               const majorVersion = parseInt(version.split('.')[0], 10);
+               if (majorVersion < 5) {
+                   logger.warn({ version }, 'Redis version is too old (requires >= 5.0.0). Attendance Scheduler will be disabled.');
+                   this.queue = undefined;
+                   this.worker = undefined;
+                   return;
+               }
+           }
+       } catch (err) {
+           logger.warn({ err }, 'Failed to check Redis version. Proceeding with caution.');
+       }
 
-      this.worker.on('completed', async (job) => {
-        logger.info({ jobId: job.id }, 'Job completed');
-        if (job.data && job.data.batchId) {
-            await this.updateBatchStatus(job.data.batchId, 'completed');
-        }
-      });
+       try {
+         this.queue = new Queue('attendance-calculation', { connection: this.connection });
+         
+         this.worker = new Worker('attendance-calculation', async (job) => {
+          logger.info({ jobId: job.id, name: job.name }, 'Processing job');
+          if (job.name === 'daily-calculation') {
+            await this.processDailyCalculation(job.data);
+          }
+        }, { connection: this.connection });
 
-      this.worker.on('failed', async (job, err) => {
-        logger.error({ jobId: job?.id, err }, 'Job failed');
-        if (job?.data && job.data.batchId) {
-            await this.updateBatchStatus(job.data.batchId, 'failed');
-        }
-      });
+        this.worker.on('completed', async (job) => {
+          logger.info({ jobId: job.id }, 'Job completed');
+          if (job.data && job.data.batchId) {
+              await this.updateBatchStatus(job.data.batchId, 'completed');
+          }
+        });
+
+        this.worker.on('failed', async (job, err) => {
+          logger.error({ jobId: job?.id, err }, 'Job failed');
+          if (job?.data && job.data.batchId) {
+              await this.updateBatchStatus(job.data.batchId, 'failed');
+          }
+        });
+       } catch (err) {
+         logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to initialize BullMQ queue/worker. Attendance Scheduler will be disabled (possibly due to Redis version incompatibility).');
+         this.queue = undefined;
+         this.worker = undefined;
+         return;
+       }
     }
 
     // Schedule daily job based on settings
