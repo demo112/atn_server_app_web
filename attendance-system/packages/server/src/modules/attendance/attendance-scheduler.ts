@@ -2,6 +2,7 @@ import { Queue, Worker } from 'bullmq';
 import { createLogger } from '../../common/logger';
 import { attendanceSettingsService } from './attendance-settings.service';
 import { prisma } from '../../common/db/prisma';
+import { AppError } from '../../common/errors';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { AttendanceCalculator } from './domain/attendance-calculator';
@@ -102,7 +103,7 @@ export class AttendanceScheduler {
   async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> {
     if (!this.queue) {
       logger.warn('Attendance scheduler not initialized, skipping calculation trigger');
-      throw new Error('Scheduler not initialized');
+      throw new AppError('ERR_SERVICE_UNAVAILABLE', '考勤计算服务未就绪（Redis连接失败），请联系管理员', 503);
     }
 
     const batchId = uuidv4();

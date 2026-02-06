@@ -173,9 +173,10 @@ const DailyStatsReport: React.FC = () => {
       };
       
       poll();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Recalculation failed', error);
-      toast.error('重算请求失败');
+      const msg = error.response?.data?.error?.message || error.message || '重算请求失败';
+      toast.error(msg);
       setRecalcLoading(false);
     }
   };
