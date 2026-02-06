@@ -32,7 +32,6 @@ export const createShift = async (data: CreateShiftDaysDto): Promise<void> => {
 export const updateShift = async (id: number, data: UpdateShiftDaysDto): Promise<void> => {
   await api.put<unknown, ApiResponse<unknown>>(`/attendance/shifts/${id}`, data);
 };
-};
 
 export const deleteShift = async (id: number): Promise<void> => {
   const res = await api.delete<unknown, ApiResponse<void>>(`/attendance/shifts/${id}`);
