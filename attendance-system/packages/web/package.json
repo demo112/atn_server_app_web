@@ -12,6 +12,7 @@
     "@attendance/shared": "workspace:*",
     "antd": "^5.14.0",
     "axios": "^1.6.0",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -21,6 +22,9 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.9",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -28,12 +32,9 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.24",
+    "mini-svg-data-uri": "^1.4.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
-    "@tailwindcss/forms": "^0.5.9",
-    "@tailwindcss/typography": "^0.5.15",
-    "@tailwindcss/postcss": "^4.1.18",
-    "mini-svg-data-uri": "^1.4.4",
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
   }
