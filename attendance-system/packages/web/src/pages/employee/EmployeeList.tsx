@@ -9,9 +9,9 @@ import { Person, FilterParams } from './types_ui';
 
 const EmployeeList: React.FC = () => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Person[]>([]);
-  const [total, setTotal] = useState(0);
+  // const [total, setTotal] = useState(0);
   const [params, setParams] = useState({ 
     page: 1, 
     pageSize: 10, 
@@ -48,7 +48,7 @@ const EmployeeList: React.FC = () => {
   });
 
   const fetchEmployees = useCallback(async (): Promise<void> => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const apiParams: any = {
         page: params.page,
@@ -60,11 +60,11 @@ const EmployeeList: React.FC = () => {
       
       const res = await employeeService.getEmployees(apiParams);
       setData(res.items.map(mapEmployeeToPerson));
-      setTotal(res.total);
+      // setTotal(res.total);
     } catch (error: any) {
         toast.error('获取人员列表失败');
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   }, [params]);
 

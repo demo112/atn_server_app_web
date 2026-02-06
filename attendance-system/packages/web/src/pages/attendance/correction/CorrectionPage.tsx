@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import CorrectionView from './components/CorrectionView';
 
 const CorrectionPage: React.FC = () => {

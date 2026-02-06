@@ -7,13 +7,13 @@ export const attendanceService = {
   // 获取排班列表
   getSchedules: async (params: ScheduleQueryDto): Promise<Schedule[]> => {
     const res = await api.get<unknown, ApiResponse<Schedule[]>>('/attendance/schedules', { params });
-    return validateResponse(z.array(ScheduleVoSchema), res);
+    return validateResponse(z.array(ScheduleVoSchema), res) as unknown as Schedule[];
   },
 
   // 创建单人排班
   createSchedule: async (data: CreateScheduleDto): Promise<Schedule> => {
     const res = await api.post<unknown, ApiResponse<Schedule>>('/attendance/schedules', data);
-    return validateResponse(ScheduleSchema, res);
+    return validateResponse(ScheduleSchema, res) as unknown as Schedule;
   },
 
   // 批量创建排班
@@ -36,7 +36,7 @@ export const attendanceService = {
     });
     
     const paginatedData = validateResponse(PaginatedShiftSchema, res);
-    return paginatedData.items;
+    return paginatedData.items as unknown as Shift[];
   },
 
   // 删除排班

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Person, FilterParams } from '../types_ui';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface Props {
   data: Person[];

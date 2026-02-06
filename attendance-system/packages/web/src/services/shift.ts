@@ -7,22 +7,22 @@ import { createPaginatedResponseSchema } from '@attendance/shared/src/schemas/co
 export const getShifts = async (params?: { name?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Shift>> => {
   const res = await api.get<unknown, ApiResponse<PaginatedResponse<Shift>>>('/attendance/shifts', { params });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return validateResponse(createPaginatedResponseSchema(ShiftSchema) as any, res);
+  return validateResponse(createPaginatedResponseSchema(ShiftSchema) as any, res) as unknown as PaginatedResponse<Shift>;
 };
 
 export const getShift = async (id: number): Promise<Shift> => {
   const res = await api.get<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`);
-  return validateResponse(ShiftSchema, res);
+  return validateResponse(ShiftSchema, res) as unknown as Shift;
 };
 
 export const createShift = async (data: CreateShiftDto): Promise<Shift> => {
   const res = await api.post<unknown, ApiResponse<Shift>>('/attendance/shifts', data);
-  return validateResponse(ShiftSchema, res);
+  return validateResponse(ShiftSchema, res) as unknown as Shift;
 };
 
 export const updateShift = async (id: number, data: UpdateShiftDto): Promise<Shift> => {
   const res = await api.put<unknown, ApiResponse<Shift>>(`/attendance/shifts/${id}`, data);
-  return validateResponse(ShiftSchema, res);
+  return validateResponse(ShiftSchema, res) as unknown as Shift;
 };
 
 export const deleteShift = async (id: number): Promise<void> => {

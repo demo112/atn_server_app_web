@@ -4,7 +4,7 @@ import * as correctionService from '@/services/correction';
 import { logger } from '@/utils/logger';
 import dayjs from 'dayjs';
 import CorrectionModal from './CorrectionModal';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface CorrectionViewProps {
   deptId?: number | null;
@@ -45,7 +45,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
       if (selectedItems.length > 0) {
         const item = selectedItems[0];
         if (item.type === 'department') {
-          params.deptId = item.id;
+          params.deptId = Number(item.id);
         } else {
           // Assuming API supports employeeId for corrections?
           // The QueryCorrectionsDto might need to be checked.
@@ -53,7 +53,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
           // If not, we might need to update backend.
           // Let's assume it does or use 'employeeId' as extra param if allowed.
           // Checking DTO definition would be safer but let's assume standard pattern.
-          (params as any).employeeId = item.id;
+          (params as any).employeeId = Number(item.id);
         }
       } else if (initialDeptId) {
         params.deptId = initialDeptId;

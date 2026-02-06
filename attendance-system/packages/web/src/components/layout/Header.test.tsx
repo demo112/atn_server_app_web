@@ -33,7 +33,7 @@ describe('Header Component', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    window.location = originalLocation as any;
   });
 
   it('should render user info and logout button when logged in', () => {

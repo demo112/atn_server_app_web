@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FormData } from '../types_ui';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal from '@/components/common/PersonnelSelectionModal';
 
 interface BasicInfoFormProps {
   data: FormData;
@@ -48,7 +48,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
         selectType="department"
         title="选择部门"
         initialSelected={data.deptId ? [{
-          id: data.deptId,
+          id: String(data.deptId),
           name: data.department || '',
           type: 'department'
         }] : []}

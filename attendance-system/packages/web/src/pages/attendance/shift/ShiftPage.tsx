@@ -148,7 +148,7 @@ const ShiftPage: React.FC = (): React.ReactElement => {
       // setLoading(true);
       // 1. Process TimePeriods
       const periodIds: number[] = [];
-
+      let index = 0;
       for (const time of uiData.times) {
         const rules = {
           lateGraceMinutes: uiData.lateGracePeriod,
@@ -161,12 +161,13 @@ const ShiftPage: React.FC = (): React.ReactElement => {
         };
 
         const periodData: CreateTimePeriodDto = {
-          name: `${uiData.name} Period`,
+          name: `${uiData.name} Period ${index + 1}`,
           type: 0, // Fixed
           startTime: time.clockIn,
           endTime: time.clockOut,
           rules,
         };
+        index++;
 
         let periodId: number;
         if (time.id) {

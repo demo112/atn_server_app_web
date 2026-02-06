@@ -13,7 +13,7 @@ import { z } from 'zod';
  */
 export const getTimePeriods = async (): Promise<TimePeriod[]> => {
   const res = await api.get<unknown, ApiResponse<TimePeriod[]>>('/attendance/time-periods');
-  return validateResponse(z.array(TimePeriodSchema), res);
+  return validateResponse(z.array(TimePeriodSchema), res) as unknown as TimePeriod[];
 };
 
 /**
@@ -21,7 +21,7 @@ export const getTimePeriods = async (): Promise<TimePeriod[]> => {
  */
 export const getTimePeriod = async (id: number): Promise<TimePeriod> => {
   const res = await api.get<unknown, ApiResponse<TimePeriod>>(`/attendance/time-periods/${id}`);
-  return validateResponse(TimePeriodSchema, res);
+  return validateResponse(TimePeriodSchema, res) as unknown as TimePeriod;
 };
 
 /**
@@ -29,7 +29,7 @@ export const getTimePeriod = async (id: number): Promise<TimePeriod> => {
  */
 export const createTimePeriod = async (data: CreateTimePeriodDto): Promise<TimePeriod> => {
   const res = await api.post<unknown, ApiResponse<TimePeriod>>('/attendance/time-periods', data);
-  return validateResponse(TimePeriodSchema, res);
+  return validateResponse(TimePeriodSchema, res) as unknown as TimePeriod;
 };
 
 /**
@@ -37,7 +37,7 @@ export const createTimePeriod = async (data: CreateTimePeriodDto): Promise<TimeP
  */
 export const updateTimePeriod = async (id: number, data: UpdateTimePeriodDto): Promise<TimePeriod> => {
   const res = await api.put<unknown, ApiResponse<TimePeriod>>(`/attendance/time-periods/${id}`, data);
-  return validateResponse(TimePeriodSchema, res);
+  return validateResponse(TimePeriodSchema, res) as unknown as TimePeriod;
 };
 
 /**

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import dayjs from 'dayjs';
 import * as correctionService from '../../../services/correction';
-import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 import type { CorrectionDailyRecordVo as DailyRecordVo, AttendanceStatus } from '@attendance/shared';
 import { useToast } from '@/components/common/ToastProvider';
 
