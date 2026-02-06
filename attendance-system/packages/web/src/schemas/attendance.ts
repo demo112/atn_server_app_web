@@ -27,7 +27,7 @@ export const TimePeriodSchema = z.object({
   restStartTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
   restEndTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
   rules: TimePeriodRulesSchema.nullable().optional(),
-  createdAt: z.string().optional(),
+  createdAt: z.string(),
   updatedAt: z.string().optional(),
 });
 
