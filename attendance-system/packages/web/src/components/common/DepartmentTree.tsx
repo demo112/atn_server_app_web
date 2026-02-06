@@ -4,6 +4,7 @@ import { DepartmentVO } from '@attendance/shared';
 
 interface DepartmentTreeProps {
   onSelect: (id: number | null) => void;
+  onNodeSelect?: (node: DepartmentVO | null) => void;
   selectedId?: number | null;
 }
 
@@ -11,8 +12,9 @@ const TreeNode: React.FC<{
   node: DepartmentVO;
   selectedId?: number | null;
   onSelect: (id: number | null) => void;
+  onNodeSelect?: (node: DepartmentVO | null) => void;
   level?: number;
-}> = ({ node, selectedId, onSelect, level = 0 }) => {
+}> = ({ node, selectedId, onSelect, onNodeSelect, level = 0 }) => {
   const isSelected = selectedId === node.id;
   const hasChildren = node.children && node.children.length > 0;
   // 虚拟根节点 ID 为 -1
@@ -32,8 +34,10 @@ const TreeNode: React.FC<{
           // 如果是虚拟根节点，点击视为取消选择或选择空
           if (isVirtualRoot) {
             onSelect(null);
+            onNodeSelect?.(null);
           } else {
             onSelect(node.id);
+            onNodeSelect?.(node);
           }
         }}
       >
@@ -50,6 +54,7 @@ const TreeNode: React.FC<{
               node={child}
               selectedId={selectedId}
               onSelect={onSelect}
+              onNodeSelect={onNodeSelect}
               level={level + 1}
             />
           ))}
@@ -59,7 +64,7 @@ const TreeNode: React.FC<{
   );
 };
 
-export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, selectedId }) => {
+export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, onNodeSelect, selectedId }) => {
   const [treeData, setTreeData] = useState<DepartmentVO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,6 +126,7 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, select
             node={node}
             selectedId={selectedId}
             onSelect={onSelect}
+            onNodeSelect={onNodeSelect}
           />
         ))}
         {treeData.length === 0 && (

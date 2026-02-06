@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import StandardModal from './StandardModal';
 import { DepartmentTree } from './DepartmentTree';
 import { employeeService } from '@/services/employee';
-import { EmployeeVo } from '@attendance/shared';
+import { EmployeeVo, DepartmentVO } from '@attendance/shared';
 import { useToast } from './ToastProvider';
 
 export type SelectionType = 'employee' | 'department' | 'all';
@@ -96,16 +96,28 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
 
   const handleDeptSelect = (deptId: number | null) => {
     setActiveDeptId(deptId);
-    
-    // If selecting departments is allowed, and we clicked a department
-    if ((selectType === 'department' || selectType === 'all') && deptId !== null && deptId !== -1) {
-      // In single select mode, if we select a dept, do we add it immediately?
-      // Usually UI requires "Add" button or double click.
-      // Here let's just highlight it for employee filtering.
-      // To select a department, user might need a specific action if mixed with employees.
-      // Simplified logic: Tree click filters employees. 
-      // To select department itself, maybe we add a "Select this department" button or checkbox in tree?
-      // For now, let's assume Tree is for filtering employees mostly, unless selectType === 'department'.
+  };
+
+  const handleDeptNodeSelect = (node: DepartmentVO | null) => {
+    // 如果是选择部门模式，点击树节点直接选中该部门
+    if (selectType === 'department' && node && node.id !== -1) {
+       const item: SelectionItem = {
+         id: node.id,
+         name: node.name,
+         type: 'department',
+         data: node
+       };
+       
+       if (!multiple) {
+          setSelectedItems([item]);
+       } else {
+          const exists = selectedItems.find(i => i.id === item.id && i.type === item.type);
+          if (exists) {
+            setSelectedItems(prev => prev.filter(i => !(i.id === item.id && i.type === item.type)));
+          } else {
+            setSelectedItems(prev => [...prev, item]);
+          }
+       }
     }
   };
 
@@ -177,11 +189,12 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
           <div className="flex-1 overflow-y-auto p-2">
             <DepartmentTree 
               onSelect={handleDeptSelect} 
+              onNodeSelect={handleDeptNodeSelect}
               selectedId={activeDeptId} 
             />
           </div>
           {/* If selecting departments, allow adding current dept */}
-          {(selectType === 'department' || selectType === 'all') && activeDeptId && activeDeptId !== -1 && (
+          {(selectType === 'all') && activeDeptId && activeDeptId !== -1 && (
             <div className="p-3 border-t border-gray-200 bg-white text-center">
               <button
                 onClick={() => {
@@ -220,7 +233,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
             {selectType === 'department' ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400">
                 <span className="material-icons text-4xl mb-2">domain</span>
-                <p>请在左侧选择部门 (暂不支持)</p>
+                <p>请在左侧点击部门进行选择</p>
               </div>
             ) : (
               <>
