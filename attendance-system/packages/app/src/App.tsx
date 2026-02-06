@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { appTheme } from './theme';
 import LoginScreen from './screens/auth/LoginScreen';
@@ -77,7 +78,12 @@ export default function App(): React.ReactElement {
   }
 
   return (
-    <PaperProvider theme={appTheme}>
+    <PaperProvider 
+      theme={appTheme}
+      settings={{
+        icon: props => <MaterialCommunityIcons {...props} />,
+      }}
+    >
       <ErrorBoundary>
         <NavigationContainer>
           <Stack.Navigator initialRouteName={isAuthenticated ? 'Home' : 'Login'}>

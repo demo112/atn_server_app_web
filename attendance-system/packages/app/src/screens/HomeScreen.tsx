@@ -82,7 +82,6 @@ const HomeScreen = () => {
             <View style={styles.grid}>
               <MenuItem title="部门管理" icon="domain" route="DepartmentList" color="#E0F2F1" />
               <MenuItem title="人员管理" icon="account-group" route="EmployeeList" color="#E0F2F1" />
-              <MenuItem title="排班管理" icon="calendar-edit" route="ShiftList" color="#E0F2F1" />
               <MenuItem title="用户管理" icon="account-cog" route="UserList" color="#E0F2F1" />
             </View>
           </>
