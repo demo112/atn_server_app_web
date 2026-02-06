@@ -175,6 +175,7 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
                 type="datetime-local"
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
                 value={formData.startTime}
+                max={formData.endTime}
                 onChange={e => setFormData({...formData, startTime: e.target.value})}
                 required
               />
@@ -187,6 +188,7 @@ export const LeaveDialog: React.FC<LeaveDialogProps> = ({
                 type="datetime-local"
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
                 value={formData.endTime}
+                min={formData.startTime}
                 onChange={e => setFormData({...formData, endTime: e.target.value})}
                 required
               />

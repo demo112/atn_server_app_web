@@ -27,11 +27,16 @@
     - `packages/web/src/pages/statistics/DailyStatsReport.tsx`
     - `packages/web/src/pages/attendance/details/AttendanceDetailsPage.tsx`
     - `packages/web/src/pages/attendance/DailyRecords.tsx`
+    - `packages/web/src/pages/statistics/MonthlySummaryReport.tsx`
+    - `packages/web/src/pages/statistics/MonthlyCardReport.tsx`
+    - `packages/web/src/pages/attendance/leave/components/LeaveDialog.tsx`
+    - `packages/web/src/pages/attendance/clock/components/PunchFilter.tsx`
 
 ## 验证结果
 - [x] 原问题已解决（通过代码逻辑审查）
 - [x] 回归测试通过（Build & Type Check 通过）
 - [x] 设计一致性确认（符合通用 UX）
+- [x] 全局扫描确认（已覆盖所有类似日期/时间选择组件）
 
 ## 提交信息
 fix(web): 修复日期选择器允许开始日期晚于结束日期的问题
