@@ -83,7 +83,7 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   onSelect, 
   onNodeSelect, 
   selectedId,
-  showVirtualRoot = true 
+  showVirtualRoot = false 
 }) => {
   const [treeData, setTreeData] = useState<DepartmentVO[]>([]);
   const [loading, setLoading] = useState(true);
