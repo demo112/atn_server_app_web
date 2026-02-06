@@ -78,6 +78,9 @@ const CorrectionProcessingPage: React.FC = () => {
           // queryParams.employeeId = item.id; // Use employeeId if supported, else use name
           queryParams.employeeName = item.name; 
         }
+      } else if (params.keyword) {
+        // 如果没有选择人员/部门，但输入了关键字，则将关键字作为 employeeName 传递
+        queryParams.employeeName = params.keyword;
       }
 
       const res = await correctionService.getDailyRecords(queryParams);

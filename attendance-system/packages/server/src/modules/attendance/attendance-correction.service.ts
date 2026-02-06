@@ -210,7 +210,12 @@ export class AttendanceCorrectionService {
         const id = Number(deptId);
         if (!isNaN(id)) employeeWhere.deptId = id;
       }
-      if (employeeName) employeeWhere.name = { contains: employeeName };
+      if (employeeName) {
+        employeeWhere.OR = [
+          { name: { contains: employeeName } },
+          { employeeNo: { contains: employeeName } }
+        ];
+      }
       if (dto.employeeId) {
         const id = Number(dto.employeeId);
         if (!isNaN(id)) employeeWhere.id = id;
