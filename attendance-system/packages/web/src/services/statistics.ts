@@ -10,7 +10,8 @@ import {
   GetChartStatsDto,
   ChartStatsVo,
   ExportStatsDto,
-  CalendarDailyVo
+  CalendarDailyVo,
+  TriggerCalculationDto
 } from '@attendance/shared';
 import {
   AttendanceSummaryVoSchema,
@@ -56,7 +57,7 @@ export const getRecalculationStatus = async (batchId: string): Promise<Calculati
   }), res);
 };
 
-export const triggerCalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> => {
+export const triggerCalculation = async (data: TriggerCalculationDto): Promise<string> => {
   const res = await api.post('/statistics/calculate', data);
   const validated = validateResponse(z.object({
     message: z.string(),

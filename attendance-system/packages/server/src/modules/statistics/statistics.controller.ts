@@ -227,7 +227,7 @@ export class StatisticsController {
       throw new AppError('ERR_FORBIDDEN', 'Only admin can trigger calculation', 403);
     }
 
-    const { startDate, endDate, employeeIds } = req.body;
+    const { startDate, endDate, employeeIds, deptId, deptName, employeeName } = req.body;
     
     if (!startDate || !endDate) {
       throw new AppError('ERR_INVALID_PARAMS', 'Start date and end date are required', 400);
@@ -236,7 +236,10 @@ export class StatisticsController {
     const batchId = await attendanceScheduler.triggerCalculation({
       startDate,
       endDate,
-      employeeIds
+      employeeIds,
+      deptId: deptId ? Number(deptId) : undefined,
+      deptName,
+      employeeName
     });
 
     res.json(success({ message: 'Calculation triggered successfully', batchId }));

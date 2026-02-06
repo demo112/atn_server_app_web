@@ -138,7 +138,7 @@ export class AttendanceScheduler {
   /**
    * 手动触发计算任务
    */
-  async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> {
+  async triggerCalculation(data: { startDate: string; endDate: string; employeeIds?: number[]; deptId?: number; deptName?: string; employeeName?: string }): Promise<string> {
     if (!this.queue && !this.useInMemory) {
       logger.warn('Attendance scheduler not initialized and fallback not enabled');
       throw new AppError('ERR_SERVICE_UNAVAILABLE', '考勤计算服务未就绪', 503);
@@ -183,7 +183,7 @@ export class AttendanceScheduler {
         return batchId;
     }
 
-    const total = daysCount * employees.length;
+    const total = daysCount;
 
     // Initial status using Hash for atomic updates
     if (this.connection) {
@@ -198,29 +198,18 @@ export class AttendanceScheduler {
         await this.connection.expire(key, 3600);
     }
 
-    // Batch add single-employee jobs
-    const jobs = [];
     let current = start;
     while (current.isBefore(end) || current.isSame(end, 'day')) {
       const dateStr = current.format('YYYY-MM-DD');
-      
-      for (const emp of employees) {
-          jobs.push({
-              name: 'daily-calculation',
-              data: {
-                  date: dateStr,
-                  employeeId: emp.id,
-                  batchId
-              }
-          });
-      }
+      await this.queue!.add('daily-calculation', {
+        date: dateStr,
+        employeeIds: data.employeeIds,
+        deptId: data.deptId,
+        deptName: data.deptName,
+        employeeName: data.employeeName,
+        batchId
+      });
       current = current.add(1, 'day');
-    }
-    
-    // Chunked add to avoid large payloads
-    const CHUNK_SIZE = 500;
-    for (let i = 0; i < jobs.length; i += CHUNK_SIZE) {
-        await this.queue.addBulk(jobs.slice(i, i + CHUNK_SIZE));
     }
     
     logger.info({ startDate: data.startDate, endDate: data.endDate, batchId, totalJobs: total }, 'Triggered manual calculation jobs');
@@ -234,7 +223,10 @@ export class AttendanceScheduler {
           try {
               await this.processDailyCalculation({
                   date: dateStr,
-                  employeeIds: data.employeeIds
+                  employeeIds: data.employeeIds,
+                  deptId: data.deptId,
+                  deptName: data.deptName,
+                  employeeName: data.employeeName
               });
               await this.updateBatchStatus(batchId, 'completed');
           } catch (err) {
@@ -322,7 +314,7 @@ export class AttendanceScheduler {
       }
   }
 
-  async processDailyCalculation(data: { date?: string, employeeIds?: number[], employeeId?: number, batchId?: string }) {
+  async processDailyCalculation(data: { date?: string, employeeIds?: number[], employeeId?: number, batchId?: string, deptId?: number, deptName?: string, employeeName?: string }) {
     const dateStr = data.date || dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     // Use UTC to ensure consistent date storage (YYYY-MM-DD 00:00:00 UTC)
     const targetDate = dayjs.utc(dateStr).startOf('day').toDate();
@@ -350,6 +342,15 @@ export class AttendanceScheduler {
     } else {
         // Only active employees for auto schedule
         where.status = 'active';
+    }
+    if (data.deptId) {
+      where.deptId = data.deptId;
+    }
+    if (data.deptName) {
+      where.department = { name: { contains: data.deptName } };
+    }
+    if (data.employeeName) {
+      where.name = { contains: data.employeeName };
     }
 
     const employees = await prisma.employee.findMany({ where });

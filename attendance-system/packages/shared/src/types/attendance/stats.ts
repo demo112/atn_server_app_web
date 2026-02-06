@@ -90,3 +90,12 @@ export interface DailyStatsVo {
   abnormalCount: number; // 异常人数（迟到/早退/缺卡）
   totalEmployees: number;// 总人数
 }
+
+export interface TriggerCalculationDto {
+  startDate: string;
+  endDate: string;
+  employeeIds?: number[];
+  deptId?: number;
+  deptName?: string;
+  employeeName?: string;
+}
