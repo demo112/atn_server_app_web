@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 
 
-import { attendanceRouter } from './modules/attendance';
+import { attendanceRouter, leaveRouter } from './modules/attendance';
 import { authRouter } from './modules/auth';
 import { userRouter } from './modules/user';
 import { employeeRouter } from './modules/employee';
@@ -37,6 +37,7 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/employees', employeeRouter);
 app.use('/api/v1/departments', departmentRouter);
 app.use('/api/v1/statistics', statisticsRouter);
+app.use('/api/v1/leaves', leaveRouter);
 app.use('/api/v1/attendance', attendanceRouter);
 
 // 错误处理中间件
