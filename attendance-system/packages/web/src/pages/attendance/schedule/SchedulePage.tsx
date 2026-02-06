@@ -4,10 +4,12 @@ import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleDialog } from './components/ScheduleDialog';
 import { BatchScheduleDialog } from './components/BatchScheduleDialog';
 import { useToast } from '@/components/common/ToastProvider';
+import { DepartmentVO } from '@attendance/shared';
 
 const SchedulePage: React.FC = (): React.ReactElement => {
   const { toast } = useToast();
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
+  const [selectedDeptName, setSelectedDeptName] = useState<string>('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0); // 用于触发日历刷新
@@ -20,7 +22,12 @@ const SchedulePage: React.FC = (): React.ReactElement => {
     <div className="flex h-full gap-5 p-2.5 bg-white">
       {/* 左侧部门树 */}
       <div className="w-[250px] flex-shrink-0 border-r border-gray-100 pr-5">
-        <DepartmentTree onSelect={setSelectedDeptId} selectedId={selectedDeptId} />
+        <DepartmentTree 
+          onSelect={setSelectedDeptId} 
+          selectedId={selectedDeptId}
+          onNodeSelect={(node: DepartmentVO | null) => setSelectedDeptName(node?.name || '')}
+          showVirtualRoot={false}
+        />
       </div>
 
       {/* 右侧内容区 */}
@@ -28,7 +35,7 @@ const SchedulePage: React.FC = (): React.ReactElement => {
         <header className="mb-5 flex justify-between items-center pb-2.5 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-800 m-0 flex items-center gap-2">
             排班管理 
-            {selectedDeptId && <span className="text-sm text-gray-500 font-normal">(部门ID: {selectedDeptId})</span>}
+            {selectedDeptId && <span className="text-sm text-gray-500 font-normal">(当前部门: {selectedDeptName})</span>}
           </h2>
           <div className="flex gap-2.5">
             <button 

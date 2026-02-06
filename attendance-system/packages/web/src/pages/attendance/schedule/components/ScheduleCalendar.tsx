@@ -75,7 +75,6 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
              <button onClick={handleNextMonth} className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">下个月 &gt;</button>
          </div>
          <div>
-             <span className="text-sm text-gray-500">当前部门: {deptId}</span>
              {loading && <span className="ml-2.5 text-sm text-primary">Loading...</span>}
          </div>
       </div>

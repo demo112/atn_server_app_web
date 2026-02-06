@@ -6,6 +6,7 @@ interface DepartmentTreeProps {
   onSelect: (id: number | null) => void;
   onNodeSelect?: (node: DepartmentVO | null) => void;
   selectedId?: number | null;
+  showVirtualRoot?: boolean;
 }
 
 const TreeNode: React.FC<{
@@ -15,10 +16,16 @@ const TreeNode: React.FC<{
   onNodeSelect?: (node: DepartmentVO | null) => void;
   level?: number;
 }> = ({ node, selectedId, onSelect, onNodeSelect, level = 0 }) => {
+  const [isOpen, setIsOpen] = useState(true);
   const isSelected = selectedId === node.id;
   const hasChildren = node.children && node.children.length > 0;
   // 虚拟根节点 ID 为 -1
   const isVirtualRoot = node.id === -1;
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
 
   return (
     <li className="select-none">
@@ -41,12 +48,20 @@ const TreeNode: React.FC<{
           }
         }}
       >
+        {/* 折叠/展开图标 */}
+        <span 
+          className={`material-icons text-lg mr-1 text-gray-400 hover:text-gray-600 transition-colors ${!hasChildren ? 'invisible' : ''}`}
+          onClick={handleToggle}
+        >
+          {isOpen ? 'arrow_drop_down' : 'arrow_right'}
+        </span>
+
         <span className="material-icons text-base mr-2 text-[#409eff]">
           {level === 0 ? 'corporate_fare' : 'folder'}
         </span>
         <span className="truncate">{node.name}</span>
       </div>
-      {hasChildren && (
+      {hasChildren && isOpen && (
         <ul className="space-y-1 mt-1">
           {node.children!.map(child => (
             <TreeNode
@@ -64,7 +79,12 @@ const TreeNode: React.FC<{
   );
 };
 
-export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, onNodeSelect, selectedId }) => {
+export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ 
+  onSelect, 
+  onNodeSelect, 
+  selectedId,
+  showVirtualRoot = true 
+}) => {
   const [treeData, setTreeData] = useState<DepartmentVO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,18 +95,21 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({ onSelect, onNode
         setLoading(true);
         const data = await departmentService.getTree();
         
-        // 添加虚拟根节点
-        const virtualRoot: DepartmentVO = {
-          id: -1,
-          name: '全公司',
-          parentId: null,
-          sortOrder: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          children: data
-        };
-        
-        setTreeData([virtualRoot]);
+        if (showVirtualRoot) {
+          // 添加虚拟根节点
+          const virtualRoot: DepartmentVO = {
+            id: -1,
+            name: '全公司',
+            parentId: null,
+            sortOrder: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            children: data
+          };
+          setTreeData([virtualRoot]);
+        } else {
+          setTreeData(data);
+        }
       } catch (err) {
         console.error('Failed to fetch department tree:', err);
         setError('加载部门失败');
