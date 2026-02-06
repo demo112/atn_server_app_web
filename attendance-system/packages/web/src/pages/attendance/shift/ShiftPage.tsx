@@ -149,14 +149,25 @@ const ShiftPage: React.FC = (): React.ReactElement => {
       const periodIds: number[] = [];
 
       for (const time of uiData.times) {
+        // Calculate offsets based on valid windows
+        const checkInStartOffset = calculateDiff(time.clockIn, time.validFromStart);
+        const checkInEndOffset = calculateDiff(time.validFromEnd, time.clockIn);
+        const checkOutStartOffset = calculateDiff(time.clockOut, time.validUntilStart);
+        const checkOutEndOffset = calculateDiff(time.validUntilEnd, time.clockOut);
+
+        // Validate offsets (must be non-negative)
+        if (checkInStartOffset < 0 || checkInEndOffset < 0 || checkOutStartOffset < 0 || checkOutEndOffset < 0) {
+          toast.error('打卡有效窗口设置错误：有效范围必须包含打卡时间');
+          return;
+        }
+
         const rules = {
           lateGraceMinutes: uiData.lateGracePeriod,
           earlyLeaveGraceMinutes: uiData.earlyLeaveGracePeriod,
-          // Calculate offsets based on valid windows
-          checkInStartOffset: calculateDiff(time.clockIn, time.validFromStart),
-          checkInEndOffset: calculateDiff(time.validFromEnd, time.clockIn),
-          checkOutStartOffset: calculateDiff(time.clockOut, time.validUntilStart),
-          checkOutEndOffset: calculateDiff(time.validUntilEnd, time.clockOut),
+          checkInStartOffset,
+          checkInEndOffset,
+          checkOutStartOffset,
+          checkOutEndOffset,
         };
 
         const periodData: CreateTimePeriodDto = {
