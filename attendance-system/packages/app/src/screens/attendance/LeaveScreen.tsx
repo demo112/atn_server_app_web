@@ -7,6 +7,7 @@ import { useAuth } from '../../utils/auth';
 import { LeaveType, EmployeeVo } from '@attendance/shared';
 import { logger } from '../../utils/logger';
 import { withAlpha } from '../../utils/colors';
+import { authService } from '../../services/auth';
 import { getErrorMessage } from '../../utils/error';
 
 const LeaveScreen = () => {
@@ -20,6 +21,7 @@ const LeaveScreen = () => {
   const [employees, setEmployees] = useState<EmployeeVo[]>([]);
   const [employeeModalVisible, setEmployeeModalVisible] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeVo | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<Partial<CreateLeaveDto>>({
@@ -30,8 +32,26 @@ const LeaveScreen = () => {
   });
 
   useEffect(() => {
+    logger.info('LeaveScreen user state:', user);
+    
+    // Refresh user info to ensure role is up-to-date
+    authService.getMe().then(res => {
+      if (res.role === 'admin') {
+        setIsAdmin(true);
+        fetchEmployees();
+      } else {
+        setIsAdmin(false);
+      }
+    }).catch(err => {
+      logger.error('Failed to refresh user info', err);
+      // Fallback to local user state
+      setIsAdmin(user?.role === 'admin');
+    });
+
     fetchLeaves();
+    
     if (user?.role === 'admin') {
+      setIsAdmin(true);
       fetchEmployees();
     }
   }, [user]);
@@ -68,7 +88,7 @@ const LeaveScreen = () => {
       return;
     }
 
-    if (user?.role === 'admin' && !selectedEmployee) {
+    if (isAdmin && !selectedEmployee) {
       Alert.alert('提示', '管理员必须选择员工');
       return;
     }
@@ -185,7 +205,7 @@ const LeaveScreen = () => {
             <Text variant="titleLarge" style={styles.modalTitle}>新建申请</Text>
             
             <ScrollView contentContainerStyle={styles.form}>
-              {user?.role === 'admin' && (
+              {isAdmin && (
                 <View style={{ marginBottom: 16 }}>
                   <Text variant="titleMedium">员工</Text>
                   <Button 
