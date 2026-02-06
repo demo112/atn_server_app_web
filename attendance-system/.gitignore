@@ -11,3 +11,7 @@ coverage
 *.log
 
 .local/
+
+# Expo native directories
+packages/app/android/
+packages/app/ios/
