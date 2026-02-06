@@ -18,9 +18,10 @@ async function globalSetup(): Promise<void> {
     console.log('[E2E] 后端服务正常');
 
     // 2. 兜底清理上次残留的测试数据
-    console.log('[E2E] 清理残留测试数据...');
-    await api.cleanupTestData('[W');
-    console.log('[E2E] 残留数据清理完成');
+    // TODO: 修复 cleanupTestData 的前缀问题，目前会导致 hanging
+    // console.log('[E2E] 清理残留测试数据...');
+    // await api.cleanupTestData('[W');
+    // console.log('[E2E] 残留数据清理完成');
 
   } catch (error) {
     console.error('[E2E] Global Setup 失败:', error);

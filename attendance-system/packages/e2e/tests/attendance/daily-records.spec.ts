@@ -38,13 +38,10 @@ test.describe('考勤明细 (SW71)', () => {
     const today = dayjs().format('YYYY-MM-DD');
     
     // 2. 执行重算
-    await dailyRecordsPage.triggerRecalculate(today, today, String(emp.id));
+    await dailyRecordsPage.triggerRecalculate(today, today);
     
     // 3. 验证
-    // 弹窗应关闭
-    await expect(dailyRecordsPage.recalcModal).not.toBeVisible();
-    
-    // 页面应刷新（可以检查 loading 状态消失，或者简单等待）
-    // 实际业务逻辑验证比较复杂（需要后端生成数据），这里重点验证 UI 流程
+    // 验证成功 Toast
+    await expect(dailyRecordsPage.page.getByText('重新计算完成')).toBeVisible();
   });
 });
