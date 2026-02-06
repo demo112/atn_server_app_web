@@ -38,6 +38,6 @@ export const userService = {
   // 删除用户
   deleteUser: async (id: number): Promise<void> => {
     const res = await api.delete<unknown, ApiResponse<void>>(`/users/${id}`);
-    return validateResponse(z.void(), res);
-  }
+    validateResponse(z.null(), res);
+  },
 };
