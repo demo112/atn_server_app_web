@@ -66,6 +66,7 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
             className="px-3 py-1.5 text-sm bg-transparent border-none focus:ring-0 w-44 dark:text-gray-200 cursor-pointer"
             type="datetime-local"
             value={params.startTime}
+            max={params.endTime}
             onChange={(e) => setParams({ ...params, startTime: e.target.value })}
           />
           <span className="px-2 text-gray-400 text-sm">至</span>
@@ -73,6 +74,7 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
             className="px-3 py-1.5 text-sm bg-transparent border-none focus:ring-0 w-44 dark:text-gray-200 cursor-pointer"
             type="datetime-local"
             value={params.endTime}
+            min={params.startTime}
             onChange={(e) => setParams({ ...params, endTime: e.target.value })}
           />
           <span className="material-symbols-outlined text-gray-400 text-sm pr-3">calendar_month</span>
