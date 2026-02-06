@@ -25,51 +25,75 @@ const MonthlySummaryReport: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  // Recalculation State - simplified, no modal
+  // Recalculation State
   const [recalcLoading, setRecalcLoading] = useState(false);
-  const [recalcModalVisible, setRecalcModalVisible] = useState(false);
-  const [recalcForm, setRecalcForm] = useState<{
-    startDate: string;
-    endDate: string;
-    targetDescription: string;
-    deptName?: string;
-    employeeName?: string;
-  }>({
-    startDate: '',
-    endDate: '',
-    targetDescription: '全部人员',
-  });
 
-  const openRecalcModal = () => {
-    const [year, month] = currentMonth.split('-');
-    const yearNum = parseInt(year);
-    const monthNum = parseInt(month);
-    const end = new Date(yearNum, monthNum, 0);
-    const startDate = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
-    const endDate = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+  const handleDirectRecalculate = async () => {
+    if (recalcLoading) return;
     
-    let targetDescription = '全部人员';
-    let employeeName: string | undefined;
-    let deptName: string | undefined;
+    setRecalcLoading(true);
+    try {
+      const [year, month] = currentMonth.split('-');
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      const end = new Date(yearNum, monthNum, 0);
+      const startDate = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+      
+      let employeeName: string | undefined;
+      let deptName: string | undefined;
 
-    if (keyword) {
-        if (searchType === 'emp') {
-            targetDescription = `人员: ${keyword}`;
-            employeeName = keyword;
-        } else if (searchType === 'dept') {
-            targetDescription = `部门: ${keyword}`;
-            deptName = keyword;
-        }
-    }
+      if (keyword) {
+          if (searchType === 'emp') {
+              employeeName = keyword;
+          } else if (searchType === 'dept') {
+              deptName = keyword;
+          }
+      }
 
-    setRecalcForm({
+      const params = {
         startDate,
         endDate,
-        targetDescription,
-        employeeName,
-        deptName
-    });
-    setRecalcModalVisible(true);
+        deptName,
+        employeeName
+      };
+
+      toast.info('正在请求重新计算...', { duration: 2000 });
+
+      const batchId = await triggerCalculation(params);
+      
+      const poll = async () => {
+        try {
+          const status = await getRecalculationStatus(batchId);
+          if (status.status === 'completed' || status.status === 'completed_with_errors') {
+            setRecalcLoading(false);
+            if (status.status === 'completed_with_errors') {
+               toast.error(status.message || '重算完成，但有部分失败');
+            } else {
+               toast.success('重新计算完成');
+            }
+            
+            // Auto refresh
+            fetchData();
+          } else if (status.status === 'failed') {
+            setRecalcLoading(false);
+            toast.error(status.message || '重算失败');
+          } else {
+            setTimeout(poll, 1000);
+          }
+        } catch (error) {
+          console.error('Polling failed', error);
+          toast.error('查询计算进度失败');
+          setRecalcLoading(false);
+        }
+      };
+      
+      poll();
+    } catch (error) {
+      logger.error('Recalculation failed', error);
+      toast.error('重算请求失败');
+      setRecalcLoading(false);
+    }
   };
 
   const fetchData = async () => {
@@ -130,69 +154,7 @@ const MonthlySummaryReport: React.FC = () => {
     }
   };
 
-  const handleRecalculate = async () => {
-    setRecalcLoading(true);
-    setRecalcModalVisible(false);
-    try {
-      const params = {
-        startDate: recalcForm.startDate,
-        endDate: recalcForm.endDate,
-        deptName: recalcForm.deptName,
-        employeeName: recalcForm.employeeName
-      };
-
-      const batchId = await triggerCalculation(params);
-      
-      const poll = async () => {
-        try {
-          const status = await getRecalculationStatus(batchId);
-          if (status.status === 'completed' || status.status === 'completed_with_errors') {
-            setRecalcLoading(false);
-            if (status.status === 'completed_with_errors') {
-               toast.error(status.message || '重算完成，但有部分失败');
-            } else {
-               toast.success('重新计算完成');
-            }
-            
-            // Auto refresh
-            fetchData();
-          } else if (status.status === 'failed') {
-            setRecalcLoading(false);
-            toast.error(status.message || '重算失败');
-          } else {
-            setTimeout(poll, 1000);
-          }
-        } catch (error) {
-          console.error('Polling failed', error);
-          toast.error('查询计算进度失败');
-          setRecalcLoading(false);
-        }
-      };
-      
-      poll();
-    } catch (error) {
-      logger.error('Recalculation failed', error);
-      toast.error('重算请求失败');
-      setRecalcLoading(false);
-    }
-  };
-
-  const recalcFooter = (
-    <div className="flex justify-end gap-3 mt-6">
-      <button
-        onClick={() => setRecalcModalVisible(false)}
-        className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition"
-      >
-        取消
-      </button>
-      <button
-        onClick={handleRecalculate}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition shadow-sm"
-      >
-        确认重算
-      </button>
-    </div>
-  );
+  // Logic removed
 
   useEffect(() => {
     fetchData();
@@ -211,10 +173,10 @@ const MonthlySummaryReport: React.FC = () => {
       <div className="m-4 p-5 bg-white rounded-xl shadow-sm border border-slate-200">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-500">统计月份</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">统计月份</label>
             <div className="flex gap-2">
               <select
-                className="text-sm border border-slate-300 rounded-lg py-2.5 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
+                className="text-sm border border-slate-300 rounded-lg py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
                 value={currentMonth.split('-')[0]}
                 onChange={(e) => {
                   const newYear = e.target.value;
@@ -227,7 +189,7 @@ const MonthlySummaryReport: React.FC = () => {
                 ))}
               </select>
               <select
-                className="text-sm border border-slate-300 rounded-lg py-2.5 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
+                className="text-sm border border-slate-300 rounded-lg py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
                 value={parseInt(currentMonth.split('-')[1])}
                 onChange={(e) => {
                   const year = currentMonth.split('-')[0];
@@ -242,10 +204,10 @@ const MonthlySummaryReport: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-500">查询范围</label>
-            <div className="flex border border-slate-200 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 shadow-sm transition-all">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">查询范围</label>
+            <div className="flex border border-slate-300 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 shadow-sm transition-all">
               <select 
-                className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-200 w-32 py-2"
+                className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-300 w-28 py-2 font-medium"
                 value={searchType}
                 onChange={(e) => setSearchType(e.target.value as any)}
               >
@@ -256,7 +218,7 @@ const MonthlySummaryReport: React.FC = () => {
               <input 
                 type="text" 
                 placeholder="输入名称、工号或部门" 
-                className="flex-1 text-sm border-none focus:ring-0 py-2 px-3"
+                className="flex-1 text-sm border-none focus:ring-0 py-2 px-4"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchData()}
@@ -265,13 +227,13 @@ const MonthlySummaryReport: React.FC = () => {
           </div>
           <div className="flex items-center space-x-3">
             <button 
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition shadow-sm font-semibold text-sm active:scale-95"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition shadow-sm font-bold text-sm active:scale-95"
               onClick={fetchData}
               disabled={loading}
             >
               {loading ? '查询中...' : '查询'}
             </button>
-            <button className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 px-6 py-2 rounded-lg transition font-semibold text-sm text-slate-600 active:scale-95">重置</button>
+            <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 px-6 py-2 rounded-lg transition font-bold text-sm text-slate-600 active:scale-95">重置</button>
           </div>
         </div>
       </div>
@@ -281,7 +243,7 @@ const MonthlySummaryReport: React.FC = () => {
           <button 
             onClick={handleExport}
             disabled={exporting || data.length === 0}
-            className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {exporting ? (
               <span className="material-icons-outlined text-xl animate-spin text-blue-600">sync</span>
@@ -291,11 +253,11 @@ const MonthlySummaryReport: React.FC = () => {
             <span>{exporting ? '导出中...' : '导出报表'}</span>
           </button>
           <button 
-            onClick={openRecalcModal}
+            onClick={handleDirectRecalculate}
             disabled={recalcLoading}
-            className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className={`material-icons-outlined text-xl ${recalcLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`}>refresh</span>
+            <span className={`material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600 ${recalcLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`}>refresh</span>
             <span>{recalcLoading ? '计算中...' : '考勤计算'}</span>
             <span className="material-icons-outlined text-sm text-slate-300 ml-1">help_outline</span>
           </button>
@@ -429,42 +391,6 @@ const MonthlySummaryReport: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <StandardModal
-        isOpen={recalcModalVisible}
-        onClose={() => setRecalcModalVisible(false)}
-        title="确认重算考勤"
-        footer={recalcFooter}
-        width="max-w-md"
-      >
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-icons-outlined text-blue-600">info</span>
-              <span className="font-bold">即将执行考勤重算</span>
-            </div>
-            <p className="leading-relaxed opacity-90">
-              系统将根据当前的考勤规则重新计算指定范围内的考勤结果。此操作可能需要几分钟时间，请耐心等待。
-            </p>
-          </div>
-
-          <div className="bg-slate-50 rounded-lg p-4 space-y-3 border border-slate-200">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-500 font-medium">开始日期</span>
-              <span className="text-sm font-bold text-slate-700 font-mono">{recalcForm.startDate}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-500 font-medium">结束日期</span>
-              <span className="text-sm font-bold text-slate-700 font-mono">{recalcForm.endDate}</span>
-            </div>
-            <div className="border-t border-slate-200 my-2"></div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-500 font-medium">计算对象</span>
-              <span className="text-sm font-bold text-blue-700">{recalcForm.targetDescription}</span>
-            </div>
-          </div>
-        </div>
-      </StandardModal>
     </div>
   );
 };

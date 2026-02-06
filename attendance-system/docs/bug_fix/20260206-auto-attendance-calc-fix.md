@@ -25,7 +25,7 @@
 - **修复思路**：
   1. 扩展后端计算接口，支持 `deptName` 和 `employeeName` 参数。
   2. 修改前端逻辑，点击按钮时自动获取当前页面的月份范围和筛选条件。
-  3. 将模态框改为确认框，展示即将计算的范围，不再需要用户手动输入。
+  3. (最新) 移除确认模态框，点击按钮直接触发计算，计算范围固定为当前选择的月份。
 - **改动文件**：
   - `packages/shared/src/types/attendance/stats.ts` (DTO update)
   - `packages/server/src/modules/attendance/attendance-scheduler.ts` (Logic update)
@@ -33,7 +33,7 @@
   - `packages/web/src/pages/statistics/MonthlySummaryReport.tsx` (UI/UX update)
 
 ## 验证结果
-- [x] 原问题已解决：代码逻辑已更新，模态框现在自动显示当前筛选条件。
+- [x] 原问题已解决：代码逻辑已更新，模态框已移除，点击直接触发计算。
 - [x] 回归测试通过：TypeScript 编译检查通过，无类型错误。
 - [x] 设计一致性确认：符合简化用户操作的设计意图。
 
