@@ -1,8 +1,23 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "sourceMap": true
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@attendance/shared": ["../../packages/shared/src"],
+      "@attendance/shared/*": ["../../packages/shared/src/*"]
+    },
+    "outDir": "./dist",
+    "noEmit": true
   },
+  "include": ["src/**/*"],
   "ts-node": {
     "transpileOnly": true
   }
