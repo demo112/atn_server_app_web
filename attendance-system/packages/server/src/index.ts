@@ -43,7 +43,11 @@ try {
   logger.info('Starting server initialization...');
   log('Initializing server configuration...');
 
-  const PORT = parseInt(process.env.PORT || '3001', 10);
+  // Enforce PORT 3000 as per project rules
+  if (process.env.PORT && process.env.PORT !== '3000') {
+    log(`WARNING: PORT in .env is ${process.env.PORT}, but enforcing 3000 per project rules.`);
+  }
+  const PORT = 3000;
   const HOST = '0.0.0.0';
 
   log(`Configuration: PORT=${PORT}, HOST=${HOST}`);
