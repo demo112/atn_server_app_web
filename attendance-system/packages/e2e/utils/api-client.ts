@@ -11,7 +11,7 @@ export interface ApiLoginResponse {
 export class ApiClient {
   private request: APIRequestContext;
   private token: string | null = null;
-  private readonly baseUrl = process.env.API_BASE_URL || 'http://localhost:3001'; // Default API URL
+  private readonly baseUrl = process.env.API_BASE_URL || 'http://127.0.0.1:3001'; // Default API URL
 
   constructor(request: APIRequestContext) {
     this.request = request;
@@ -123,6 +123,39 @@ export class ApiClient {
 
   async deleteEmployee(id: number) {
     return this.delete(`/api/v1/employees/${id}`);
+  }
+
+  // Attendance
+  async createTimePeriod(data: any) {
+    const res = await this.post('/api/v1/attendance/time-periods', data);
+    return res.data;
+  }
+
+  async deleteTimePeriod(id: number) {
+    return this.delete(`/api/v1/attendance/time-periods/${id}`);
+  }
+
+  async createShift(data: any) {
+    const res = await this.post('/api/v1/attendance/shifts', data);
+    return res.data;
+  }
+
+  async deleteShift(id: number) {
+    return this.delete(`/api/v1/attendance/shifts/${id}`);
+  }
+
+  async createSchedule(data: any) {
+    const res = await this.post('/api/v1/attendance/schedules', data);
+    return res.data;
+  }
+
+  async deleteSchedule(id: number) {
+    return this.delete(`/api/v1/attendance/schedules/${id}`);
+  }
+
+  async recalculate(data: { startDate: string; endDate: string; employeeIds?: number[] }) {
+    const res = await this.post('/api/v1/attendance/recalculate', data);
+    return res.data;
   }
 
   // Cleanup

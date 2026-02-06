@@ -21,6 +21,7 @@
     "@faker-js/faker": "^10.2.0",
     "@playwright/test": "^1.50.1",
     "@types/node": "^22.13.1",
+    "date-fns": "^4.1.0",
     "fast-check": "^3.15.0",
     "typescript": "^5.0.0",
     "vitest": "^2.1.8"

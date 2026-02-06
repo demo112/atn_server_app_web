@@ -6,6 +6,9 @@ export class TestDataFactory {
   private api: ApiClient | null = null;
   private createdEmployeeIds: number[] = [];
   private createdDepartmentIds: number[] = [];
+  private createdScheduleIds: number[] = [];
+  private createdShiftIds: number[] = [];
+  private createdTimePeriodIds: number[] = [];
 
   constructor(workerId: number | string, api?: ApiClient) {
     this.prefix = `[W${workerId}]`;
@@ -71,6 +74,55 @@ export class TestDataFactory {
     return department;
   }
 
+  async createTimePeriod(overrides: any = {}) {
+    if (!this.api) throw new Error('API client not set');
+    const data = {
+      name: `${this.prefix}Time_${Date.now()}`,
+      type: 0, // 0: Normal
+      startTime: '09:00',
+      endTime: '18:00',
+      ...overrides
+    };
+    const period = await this.api.createTimePeriod(data);
+    this.createdTimePeriodIds.push(period.id);
+    return period;
+  }
+
+  async createShift(overrides: any = {}) {
+    if (!this.api) throw new Error('API client not set');
+    
+    // If no days provided, create a default time period and assign it
+    let days = overrides.days;
+    if (!days) {
+      const period = await this.createTimePeriod();
+      days = [
+        { dayOfCycle: 1, periodIds: [period.id] },
+        { dayOfCycle: 2, periodIds: [period.id] },
+        { dayOfCycle: 3, periodIds: [period.id] },
+        { dayOfCycle: 4, periodIds: [period.id] },
+        { dayOfCycle: 5, periodIds: [period.id] }
+      ];
+    }
+
+    const data = {
+      name: `${this.prefix}Shift_${Date.now()}`,
+      cycleDays: 7,
+      days,
+      ...overrides
+    };
+    
+    const shift = await this.api.createShift(data);
+    this.createdShiftIds.push(shift.id);
+    return shift;
+  }
+
+  async createSchedule(data: { employeeId: number; shiftId: number; startDate: string; endDate: string }) {
+    if (!this.api) throw new Error('API client not set');
+    const schedule = await this.api.createSchedule(data);
+    this.createdScheduleIds.push(schedule.id);
+    return schedule;
+  }
+
   /** 清理本工厂创建的所有数据 */
   async cleanup(): Promise<void> {
     if (!this.api) return;
@@ -93,8 +145,38 @@ export class TestDataFactory {
       }
     }
 
+    // 删除排班
+    for (const id of this.createdScheduleIds) {
+      try {
+        await this.api.deleteSchedule(id);
+      } catch {
+        // 忽略
+      }
+    }
+
+    // 删除班次
+    for (const id of this.createdShiftIds) {
+      try {
+        await this.api.deleteShift(id);
+      } catch {
+        // 忽略
+      }
+    }
+
+    // 删除时间段
+    for (const id of this.createdTimePeriodIds) {
+      try {
+        await this.api.deleteTimePeriod(id);
+      } catch {
+        // 忽略
+      }
+    }
+
     this.createdEmployeeIds = [];
     this.createdDepartmentIds = [];
+    this.createdScheduleIds = [];
+    this.createdShiftIds = [];
+    this.createdTimePeriodIds = [];
   }
 
   /** 获取已创建的员工 ID 列表 */
