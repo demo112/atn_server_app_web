@@ -64,14 +64,14 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{title}</h3>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="px-6 py-3 bg-[#409eff] flex justify-between items-center">
+          <h3 className="text-lg font-medium text-white">{title}</h3>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 focus:outline-none"
+            className="text-white/80 hover:text-white hover:bg-white/10 rounded-full p-1 transition-colors focus:outline-none flex items-center justify-center"
           >
-            <span className="material-icons-round">close</span>
+            <span className="material-icons text-xl">close</span>
           </button>
         </div>
 
@@ -83,7 +83,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               部门名称 <span className="text-red-500">*</span>
             </label>
             <input
@@ -91,7 +91,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="请输入部门名称"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:text-white sm:text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#409eff]/50 focus:border-[#409eff] sm:text-sm"
               autoFocus
             />
           </div>
@@ -100,14 +100,14 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#409eff]"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#409eff] hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#409eff] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '保存中...' : '保存'}
             </button>

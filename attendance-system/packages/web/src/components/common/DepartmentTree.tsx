@@ -23,7 +23,7 @@ const TreeNode: React.FC<{
       <div
         className={`px-2 py-1.5 cursor-pointer rounded text-sm flex items-center transition-colors ${
           isSelected 
-            ? 'bg-blue-50 text-blue-600 font-medium' 
+            ? 'bg-blue-50 text-[#409eff] font-medium' 
             : 'text-gray-600 hover:bg-gray-100'
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
@@ -37,8 +37,8 @@ const TreeNode: React.FC<{
           }
         }}
       >
-        <span className="mr-2 text-base">
-          {level === 0 ? '🏢' : (hasChildren ? '📂' : '└─')}
+        <span className="material-icons text-base mr-2 text-[#409eff]">
+          {level === 0 ? 'corporate_fare' : 'folder'}
         </span>
         <span className="truncate">{node.name}</span>
       </div>

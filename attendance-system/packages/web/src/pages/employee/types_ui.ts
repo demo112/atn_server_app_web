@@ -21,6 +21,8 @@ export interface FilterParams {
   name: string;
   idNumber: string;
   status: string;
+  deptId?: number;
+  employeeId?: number;
 }
 
 export enum ModalTab {

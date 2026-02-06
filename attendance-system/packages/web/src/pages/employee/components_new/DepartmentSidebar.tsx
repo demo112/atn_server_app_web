@@ -43,58 +43,58 @@ const DepartmentItem: React.FC<DepartmentItemProps> = ({
   };
 
   return (
-    <div className="">
+    <div className="select-none">
       <div 
-        className={`group flex items-center px-2 py-2 rounded cursor-pointer text-sm transition-colors ${
+        className={`group flex items-center px-2 py-1.5 rounded cursor-pointer text-sm transition-colors mb-0.5 ${
           isSelected 
-            ? 'bg-blue-100 dark:bg-blue-900/40 text-primary font-medium' 
-            : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-700 dark:text-slate-300'
+            ? 'bg-blue-50 text-blue-600 font-medium' 
+            : 'hover:bg-gray-50 text-gray-600'
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleItemClick}
       >
-        <div onClick={handleExpandClick} className="flex items-center">
+        <div onClick={handleExpandClick} className="flex items-center cursor-pointer p-0.5 rounded hover:bg-black/5 mr-1">
           {dept.children && dept.children.length > 0 ? (
-            <span className={`material-icons-round text-sm mr-1 ${isSelected ? 'text-primary' : 'text-slate-400'}`}>
-              {isOpen ? 'indeterminate_check_box' : 'add_box'}
+            <span className={`material-icons text-xs transition-transform duration-200 ${isOpen ? 'rotate-90' : ''} ${isSelected ? 'text-blue-500' : 'text-gray-400'}`}>
+              chevron_right
             </span>
           ) : (
-             <span className="w-4 mr-1"></span>
+             <span className="w-4"></span>
           )}
         </div>
         
-        <span className={`material-icons-round text-sm mr-1 ${level === 0 ? 'text-amber-500' : (isSelected ? 'text-primary' : 'text-slate-400')}`}>
-          {level === 0 ? 'folder_open' : 'account_tree'}
+        <span className={`material-icons text-sm mr-2 ${level === 0 ? 'text-blue-500' : (isSelected ? 'text-blue-500' : 'text-gray-400')}`}>
+          {level === 0 ? 'corporate_fare' : 'folder'}
         </span>
         <span className="flex-1 truncate">{dept.name}</span>
         
-        <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-0.5 ml-2 transition-opacity">
+        <div className="opacity-0 group-hover:opacity-100 flex items-center ml-2 transition-opacity">
           <button 
-            className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-primary transition-colors" 
+            className="p-1 hover:bg-white rounded text-gray-400 hover:text-blue-500 transition-colors" 
             title="添加子部门"
             onClick={(e) => { e.stopPropagation(); onAdd(dept); }}
           >
-            <span className="material-symbols-outlined text-[16px]">add</span>
+            <span className="material-icons text-[14px]">add</span>
           </button>
           <button 
-            className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-primary transition-colors" 
+            className="p-1 hover:bg-white rounded text-gray-400 hover:text-blue-500 transition-colors" 
             title="编辑部门"
             onClick={(e) => { e.stopPropagation(); onEdit(dept); }}
           >
-            <span className="material-symbols-outlined text-[16px]">edit</span>
+            <span className="material-icons text-[14px]">edit</span>
           </button>
           <button 
-            className="p-1 hover:bg-white/50 dark:hover:bg-black/20 rounded text-slate-400 hover:text-red-500 transition-colors" 
+            className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-colors" 
             title="删除部门"
             onClick={(e) => { e.stopPropagation(); onDelete(dept); }}
           >
-            <span className="material-symbols-outlined text-[16px]">delete</span>
+            <span className="material-icons text-[14px]">delete</span>
           </button>
         </div>
       </div>
       
       {isOpen && dept.children && (
-        <div className="border-l border-slate-200 dark:border-slate-700 ml-4 pl-0">
+        <div className="">
           {dept.children.map(child => (
             <DepartmentItem 
               key={child.id} 
@@ -127,6 +127,10 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [currentDept, setCurrentDept] = useState<DepartmentVO | null>(null);
   const [parentDept, setParentDept] = useState<DepartmentVO | null>(null);
+  
+  // Search state
+  const [searchText, setSearchText] = useState('');
+  const [searchResults, setSearchResults] = useState<Department[]>([]);
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
@@ -143,6 +147,29 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
   useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
+
+  // Search effect
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const flatten = (nodes: Department[]): Department[] => {
+      let res: Department[] = [];
+      for (const node of nodes) {
+        res.push(node);
+        if (node.children) {
+          res = res.concat(flatten(node.children));
+        }
+      }
+      return res;
+    };
+
+    const all = flatten(departments);
+    const filtered = all.filter(d => d.name.toLowerCase().includes(searchText.toLowerCase()));
+    setSearchResults(filtered);
+  }, [searchText, departments]);
 
   const handleSelect = (dept: Department) => {
     setSelectedId(dept.id);
@@ -194,55 +221,71 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
   };
 
   return (
-    <aside className="w-72 bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark flex flex-col flex-shrink-0">
-      <div className="p-4 border-b border-border-light dark:border-border-dark">
+    <aside className="w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full">
+      <div className="p-4 border-b border-gray-200">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold">部门</h3>
+          <h3 className="text-sm font-bold text-gray-700">部门架构</h3>
           <button 
+            className="p-1 hover:bg-blue-50 text-blue-500 rounded transition-colors"
             onClick={handleAddRoot}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-primary"
-            title="新增一级部门"
+            title="添加根部门"
           >
-            <span className="material-icons-round text-sm">add</span>
+            <span className="material-icons text-sm">add</span>
           </button>
         </div>
         
-        <div className="relative mb-3">
+        <div className="relative">
+          <span className="material-icons absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
           <input 
-            className="w-full pl-8 pr-3 py-1.5 text-sm border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded focus:ring-primary focus:border-primary dark:text-white" 
-            placeholder="请输入关键字" 
-            type="text"
+            className="w-full text-xs border border-gray-300 rounded pl-8 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" 
+            placeholder="搜索部门" 
+            type="text" 
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
-          <span className="material-icons-round absolute left-2 top-2 text-slate-400 text-sm">search</span>
         </div>
-        <label className="flex items-center space-x-2 text-xs text-slate-500 cursor-pointer">
-          <input className="rounded text-primary focus:ring-primary border-slate-300 w-3.5 h-3.5" type="checkbox"/>
-          <span>显示子部门成员</span>
-        </label>
       </div>
-      
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+
+      <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
         {loading ? (
-          <div className="flex justify-center py-4 text-slate-400 text-sm">加载中...</div>
-        ) : (
-          <div>
-            {departments.length === 0 && (
-              <div className="text-center py-8 text-slate-400 text-sm">
-                暂无部门数据
-              </div>
-            )}
-            {departments.map(dept => (
-              <DepartmentItem 
-                key={dept.id} 
-                dept={dept} 
-                selectedId={selectedId}
-                onSelect={handleSelect}
-                onAdd={handleAdd}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
           </div>
+        ) : searchText ? (
+          // Search Results
+          <div className="space-y-1">
+            {searchResults.length === 0 ? (
+              <div className="text-center text-gray-400 text-xs py-4">无匹配结果</div>
+            ) : (
+              searchResults.map(dept => (
+                <div 
+                  key={dept.id}
+                  className={`flex items-center px-3 py-2 rounded cursor-pointer text-sm transition-colors ${
+                    selectedId === dept.id 
+                      ? 'bg-blue-50 text-blue-600 font-medium' 
+                      : 'hover:bg-gray-50 text-gray-600'
+                  }`}
+                  onClick={() => handleSelect(dept)}
+                >
+                  <span className="material-icons text-sm mr-2 text-gray-400">folder</span>
+                  <span className="flex-1 truncate">{dept.name}</span>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          // Tree View
+          departments.map(dept => (
+            <DepartmentItem 
+              key={dept.id} 
+              dept={dept} 
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              onAdd={handleAdd}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))
         )}
       </div>
 

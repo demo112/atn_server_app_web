@@ -56,7 +56,7 @@ export const EmployeeSelect: React.FC<EmployeeSelectProps> = ({
         const val = e.target.value ? Number(e.target.value) : undefined;
         onChange(val);
       }}
-      className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${className}`}
+      className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-[#409eff] focus:ring-[#409eff] sm:text-sm ${className}`}
       disabled={loading}
     >
       <option value="">全部人员</option>

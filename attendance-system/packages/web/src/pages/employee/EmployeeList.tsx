@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { EmployeeVo, CreateEmployeeDto, UpdateEmployeeDto } from '@attendance/shared';
 import { employeeService } from '../../services/employee';
 import { EmployeeModal } from './components/EmployeeModal';
-import StandardModal from '@/components/common/StandardModal';
 import { useToast } from '@/components/common/ToastProvider';
 import DepartmentSidebar from './components_new/DepartmentSidebar';
 import PersonnelDashboard from './components_new/PersonnelDashboard';
@@ -18,6 +17,7 @@ const EmployeeList: React.FC = () => {
     pageSize: 10, 
     keyword: '',
     deptId: undefined as number | undefined,
+    employeeId: undefined as number | undefined,
     status: 'all' as string
   });
   
@@ -54,7 +54,8 @@ const EmployeeList: React.FC = () => {
         page: params.page,
         pageSize: params.pageSize,
         keyword: params.keyword,
-        deptId: params.deptId
+        deptId: params.deptId,
+        employeeId: params.employeeId
       };
       
       const res = await employeeService.getEmployees(apiParams);
@@ -82,11 +83,11 @@ const EmployeeList: React.FC = () => {
 
   const handleFilterChange = (filters: FilterParams) => {
     // Merge filters into params
-    // Currently only mapping name/idNumber to keyword as API limitation
-    // ideally API should support specific fields
     setParams(prev => ({
       ...prev,
       keyword: filters.name || filters.idNumber || '',
+      deptId: filters.deptId,
+      employeeId: filters.employeeId,
       status: filters.status,
       page: 1
     }));
@@ -160,26 +161,8 @@ const EmployeeList: React.FC = () => {
     }
   };
 
-  const confirmFooter = (
-    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-      <button
-        onClick={() => setConfirmModalOpen(false)}
-        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-      >
-        取消
-      </button>
-      <button
-        onClick={handleConfirmOk}
-        disabled={confirmLoading}
-        className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {confirmLoading ? '处理中...' : '确定'}
-      </button>
-    </div>
-  );
-
   return (
-    <div className="flex h-full bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-full bg-slate-50">
       {/* Left Sidebar - Department Tree */}
       <DepartmentSidebar onSelect={handleDeptSelect} />
 
@@ -203,24 +186,52 @@ const EmployeeList: React.FC = () => {
         onOk={handleEmployeeModalOk}
       />
 
-      <StandardModal
-        isOpen={confirmModalOpen}
-        onClose={() => setConfirmModalOpen(false)}
-        title={confirmConfig.title}
-        footer={confirmFooter}
-        width="max-w-sm"
-      >
-        <div className="flex items-start">
-          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-            <span className="material-icons text-red-600">warning</span>
-          </div>
-          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-            <div className="mt-2">
-              <p className="text-sm text-gray-500">{confirmConfig.content}</p>
+      {confirmModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-sm rounded-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+             <div className="px-6 py-3 bg-[#409eff] flex justify-between items-center">
+              <h3 className="text-lg font-medium text-white">
+                {confirmConfig.title}
+              </h3>
+              <button 
+                onClick={() => setConfirmModalOpen(false)}
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-full p-1 transition-colors focus:outline-none flex items-center justify-center"
+              >
+                <span className="material-icons text-xl">close</span>
+              </button>
+            </div>
+            
+            <div className="p-6">
+                <div className="flex items-start">
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span className="material-icons text-red-600">warning</span>
+                    </div>
+                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                        <div className="mt-2">
+                            <p className="text-sm text-gray-500">{confirmConfig.content}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
+              <button
+                onClick={() => setConfirmModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#409eff]"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmOk}
+                disabled={confirmLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {confirmLoading ? '处理中...' : '确定'}
+              </button>
             </div>
           </div>
         </div>
-      </StandardModal>
+      )}
     </div>
   );
 };

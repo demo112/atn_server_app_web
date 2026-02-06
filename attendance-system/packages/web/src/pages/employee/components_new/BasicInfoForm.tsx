@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FormData } from '../types_ui';
-import { departmentService } from '../../../services/department';
-import { DepartmentVO } from '@attendance/shared';
+import { PersonnelSelectionModal, SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface BasicInfoFormProps {
   data: FormData;
@@ -9,55 +8,55 @@ interface BasicInfoFormProps {
 }
 
 const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
-  const [departments, setDepartments] = useState<DepartmentVO[]>([]);
-
-  useEffect(() => {
-    departmentService.getTree().then(setDepartments).catch(console.error);
-  }, []);
-
-  const flattenDepartments = (depts: DepartmentVO[], level = 0): {id: number, name: string, level: number}[] => {
-    return depts.reduce((acc, dept) => {
-      acc.push({ id: dept.id, name: dept.name, level });
-      if (dept.children) {
-        acc.push(...flattenDepartments(dept.children, level + 1));
-      }
-      return acc;
-    }, [] as {id: number, name: string, level: number}[]);
-  };
-
-  const flatDepts = flattenDepartments(departments);
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
 
   return (
     <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
       {/* Department */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>所属部门:
         </label>
         <div className="col-span-3">
-          <select
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
-            value={data.deptId || ''}
-            onChange={(e) => {
-              const id = Number(e.target.value);
-              const dept = flatDepts.find(d => d.id === id);
-              onChange('deptId', id);
-              onChange('department', dept?.name || '');
-            }}
+          <div 
+            onClick={() => setIsDeptModalOpen(true)}
+            className="relative cursor-pointer"
           >
-            <option value="">请选择部门</option>
-            {flatDepts.map(dept => (
-              <option key={dept.id} value={dept.id}>
-                {'\u00A0'.repeat(dept.level * 4)}{dept.name}
-              </option>
-            ))}
-          </select>
+            <input
+              type="text"
+              readOnly
+              placeholder="请选择部门"
+              value={data.department || ''}
+              className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors cursor-pointer"
+            />
+            <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+          </div>
         </div>
       </div>
 
+      <PersonnelSelectionModal
+        isOpen={isDeptModalOpen}
+        onClose={() => setIsDeptModalOpen(false)}
+        onConfirm={(items) => {
+          if (items.length > 0) {
+            onChange('deptId', Number(items[0].id));
+            onChange('department', items[0].name);
+          }
+          setIsDeptModalOpen(false);
+        }}
+        multiple={false}
+        selectType="department"
+        title="选择部门"
+        initialSelected={data.deptId ? [{
+          id: data.deptId,
+          name: data.department || '',
+          type: 'department'
+        }] : []}
+      />
+
       {/* Cloud Account */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>开通云账号:
         </label>
         <div className="col-span-3 flex items-center space-x-4">
@@ -68,7 +67,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
               checked={data.enableCloudAccount} 
               onChange={(e) => onChange('enableCloudAccount', e.target.checked)}
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#409eff]"></div>
           </label>
           <span className="text-xs text-orange-500">*开通后，可使用[我的房屋]功能</span>
         </div>
@@ -78,9 +77,9 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
       <div className="grid grid-cols-4 items-center">
         <div className="col-span-1"></div>
         <div className="col-span-3">
-          <label className="flex items-center text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+          <label className="flex items-center text-sm text-gray-600 cursor-pointer">
             <input 
-              className="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary h-4 w-4 mr-2" 
+              className="rounded border-gray-300 text-[#409eff] focus:ring-[#409eff] h-4 w-4 mr-2" 
               type="checkbox"
               checked={data.sendInviteSms}
               onChange={(e) => onChange('sendInviteSms', e.target.checked)}
@@ -92,12 +91,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Name */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>姓名:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             placeholder="请输入姓名" 
             type="text"
             value={data.name}
@@ -108,12 +107,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Phone */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           手机号码:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             placeholder="请输入手机号码" 
             type="tel"
             value={data.phone}
@@ -124,12 +123,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Employee ID */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           工号:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             placeholder="请输入工号" 
             type="text"
             value={data.employeeId}
@@ -140,12 +139,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Hire Date (New) */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>入职日期:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             type="date"
             value={data.hireDate || ''}
             onChange={(e) => onChange('hireDate', e.target.value)}
@@ -155,7 +154,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Gender */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           性别:
         </label>
         <div className="col-span-3 flex space-x-6">
@@ -163,33 +162,33 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
             <input 
               type="radio" 
               name="gender" 
-              className="w-4 h-4 text-primary focus:ring-primary border-gray-300"
+              className="w-4 h-4 text-[#409eff] focus:ring-[#409eff] border-gray-300"
               checked={data.gender === 'male'}
               onChange={() => onChange('gender', 'male')}
             />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">男</span>
+            <span className="ml-2 text-sm text-gray-700">男</span>
           </label>
           <label className="flex items-center cursor-pointer">
             <input 
               type="radio" 
               name="gender" 
-              className="w-4 h-4 text-primary focus:ring-primary border-gray-300"
+              className="w-4 h-4 text-[#409eff] focus:ring-[#409eff] border-gray-300"
               checked={data.gender === 'female'}
               onChange={() => onChange('gender', 'female')}
             />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">女</span>
+            <span className="ml-2 text-sm text-gray-700">女</span>
           </label>
         </div>
       </div>
 
       {/* Door Password */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           开门密码:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             placeholder="请输入密码" 
             type="password"
             value={data.doorPassword}
@@ -200,12 +199,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Validity */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           有效期:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             value="永久有效"
             readOnly
           />
@@ -214,12 +213,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* ID Type */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           证件类型:
         </label>
         <div className="col-span-3">
           <select 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors"
             value={data.idType}
             onChange={(e) => onChange('idType', e.target.value)}
           >
@@ -232,12 +231,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* ID Number */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           证件号码:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             placeholder="请输入证件号码" 
             type="text"
             value={data.idNumber}
@@ -248,12 +247,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ data, onChange }) => {
 
       {/* Birth Date */}
       <div className="grid grid-cols-4 items-center">
-        <label className="col-span-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="col-span-1 text-sm font-medium text-gray-700">
           出生日期:
         </label>
         <div className="col-span-3">
           <input 
-            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            className="w-full border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-1 focus:ring-[#409eff] focus:border-[#409eff] transition-colors" 
             type="date"
             value={data.birthDate}
             onChange={(e) => onChange('birthDate', e.target.value)}
