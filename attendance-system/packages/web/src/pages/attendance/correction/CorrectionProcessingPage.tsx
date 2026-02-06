@@ -39,6 +39,7 @@ const CorrectionProcessingPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   
   // Modal State
+  const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<DailyRecordVo | null>(null);
 
@@ -366,6 +367,7 @@ const CorrectionProcessingPage: React.FC = () => {
             dailyRecordId={selectedRecord.id}
             employeeName={selectedRecord.employeeName}
             workDate={selectedRecord.workDate}
+            startTime={selectedRecord.startTime}
           />
           <CheckOutDialog
             isOpen={checkOutOpen}
@@ -374,6 +376,7 @@ const CorrectionProcessingPage: React.FC = () => {
             dailyRecordId={selectedRecord.id}
             employeeName={selectedRecord.employeeName}
             workDate={selectedRecord.workDate}
+            endTime={selectedRecord.endTime}
           />
         </>
       )}

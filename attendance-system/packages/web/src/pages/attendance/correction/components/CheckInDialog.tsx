@@ -11,10 +11,11 @@ interface CheckInDialogProps {
   dailyRecordId: string;
   employeeName?: string;
   workDate?: string;
+  startTime?: string;
 }
 
 export const CheckInDialog: React.FC<CheckInDialogProps> = ({ 
-  isOpen, onClose, onSuccess, dailyRecordId 
+  isOpen, onClose, onSuccess, dailyRecordId, workDate, startTime 
 }): React.ReactElement | null => {
   const { success, error } = useToast();
   const [loading, setLoading] = useState(false);
@@ -23,11 +24,13 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // Default to now, formatted for datetime-local (YYYY-MM-DDTHH:mm)
-      setCheckInTime(dayjs().format('YYYY-MM-DDTHH:mm'));
+      const defaultTime = workDate && startTime
+        ? `${workDate}T${startTime}`
+        : dayjs().format('YYYY-MM-DDTHH:mm');
+      setCheckInTime(defaultTime);
       setRemark('');
     }
-  }, [isOpen]);
+  }, [isOpen, workDate, startTime]);
 
   const handleSubmit = async (): Promise<void> => {
     try {

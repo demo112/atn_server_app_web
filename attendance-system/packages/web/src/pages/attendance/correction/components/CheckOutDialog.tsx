@@ -11,10 +11,11 @@ interface CheckOutDialogProps {
   dailyRecordId: string;
   employeeName?: string;
   workDate?: string;
+  endTime?: string;
 }
 
 export const CheckOutDialog: React.FC<CheckOutDialogProps> = ({ 
-  isOpen, onClose, onSuccess, dailyRecordId 
+  isOpen, onClose, onSuccess, dailyRecordId, workDate, endTime 
 }): React.ReactElement | null => {
   const { success, error } = useToast();
   const [loading, setLoading] = useState(false);
@@ -23,10 +24,13 @@ export const CheckOutDialog: React.FC<CheckOutDialogProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setCheckOutTime(dayjs().format('YYYY-MM-DDTHH:mm'));
+      const defaultTime = workDate && endTime
+        ? `${workDate}T${endTime}`
+        : dayjs().format('YYYY-MM-DDTHH:mm');
+      setCheckOutTime(defaultTime);
       setRemark('');
     }
-  }, [isOpen]);
+  }, [isOpen, workDate, endTime]);
 
   const handleSubmit = async (): Promise<void> => {
     try {
