@@ -26,7 +26,6 @@ const DailyStatsReport: React.FC = () => {
   const [endDate, setEndDate] = useState(getYesterday());
   
   // Selection state
-  const [searchType, setSearchType] = useState<'employee' | 'department'>('employee');
   const [selectedItems, setSelectedItems] = useState<SelectionItem[]>([]);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   
@@ -218,28 +217,19 @@ const DailyStatsReport: React.FC = () => {
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">查询范围</label>
-            <div className="flex border border-slate-200 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-              <select 
-                className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-200 w-36 py-2.5"
-                value={searchType}
-                onChange={(e) => {
-                  setSearchType(e.target.value as 'employee' | 'department');
-                  setSelectedItems([]);
-                }}
-              >
-                <option value="employee">按姓名</option>
-                <option value="department">按部门</option>
-              </select>
+            <div 
+              onClick={() => setIsSelectionModalOpen(true)}
+              className="flex border border-slate-200 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 transition-all cursor-pointer bg-white"
+            >
               <div className="flex-1 relative">
                 <input 
                   type="text" 
                   readOnly
-                  placeholder={searchType === 'employee' ? "点击选择员工..." : "点击选择部门..."}
+                  placeholder="选择部门或人员"
                   className="w-full text-sm border-none focus:ring-0 py-2.5 px-4 cursor-pointer"
                   value={selectedItems.map(i => i.name).join(', ')}
-                  onClick={() => setIsSelectionModalOpen(true)}
                 />
-                {selectedItems.length > 0 && (
+                {selectedItems.length > 0 ? (
                   <button
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     onClick={(e) => {
@@ -249,6 +239,8 @@ const DailyStatsReport: React.FC = () => {
                   >
                     <span className="material-icons-outlined text-sm">close</span>
                   </button>
+                ) : (
+                  <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
                 )}
               </div>
             </div>
@@ -281,9 +273,9 @@ const DailyStatsReport: React.FC = () => {
             setSelectedItems(items);
             // Optionally auto-search here? Let's stick to explicit search for now as there's a Search button
           }}
-          selectType={searchType}
+          selectType="all"
           multiple={false}
-          title={searchType === 'employee' ? "选择员工" : "选择部门"}
+          title="选择部门或人员"
           initialSelected={selectedItems}
         />
 
