@@ -64,7 +64,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
           const tree = await departmentService.getTree();
           setDepartments(tree);
           
-          if (mode === 'create' && !defaultDeptId && tree.length === 1) {
+          if (mode === 'create' && !defaultDeptId && tree.length > 0) {
             setFormData(prev => ({
               ...prev,
               deptId: tree[0].id
@@ -98,11 +98,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     }
   }, [open, mode, initialValues, defaultDeptId]);
 
-  const effectiveDefaultDeptId = useMemo(() => {
-    if (defaultDeptId) return defaultDeptId;
-    if (departments.length === 1) return departments[0].id;
-    return undefined;
-  }, [defaultDeptId, departments]);
+  // Removed effectiveDefaultDeptId
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -202,25 +198,19 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               部门 <span className="text-red-500">*</span>
             </label>
-            {mode === 'create' && effectiveDefaultDeptId ? (
-              <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-700">
-                {departmentOptions.find(d => d.id === effectiveDefaultDeptId)?.name || '加载中...'}
-              </div>
-            ) : (
-              <div 
-                onClick={() => setIsDeptModalOpen(true)}
-                className="relative cursor-pointer"
-              >
-                <input
-                  type="text"
-                  readOnly
-                  placeholder="请选择部门"
-                  value={formData.deptId ? departmentOptions.find(d => d.id === formData.deptId)?.name || '' : ''}
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#409eff]/50 focus:border-[#409eff] sm:text-sm transition-shadow cursor-pointer"
-                />
-                <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
-              </div>
-            )}
+            <div 
+              onClick={() => setIsDeptModalOpen(true)}
+              className="relative cursor-pointer"
+            >
+              <input
+                type="text"
+                readOnly
+                placeholder="请选择部门"
+                value={formData.deptId ? departmentOptions.find(d => d.id === formData.deptId)?.name || '' : ''}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#409eff]/50 focus:border-[#409eff] sm:text-sm transition-shadow cursor-pointer"
+              />
+              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">arrow_drop_down</span>
+            </div>
             
             <PersonnelSelectionModal
               isOpen={isDeptModalOpen}

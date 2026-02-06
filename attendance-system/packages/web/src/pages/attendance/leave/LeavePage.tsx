@@ -145,75 +145,77 @@ const LeavePage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-64px)]">
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">请假/出差管理</h1>
-            <button
-              onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
-            >
-              <span className="material-icons text-xl">add</span>
-              <span>申请请假</span>
-            </button>
-          </div>
-
-          <div className="flex flex-wrap gap-4 mb-6">
-            <div 
-              onClick={() => setIsSelectionModalOpen(true)}
-              className="relative cursor-pointer w-48"
-            >
-              <input
-                type="text"
-                readOnly
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A90E2] cursor-pointer"
-                placeholder="选择部门或人员"
-                value={selectedItems.map(i => i.name).join(', ')}
-              />
-              <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+    <div className="flex flex-col h-full min-h-[calc(100vh-64px)] overflow-hidden">
+      <div className="flex-1 flex flex-col p-6 min-h-0">
+        <div className="flex flex-col flex-1 bg-white rounded-lg shadow-sm p-6 min-h-0">
+          <div className="flex-shrink-0">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">请假/出差管理</h1>
+              <button
+                onClick={handleCreate}
+                className="flex items-center gap-2 px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
+              >
+                <span className="material-icons text-xl">add</span>
+                <span>申请请假</span>
+              </button>
             </div>
-          <select
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-            value={filters.type || ''}
-            onChange={e => setFilters({...filters, type: e.target.value ? e.target.value as LeaveType : undefined})}
-          >
-            <option value="">所有类型</option>
-            <option value={LeaveType.annual}>年假</option>
-            <option value={LeaveType.sick}>病假</option>
-            <option value={LeaveType.personal}>事假</option>
-            <option value={LeaveType.business_trip}>出差</option>
-            <option value={LeaveType.other}>其他</option>
-          </select>
-          <div className="flex items-center gap-2">
-            <input
-              type="datetime-local"
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-              value={filters.startTime}
-              max={filters.endTime}
-              onChange={e => setFilters({...filters, startTime: e.target.value})}
-            />
-            <span className="text-gray-500">-</span>
-            <input
-              type="datetime-local"
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
-              value={filters.endTime}
-              min={filters.startTime}
-              onChange={e => setFilters({...filters, endTime: e.target.value})}
-            />
-          </div>
-          <button
-            onClick={() => setPage(1)}
-            className="px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
-          >
-            查询
-          </button>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="bg-gray-50 text-gray-600">
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div 
+                onClick={() => setIsSelectionModalOpen(true)}
+                className="relative cursor-pointer w-48"
+              >
+                <input
+                  type="text"
+                  readOnly
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A90E2] cursor-pointer"
+                  placeholder="选择部门或人员"
+                  value={selectedItems.map(i => i.name).join(', ')}
+                />
+                <span className="material-icons absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+              </div>
+              <select
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+                value={filters.type || ''}
+                onChange={e => setFilters({...filters, type: e.target.value ? e.target.value as LeaveType : undefined})}
+              >
+                <option value="">所有类型</option>
+                <option value={LeaveType.annual}>年假</option>
+                <option value={LeaveType.sick}>病假</option>
+                <option value={LeaveType.personal}>事假</option>
+                <option value={LeaveType.business_trip}>出差</option>
+                <option value={LeaveType.other}>其他</option>
+              </select>
+              <div className="flex items-center gap-2">
+                <input
+                  type="datetime-local"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+                  value={filters.startTime}
+                  max={filters.endTime}
+                  onChange={e => setFilters({...filters, startTime: e.target.value})}
+                />
+                <span className="text-gray-500">-</span>
+                <input
+                  type="datetime-local"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+                  value={filters.endTime}
+                  min={filters.startTime}
+                  onChange={e => setFilters({...filters, endTime: e.target.value})}
+                />
+              </div>
+              <button
+                onClick={() => setPage(1)}
+                className="px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
+              >
+                查询
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-auto min-h-0 border rounded-lg">
+            <table className="w-full text-left border-collapse min-w-[1000px] relative">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gray-50 text-gray-600 shadow-sm">
                 <th className="p-4 font-medium">员工ID</th>
                 <th className="p-4 font-medium">类型</th>
                 <th className="p-4 font-medium">开始时间</th>
@@ -276,7 +278,7 @@ const LeavePage: React.FC = () => {
           </table>
         </div>
 
-        <div className="flex justify-end mt-4">
+        <div className="flex-shrink-0 flex justify-end mt-4">
           <Pagination
             current={page}
             pageSize={pageSize}
