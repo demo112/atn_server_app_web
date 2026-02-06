@@ -66,7 +66,22 @@ export class LeaveController {
    */
   async getList(req: Request, res: Response) {
     const user = (req as any).user;
-    const query: LeaveQueryDto = req.query;
+    
+    // 手动处理 query 参数类型转换 (Express req.query 默认为 string)
+    const rawQuery = req.query as any;
+    
+    logger.info(`getList query: ${JSON.stringify(rawQuery)}`);
+
+    const query: LeaveQueryDto = {
+      page: rawQuery.page ? Number(rawQuery.page) : 1,
+      pageSize: rawQuery.pageSize ? Number(rawQuery.pageSize) : 20,
+      employeeId: rawQuery.employeeId ? Number(rawQuery.employeeId) : undefined,
+      deptId: rawQuery.deptId ? Number(rawQuery.deptId) : undefined,
+      startTime: rawQuery.startTime as string,
+      endTime: rawQuery.endTime as string,
+      type: rawQuery.type as any,
+      status: rawQuery.status as any,
+    };
 
     // 权限控制
     if (user.role !== 'admin') {
