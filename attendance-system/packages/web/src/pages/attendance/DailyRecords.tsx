@@ -207,7 +207,14 @@ const DailyRecords: React.FC = () => {
               <input
                 type="date"
                 value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  const newFilters = { ...filters, startDate: newDate };
+                  if (filters.endDate && newDate > filters.endDate) {
+                    newFilters.endDate = newDate;
+                  }
+                  setFilters(newFilters);
+                }}
                 className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm"
               />
             </div>
@@ -216,7 +223,14 @@ const DailyRecords: React.FC = () => {
               <input
                 type="date"
                 value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  const newFilters = { ...filters, endDate: newDate };
+                  if (filters.startDate && newDate < filters.startDate) {
+                    newFilters.startDate = newDate;
+                  }
+                  setFilters(newFilters);
+                }}
                 className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm"
               />
             </div>
