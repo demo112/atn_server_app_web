@@ -159,9 +159,9 @@ const CorrectionProcessingPage: React.FC = () => {
   return (
     <div className="flex h-full bg-slate-50 flex-col">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
+      <div className="flex-1 flex flex-col min-w-0 bg-gray-50 overflow-hidden">
         {/* Filters Header - Cloning incoming/web/signed/App.tsx structure */}
-        <div className="bg-white px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-40">
+        <div className="bg-white px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-6 text-sm">
             <div className="flex items-center space-x-3">
               <span className="text-slate-500">起止时间</span>

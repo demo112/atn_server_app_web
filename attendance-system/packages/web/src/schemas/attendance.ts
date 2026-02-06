@@ -6,15 +6,15 @@ import {
 
 // TimePeriod Rules Schema
 export const TimePeriodRulesSchema = z.object({
-  minWorkHours: z.number().min(0).optional(),
-  maxWorkHours: z.number().min(0).optional(),
-  lateGraceMinutes: z.number().min(0).optional(),
-  earlyLeaveGraceMinutes: z.number().min(0).optional(),
-  checkInStartOffset: z.number().min(0).optional(),
-  checkInEndOffset: z.number().min(0).optional(),
-  checkOutStartOffset: z.number().min(0).optional(),
-  checkOutEndOffset: z.number().min(0).optional(),
-  absentTime: z.number().min(0).optional(),
+  minWorkHours: z.number().min(0).nullable().optional(),
+  maxWorkHours: z.number().min(0).nullable().optional(),
+  lateGraceMinutes: z.number().min(0).nullable().optional(),
+  earlyLeaveGraceMinutes: z.number().min(0).nullable().optional(),
+  checkInStartOffset: z.number().min(0).nullable().optional(),
+  checkInEndOffset: z.number().min(0).nullable().optional(),
+  checkOutStartOffset: z.number().min(0).nullable().optional(),
+  checkOutEndOffset: z.number().min(0).nullable().optional(),
+  absentTime: z.number().min(0).nullable().optional(),
 });
 
 // TimePeriod Schema
@@ -26,9 +26,9 @@ export const TimePeriodSchema = z.object({
   endTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
   restStartTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
   restEndTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
-  rules: TimePeriodRulesSchema.optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  rules: TimePeriodRulesSchema.nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 // Shift Period Schema
@@ -41,12 +41,21 @@ export const ShiftPeriodSchema = z.object({
   period: TimePeriodSchema.optional(),
 });
 
+// Shift Day Schema
+export const ShiftDaySchema = z.object({
+  dayOfCycle: z.number(),
+  periods: z.array(TimePeriodSchema),
+});
+
 // Shift Schema
 export const ShiftSchema = z.object({
   id: z.coerce.number(),
   name: z.string(),
   cycleDays: z.number(),
   periods: z.array(ShiftPeriodSchema).optional(),
+  days: z.array(ShiftDaySchema).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 // Schedule Schema
