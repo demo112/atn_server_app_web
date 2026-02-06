@@ -194,14 +194,14 @@ const MonthlyCardReport: React.FC = () => {
     <div className="flex justify-end gap-3 mt-6">
       <button
         onClick={() => setRecalcModalVisible(false)}
-        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        className="px-6 py-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95"
       >
         取消
       </button>
       <button
         onClick={handleRecalculate}
         disabled={recalcLoading}
-        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {recalcLoading ? '计算中...' : '开始重算'}
       </button>
@@ -230,7 +230,7 @@ const MonthlyCardReport: React.FC = () => {
       </div>
 
       <div className="p-6 bg-white m-4 rounded-xl shadow-md border border-slate-200">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end border-b border-slate-100 pb-8 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end border-b border-slate-100 pb-8 mb-6">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">统计月份</label>
             <div className="flex gap-2">
@@ -347,23 +347,21 @@ const MonthlyCardReport: React.FC = () => {
 
         <div className="mt-8 flex items-center justify-end gap-5 text-[11px] font-bold text-slate-400">
           <span>共 {data.length} 条数据</span>
-          <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm items-center">
+          <div className="flex items-center gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 bg-slate-50 text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition text-xs font-medium"
             >
-              <span className="material-icons-outlined text-sm">chevron_left</span>
+              上一页
             </button>
-            <span className="px-4 py-1.5 bg-white text-slate-700 font-bold border-x border-slate-100">
-              {page} / {totalPages}
-            </span>
+            <span className="text-slate-700 font-bold">{page} / {totalPages}</span>
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition text-xs font-medium"
             >
-              <span className="material-icons-outlined text-sm">chevron_right</span>
+              下一页
             </button>
             <select
               value={pageSize}
