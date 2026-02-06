@@ -3,9 +3,13 @@ import { createLogger } from '../../common/logger';
 import { attendanceSettingsService } from './attendance-settings.service';
 import { prisma } from '../../common/db/prisma';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { AttendanceCalculator } from './domain/attendance-calculator';
 import { CorrectionType } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import IORedis from 'ioredis';
+
+dayjs.extend(utc);
 
 const logger = createLogger('AttendanceScheduler');
 
@@ -16,9 +20,6 @@ const redisConfig = process.env.REDIS_URL || {
   password: process.env.REDIS_PASSWORD,
   db: parseInt(process.env.REDIS_DB || '0'),
 };
-
-import IORedis from 'ioredis';
-// const connection = new IORedis(redisConfig as any, { maxRetriesPerRequest: null });
 
 export class AttendanceScheduler {
   private queue: Queue | undefined;
@@ -107,80 +108,146 @@ export class AttendanceScheduler {
     const batchId = uuidv4();
     const start = dayjs(data.startDate);
     const end = dayjs(data.endDate);
-    const days = end.diff(start, 'day') + 1;
+    const daysCount = end.diff(start, 'day') + 1;
 
-    // Initial status
-    const status = {
-      id: batchId,
-      status: 'processing',
-      total: days,
-      completed: 0,
-      failed: 0,
-      message: 'Calculation started'
-    };
-
-    if (this.connection) {
-        await this.connection.set(`attendance:batch:${batchId}`, JSON.stringify(status), 'EX', 3600);
+    // Get all employees to calculate (only IDs for minimal data transfer)
+    const empWhere: any = { status: 'active' }; 
+    if (data.employeeIds && data.employeeIds.length > 0) {
+      empWhere.id = { in: data.employeeIds };
+    }
+    
+    const employees = await prisma.employee.findMany({ 
+        where: empWhere,
+        select: { id: true }
+    });
+    
+    if (employees.length === 0) {
+         throw new Error('No active employees found to calculate');
     }
 
+    const total = daysCount * employees.length;
+
+    // Initial status using Hash for atomic updates
+    if (this.connection) {
+        const key = `attendance:batch:${batchId}`;
+        await this.connection.hmset(key, {
+            status: 'processing',
+            total: total.toString(),
+            completed: '0',
+            failed: '0',
+            message: 'Calculation started'
+        });
+        await this.connection.expire(key, 3600);
+    }
+
+    // Batch add single-employee jobs
+    const jobs = [];
     let current = start;
     while (current.isBefore(end) || current.isSame(end, 'day')) {
       const dateStr = current.format('YYYY-MM-DD');
-      await this.queue.add('daily-calculation', {
-        date: dateStr,
-        employeeIds: data.employeeIds,
-        batchId
-      });
+      
+      for (const emp of employees) {
+          jobs.push({
+              name: 'daily-calculation',
+              data: {
+                  date: dateStr,
+                  employeeId: emp.id,
+                  batchId
+              }
+          });
+      }
       current = current.add(1, 'day');
     }
     
-    logger.info({ startDate: data.startDate, endDate: data.endDate, batchId }, 'Triggered manual calculation jobs');
+    // Chunked add to avoid large payloads
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < jobs.length; i += CHUNK_SIZE) {
+        await this.queue.addBulk(jobs.slice(i, i + CHUNK_SIZE));
+    }
+    
+    logger.info({ startDate: data.startDate, endDate: data.endDate, batchId, totalJobs: total }, 'Triggered manual calculation jobs');
     return batchId;
   }
 
   async getBatchStatus(batchId: string) {
     if (!this.connection) return null;
-    const data = await this.connection.get(`attendance:batch:${batchId}`);
-    if (!data) return null;
+    const status = await this.connection.hgetall(`attendance:batch:${batchId}`);
+    
+    if (!status || Object.keys(status).length === 0) return null;
 
-    const status = JSON.parse(data);
-    const progress = status.total > 0 
-      ? Math.round(((status.completed + status.failed) / status.total) * 100) 
+    const total = parseInt(status.total || '0');
+    const completed = parseInt(status.completed || '0');
+    const failed = parseInt(status.failed || '0');
+    
+    const progress = total > 0 
+      ? Math.round(((completed + failed) / total) * 100) 
       : 0;
 
-    return { ...status, progress };
+    return { 
+        id: batchId,
+        status: status.status,
+        message: status.message,
+        total,
+        completed,
+        failed,
+        progress 
+    };
   }
 
   async updateBatchStatus(batchId: string, type: 'completed' | 'failed') {
       if (!this.connection) return;
       const key = `attendance:batch:${batchId}`;
-      const data = await this.connection.get(key);
-      if (!data) return;
       
-      const status = JSON.parse(data);
-      if (type === 'completed') status.completed++;
-      if (type === 'failed') status.failed++;
+      const field = type === 'completed' ? 'completed' : 'failed';
+      await this.connection.hincrby(key, field, 1);
       
-      if (status.completed + status.failed >= status.total) {
-          status.status = status.failed > 0 ? 'completed_with_errors' : 'completed';
-          status.message = 'Calculation finished';
+      // Check if finished
+      const status = await this.connection.hgetall(key);
+      if (!status || Object.keys(status).length === 0) return;
+      
+      const total = parseInt(status.total || '0');
+      const completed = parseInt(status.completed || '0');
+      const failed = parseInt(status.failed || '0');
+      
+      if (completed + failed >= total) {
+          const finalStatus = failed > 0 ? 'completed_with_errors' : 'completed';
+          // Use hset to update status only if not already completed (idempotency check ideal but race condition low risk here)
+          // Just overwrite is fine as long as we don't revert from completed
+          await this.connection.hmset(key, {
+              status: finalStatus,
+              message: 'Calculation finished'
+          });
       }
-      
-      await this.connection.set(key, JSON.stringify(status), 'EX', 3600);
   }
 
-  async processDailyCalculation(data: { date?: string, employeeIds?: number[] }) {
+  async processDailyCalculation(data: { date?: string, employeeIds?: number[], employeeId?: number, batchId?: string }) {
     const dateStr = data.date || dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     // Use UTC to ensure consistent date storage (YYYY-MM-DD 00:00:00 UTC)
     const targetDate = dayjs.utc(dateStr).startOf('day').toDate();
     const nextDate = dayjs.utc(dateStr).add(1, 'day').startOf('day').toDate();
     
-    logger.info({ date: dateStr, targetDate }, 'Starting daily calculation');
+    // Single employee mode (Optimized)
+    if (data.employeeId) {
+        try {
+            await this.ensureDailyRecordExists(data.employeeId, targetDate);
+            await this.calculateEmployeeDaily(data.employeeId, targetDate, nextDate);
+        } catch (err) {
+            logger.error({ employeeId: data.employeeId, date: dateStr, err }, 'Failed to calculate for employee');
+            throw err; // Re-throw to trigger job failure handling
+        }
+        return;
+    }
+
+    // Batch mode (Legacy or Schedule)
+    logger.info({ date: dateStr, targetDate }, 'Starting daily calculation (batch mode)');
 
     // Find employees to calculate
     const where: any = {};
     if (data.employeeIds && data.employeeIds.length > 0) {
       where.id = { in: data.employeeIds };
+    } else {
+        // Only active employees for auto schedule
+        where.status = 'active';
     }
 
     const employees = await prisma.employee.findMany({ where });
@@ -203,16 +270,16 @@ export class AttendanceScheduler {
   }
 
   async ensureDailyRecordExists(employeeId: number, date: Date) {
-    logger.info({ employeeId, date }, 'Ensuring daily record exists');
+    // logger.debug({ employeeId, date }, 'Ensuring daily record exists');
     // 1. Check if exists
     const exists = await prisma.attDailyRecord.findFirst({
       where: { 
         employeeId, 
         workDate: date 
-      }
+      },
+      select: { id: true } // Optimization: select only ID
     });
     if (exists) {
-        logger.info('Record already exists');
         return;
     }
 
@@ -231,7 +298,7 @@ export class AttendanceScheduler {
     });
 
     if (!schedule || !schedule.shift) {
-        logger.info('No schedule found');
+        // logger.info('No schedule found');
         return;
     }
 
@@ -247,19 +314,15 @@ export class AttendanceScheduler {
        dayOfCycle = (diff % schedule.shift.cycleDays) + 1;
     }
     
-    logger.info({ dayOfCycle, periods: schedule.shift.periods.length }, 'Checking periods');
-
     // 4. Find periods for this day
     const shiftPeriods = schedule.shift.periods.filter(p => p.dayOfCycle === dayOfCycle);
     
     if (shiftPeriods.length === 0) {
-        logger.info('No periods for this day');
         return;
     }
 
     // 5. Create records
     for (const sp of shiftPeriods) {
-       logger.info({ periodId: sp.periodId }, 'Creating daily record');
        await prisma.attDailyRecord.create({
          data: {
            employeeId,

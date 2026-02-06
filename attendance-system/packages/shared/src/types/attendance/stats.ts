@@ -77,3 +77,16 @@ export interface ExportStatsDto {
   employeeName?: string;
 }
 
+export interface GetDailyStatsQuery {
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+}
+
+export interface DailyStatsVo {
+  date: string;          // YYYY-MM-DD
+  expectedCount: number; // 应到人数（活跃员工数）
+  actualCount: number;   // 实到人数（有打卡记录）
+  attendanceRate: number;// 出勤率 (0-100)
+  abnormalCount: number; // 异常人数（迟到/早退/缺卡）
+  totalEmployees: number;// 总人数
+}
