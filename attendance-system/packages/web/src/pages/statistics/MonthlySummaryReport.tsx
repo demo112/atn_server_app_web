@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { getDepartmentSummary, exportStats, triggerCalculation, getRecalculationStatus } from '../../services/statistics';
 import { AttendanceSummaryVo, ExportStatsDto } from '@attendance/shared';
 import { logger } from '../../utils/logger';
-import StandardModal from '../../components/common/StandardModal';
 import { useToast } from '@/components/common/ToastProvider';
 
 const MonthlySummaryReport: React.FC = () => {
