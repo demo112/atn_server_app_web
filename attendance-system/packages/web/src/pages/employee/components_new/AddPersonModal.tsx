@@ -138,6 +138,7 @@ const AddPersonModal: React.FC<AddPersonModalProps> = ({ onClose, onSuccess }) =
           取消
         </button>
       </div>
+      </div>
     </div>
   );
 };
