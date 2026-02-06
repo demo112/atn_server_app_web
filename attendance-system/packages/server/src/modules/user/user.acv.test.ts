@@ -6,8 +6,8 @@ import { AppError } from '../../common/errors';
 import { prisma } from '../../common/db/prisma';
 
 // Mock Prisma
-vi.mock('../../common/db/prisma', () => ({
-  prisma: {
+vi.mock('../../common/db/prisma', () => {
+  const tx = {
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -16,8 +16,17 @@ vi.mock('../../common/db/prisma', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
-  },
-}));
+    employee: {
+      create: vi.fn().mockResolvedValue({ id: 100 }),
+    },
+  } as any;
+  return {
+    prisma: {
+      ...tx,
+      $transaction: vi.fn(async (cb: any) => cb(tx)),
+    },
+  };
+});
 
 // Mock bcrypt
 vi.mock('bcryptjs', () => ({

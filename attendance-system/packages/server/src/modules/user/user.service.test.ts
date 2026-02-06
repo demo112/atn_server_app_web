@@ -35,15 +35,16 @@ describe('UserService', () => {
   describe('create', () => {
     it('should create user with default password if not provided', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
+      const now = new Date();
       prismaMock.user.create.mockResolvedValue({
         id: 1,
         username: 'newuser',
         passwordHash: 'hashed_password',
         role: 'user',
         status: 'active',
-        employeeId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        employeeId: 101,
+        createdAt: now,
+        updatedAt: now,
       } as any);
 
       const result = await service.create({ username: 'newuser', role: 'user' });
@@ -51,6 +52,7 @@ describe('UserService', () => {
       expect(bcrypt.hash).toHaveBeenCalledWith('123456', 10);
       expect(result).toHaveProperty('createdAt');
       expect(result).toHaveProperty('updatedAt');
+      expect(result.employeeId).toBe(101);
     });
 
     it('should throw AppError if username exists', async () => {
@@ -61,10 +63,7 @@ describe('UserService', () => {
     });
 
     it('should throw friendly error if employeeId is already linked', async () => {
-      // Setup: Username unique check passes
       prismaMock.user.findUnique.mockResolvedValue(null);
-      
-      // Setup: Create fails with Unique Constraint Violation on employeeId
       const error = new Prisma.PrismaClientKnownRequestError(
         'Unique constraint failed',
         { code: 'P2002', clientVersion: '4.0.0', meta: { target: ['employeeId'] } }

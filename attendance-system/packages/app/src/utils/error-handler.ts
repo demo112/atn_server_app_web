@@ -64,7 +64,7 @@ export function analyzeErrorResponse(status: number, data: any): ErrorAction {
     case 401:
       return { type: 'CLEAR_AUTH_AND_ALERT', title: '会话已过期', message: '请重新登录' };
     case 403:
-      return { type: 'ALERT', title: '无权限', message: '你没有执行此操作的权限' };
+      return { type: 'ALERT', title: '无权限', message: errorMessage };
     case 404:
       return { type: 'ALERT', title: '错误', message: '资源不存在' };
     case 500:

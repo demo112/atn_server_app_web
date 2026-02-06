@@ -139,7 +139,7 @@ describe('request utils', () => {
       try {
         await errorHandler(error);
       } catch (e) {
-        expect(Alert.alert).toHaveBeenCalledWith('无权限', '你没有执行此操作的权限');
+        expect(Alert.alert).toHaveBeenCalledWith('无权限', 'Forbidden');
       }
     });
 

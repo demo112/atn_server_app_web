@@ -23,8 +23,8 @@ vi.mock('../../common/logger', () => {
 });
 
 // Mock Prisma
-vi.mock('../../common/db/prisma', () => ({
-  prisma: {
+vi.mock('../../common/db/prisma', () => {
+  const tx = {
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -34,11 +34,17 @@ vi.mock('../../common/db/prisma', () => ({
       delete: vi.fn(),
     },
     employee: {
-        findUnique: vi.fn(),
+      create: vi.fn().mockResolvedValue({ id: 200 }),
+      findUnique: vi.fn(),
     },
-    $transaction: vi.fn((actions) => Promise.all(actions)),
-  },
-}));
+  } as any;
+  return {
+    prisma: {
+      ...tx,
+      $transaction: vi.fn(async (cb: any) => cb(tx)),
+    },
+  };
+});
 
 // Mock bcryptjs
 vi.mock('bcryptjs', () => ({

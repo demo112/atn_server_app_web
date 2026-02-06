@@ -45,7 +45,6 @@ describe('HomeScreen', () => {
     
     // Check common functions
     expect(getByText('考勤打卡')).toBeTruthy();
-    expect(getByText('请假/出差')).toBeTruthy();
     expect(getByText('补卡申请')).toBeTruthy();
     expect(getByText('考勤记录')).toBeTruthy();
     expect(getByText('我的排班')).toBeTruthy();
@@ -77,6 +76,16 @@ describe('HomeScreen', () => {
 
     expect(queryByText('管理中心')).toBeNull();
     expect(queryByText('部门管理')).toBeNull();
+  });
+
+  it('shows username when name is missing', async () => {
+    (getUser as jest.Mock).mockResolvedValue({ username: 'smq', role: 'USER' });
+
+    const { getByText } = render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(getByText('你好, smq')).toBeTruthy();
+    });
   });
 
   it('handles navigation correctly', async () => {

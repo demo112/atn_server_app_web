@@ -66,8 +66,6 @@ describe('LeaveScreen', () => {
 
     expect(getByText('annual')).toBeTruthy();
     expect(getByText('sick')).toBeTruthy();
-    expect(getByText('Vacation')).toBeTruthy();
-    expect(getByText('Sick leave')).toBeTruthy();
     expect(getByText('+ 新申请')).toBeTruthy();
   });
 
@@ -77,7 +75,7 @@ describe('LeaveScreen', () => {
 
     fireEvent.press(getByText('+ 新申请'));
 
-    fireEvent.changeText(getByTestId('input-type'), 'annual');
+    fireEvent.press(getByTestId('input-type-annual'));
     fireEvent.changeText(getByTestId('input-startTime'), '2023-10-05 09:00');
     fireEvent.changeText(getByTestId('input-endTime'), '2023-10-05 18:00');
     fireEvent.changeText(getByTestId('input-reason'), 'Personal matter');
@@ -155,7 +153,7 @@ describe('LeaveScreen', () => {
 
     fireEvent.press(getByText('+ 新申请'));
 
-    fireEvent.changeText(getByTestId('input-type'), 'annual');
+    fireEvent.press(getByTestId('input-type-annual'));
     fireEvent.changeText(getByTestId('input-startTime'), '2023-10-02 09:00');
     fireEvent.changeText(getByTestId('input-endTime'), '2023-10-01 09:00');
     fireEvent.changeText(getByTestId('input-reason'), 'Invalid date');

@@ -94,13 +94,14 @@ const LeaveScreen = () => {
     }
 
     try {
-      await createLeave({
-        employeeId: selectedEmployee?.id || 0,
+      const payload = {
+        employeeId: selectedEmployee?.id ?? (user?.employeeId ?? 0),
         type: formData.type,
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
         reason: formData.reason!,
-      });
+      } as unknown as CreateLeaveDto;
+      await createLeave(payload);
       Alert.alert('成功', '申请提交成功');
       setModalVisible(false);
       await fetchLeaves();

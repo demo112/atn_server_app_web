@@ -73,20 +73,15 @@ request.interceptors.response.use(
 
       switch (action.type) {
         case 'ALERT':
-          Alert.alert(action.title, action.message);
           break;
         case 'CLEAR_AUTH_AND_ALERT':
-          Alert.alert(action.title, action.message);
           await clearAuth();
           break;
         case 'REJECT':
-          // Default behavior for unhandled cases if any
           break;
       }
     } else if (error.request) {
-      Alert.alert('网络错误', '请检查网络连接');
     } else {
-      Alert.alert('错误', '请求配置错误');
     }
     return Promise.reject(error);
   }
