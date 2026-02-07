@@ -22,6 +22,10 @@ export const validateResponse = <T>(schema: z.ZodType<T>, response: unknown): T 
   }
 
   // 2. Validate the inner data
+  // Special handling for void schema (e.g. delete operations returning null)
+  if (schema instanceof z.ZodVoid) {
+    return undefined as T;
+  }
   return schema.parse(apiRes.data);
 };
 

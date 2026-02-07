@@ -45,5 +45,5 @@ export const updateTimePeriod = async (id: number, data: UpdateTimePeriodDto): P
  */
 export const deleteTimePeriod = async (id: number): Promise<void> => {
   const res = await api.delete<unknown, ApiResponse<void>>(`/attendance/time-periods/${id}`);
-  return validateResponse(z.void(), res);
+  validateResponse(z.null(), res);
 };

@@ -37,6 +37,6 @@ export const departmentService = {
   // 删除部门
   deleteDepartment: async (id: number): Promise<void> => {
     const res = await api.delete<unknown, ApiResponse<void>>(`/departments/${id}`);
-    return validateResponse(z.void(), res);
+    validateResponse(z.null(), res);
   }
 };

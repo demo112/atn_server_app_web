@@ -42,6 +42,6 @@ export const attendanceService = {
   // 删除排班
   deleteSchedule: async (id: number): Promise<void> => {
     const res = await api.delete<unknown, ApiResponse<void>>(`/attendance/schedules/${id}`);
-    return validateResponse(z.void(), res);
+    validateResponse(z.null(), res);
   }
 };
