@@ -154,6 +154,20 @@ export class AttendanceScheduler {
     if (data.employeeIds && data.employeeIds.length > 0) {
       empWhere.id = { in: data.employeeIds };
     }
+
+    if (data.deptId) {
+      empWhere.deptId = data.deptId;
+    }
+
+    if (data.deptName) {
+      empWhere.department = {
+        name: { contains: data.deptName }
+      };
+    }
+
+    if (data.employeeName) {
+      empWhere.name = { contains: data.employeeName };
+    }
     
     const employees = await prisma.employee.findMany({ 
         where: empWhere,
