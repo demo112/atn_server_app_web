@@ -37,6 +37,13 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
     }
   }, [params.employeeId, employees]);
 
+  // Sync deptName with params
+  React.useEffect(() => {
+    if (!params.deptId) {
+      setDeptName('');
+    }
+  }, [params.deptId]);
+
   const handleDeptConfirm = (selected: SelectionItem[]) => {
     if (selected.length > 0) {
       setParams({ ...params, deptId: selected[0].id });
