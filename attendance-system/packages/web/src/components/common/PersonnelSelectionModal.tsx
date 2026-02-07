@@ -54,7 +54,9 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
       setSearchName('');
       setEmployees([]);
     }
-  }, [isOpen, initialSelected]);
+    // Only reset when modal opens, ignore initialSelected changes to avoid resetting on re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Load employees when dept changes or search
   useEffect(() => {
