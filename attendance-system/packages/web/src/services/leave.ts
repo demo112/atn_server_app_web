@@ -50,12 +50,13 @@ export const updateLeave = async (id: number, data: Partial<CreateLeaveDto>): Pr
 };
 
 export const deleteLeave = async (id: number): Promise<void> => {
-  await api.delete<unknown, ApiResponse<void>>(`/leaves/${id}`);
+  const res = await api.delete<unknown, ApiResponse<{ id: number }>>(`/leaves/${id}`);
+  validateResponse(z.object({ id: z.number() }), res);
 };
 
-export const cancelLeave = async (id: number, reason: string): Promise<LeaveVo> => {
-  const res = await api.post<unknown, ApiResponse<LeaveVo>>(`/leaves/${id}/cancel`, { reason });
-  return validateResponse(LeaveVoSchema, res) as unknown as LeaveVo;
+export const cancelLeave = async (id: number, reason: string): Promise<{ id: number }> => {
+  const res = await api.post<unknown, ApiResponse<{ id: number }>>(`/leaves/${id}/cancel`, { reason });
+  return validateResponse(z.object({ id: z.number() }), res);
 };
 
 export const approveLeave = async (id: number, comment?: string): Promise<LeaveVo> => {

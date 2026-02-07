@@ -37,7 +37,7 @@ export const userService = {
 
   // 删除用户
   deleteUser: async (id: number): Promise<void> => {
-    const res = await api.delete<unknown, ApiResponse<void>>(`/users/${id}`);
-    validateResponse(z.null(), res);
+    const res = await api.delete<unknown, ApiResponse<{ id: number }>>(`/users/${id}`);
+    validateResponse(z.object({ id: z.number() }), res);
   },
 };

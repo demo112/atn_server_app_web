@@ -94,7 +94,7 @@ describe('Leave Integration Test', () => {
       pageSize: 10,
       totalPages: 1
     });
-    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ ...mockLeaves[0], status: LeaveStatus.cancelled });
+    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ id: 1 });
   });
 
   it('renders leave list correctly', async () => {
@@ -164,7 +164,7 @@ describe('Leave Integration Test', () => {
 
   it('cancels a leave request', async () => {
     const user = userEvent.setup();
-    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ ...mockLeaves[0], status: LeaveStatus.cancelled });
+    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ id: 1 });
 
     renderWithProviders(<LeavePage />);
 

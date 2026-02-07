@@ -34,6 +34,6 @@ export const updateShift = async (id: number, data: UpdateShiftDaysDto): Promise
 };
 
 export const deleteShift = async (id: number): Promise<void> => {
-  const res = await api.delete<unknown, ApiResponse<void>>(`/attendance/shifts/${id}`);
-  validateResponse(z.null(), res);
+  const res = await api.delete<unknown, ApiResponse<{ id: number }>>(`/attendance/shifts/${id}`);
+  validateResponse(z.object({ id: z.number() }), res);
 };

@@ -3,6 +3,7 @@ import { departmentService } from '../../../services/department';
 import { DepartmentVO } from '@attendance/shared';
 import { Department } from '../types_ui';
 import DepartmentModal from './DepartmentModal';
+import StandardModal from '../../../components/common/StandardModal';
 
 const mapDepartment = (dept: DepartmentVO): Department => ({
   id: String(dept.id),
@@ -132,6 +133,10 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<Department[]>([]);
 
+  // Delete Confirmation State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deptToDelete, setDeptToDelete] = useState<Department | null>(null);
+
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
@@ -209,18 +214,27 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
     setModalVisible(true);
   };
 
-  const handleDelete = async (dept: Department) => {
-    if (window.confirm(`确定要删除部门 "${dept.name}" 吗？\n注意：如果该部门下有子部门或员工，删除将失败。`)) {
-      try {
-        await departmentService.deleteDepartment(Number(dept.id));
-        fetchDepartments();
-        // If deleted department was selected, select root
-        if (selectedId === dept.id) {
-          setSelectedId('');
-        }
-      } catch (error: any) {
-        alert(error.message || '删除失败');
+  const handleDelete = (dept: Department) => {
+    setDeptToDelete(dept);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deptToDelete) return;
+    
+    try {
+      await departmentService.deleteDepartment(Number(deptToDelete.id));
+      fetchDepartments();
+      // If deleted department was selected, select root
+      if (selectedId === deptToDelete.id) {
+        setSelectedId('');
       }
+      setDeleteModalOpen(false);
+      setDeptToDelete(null);
+    } catch (error: any) {
+      alert(error.message || '删除失败');
+      // Keep modal open on error? Or close it? 
+      // Usually keep it open if retry is possible, but here maybe close it or let user see error via alert
     }
   };
 
@@ -309,6 +323,38 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
           onSuccess={handleModalSuccess}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <StandardModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="删除部门确认"
+        width="max-w-md"
+        footer={
+          <>
+            <button
+              onClick={() => setDeleteModalOpen(false)}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              确定删除
+            </button>
+          </>
+        }
+      >
+        <div className="py-2">
+          <p className="mb-2">确定要删除部门 <span className="font-bold text-gray-800">{deptToDelete?.name}</span> 吗？</p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 flex items-start">
+            <span className="material-icons text-yellow-600 text-base mr-2 mt-0.5">warning</span>
+            <span>注意：如果该部门下有子部门或员工，删除操作将失败。</span>
+          </div>
+        </div>
+      </StandardModal>
     </aside>
   );
 };

@@ -49,7 +49,7 @@ export const employeeService = {
 
   // 绑定用户
   bindUser: async (id: number, data: BindUserDto): Promise<void> => {
-    const res = await api.post<unknown, ApiResponse<void>>(`/employees/${id}/bind-user`, data);
-    validateResponse(z.null(), res);
+    const res = await api.post<unknown, ApiResponse<{ id: number }>>(`/employees/${id}/bind-user`, data);
+    validateResponse(z.object({ id: z.number() }), res);
   }
 };
