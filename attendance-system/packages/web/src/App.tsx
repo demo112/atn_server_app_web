@@ -70,7 +70,6 @@ export default function App(): React.ReactElement {
                    <Route path="correction" element={<CorrectionPage />} />
                    <Route path="correction-processing" element={<CorrectionProcessingPage />} />
                    <Route path="settings" element={<AttendanceSettingsPage />} />
-                   <Route path="groups" element={<GroupPage />} />
                    <Route path="daily-records" element={<DailyRecords />} />
                 </Route>
                 <Route path="statistics">
