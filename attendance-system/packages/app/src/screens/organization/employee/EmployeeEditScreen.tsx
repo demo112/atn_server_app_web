@@ -59,8 +59,15 @@ export const EmployeeEditScreen = () => {
 
   const handleSave = async () => {
     if (!name.trim()) return Alert.alert('提示', '请输入姓名');
+    if (name.length > 100) return Alert.alert('提示', '姓名不能超过100个字符');
+    
     if (!employeeNo.trim()) return Alert.alert('提示', '请输入工号');
+    if (employeeNo.length > 50) return Alert.alert('提示', '工号不能超过50个字符');
+
     if (!deptId) return Alert.alert('提示', '请选择部门');
+
+    if (phone && phone.length > 20) return Alert.alert('提示', '手机号不能超过20个字符');
+    if (email && email.length > 100) return Alert.alert('提示', '邮箱不能超过100个字符');
 
     setLoading(true);
     try {
@@ -104,6 +111,7 @@ export const EmployeeEditScreen = () => {
             value={name}
             onChangeText={setName}
             placeholder="请输入姓名"
+            maxLength={100}
           />
         </View>
 
@@ -115,6 +123,7 @@ export const EmployeeEditScreen = () => {
             onChangeText={setEmployeeNo}
             placeholder="请输入工号"
             editable={!isEdit}
+            maxLength={50}
           />
         </View>
 
@@ -133,6 +142,7 @@ export const EmployeeEditScreen = () => {
             onChangeText={setPhone}
             placeholder="请输入手机号"
             keyboardType="phone-pad"
+            maxLength={20}
           />
         </View>
 
@@ -145,6 +155,7 @@ export const EmployeeEditScreen = () => {
             placeholder="请输入邮箱"
             keyboardType="email-address"
             autoCapitalize="none"
+            maxLength={100}
           />
         </View>
 
