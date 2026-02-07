@@ -9,6 +9,7 @@ import { logger } from '../../utils/logger';
 import { withAlpha } from '../../utils/colors';
 import { authService } from '../../services/auth';
 import { getErrorMessage } from '../../utils/error';
+import dayjs from 'dayjs';
 
 const LeaveScreen = () => {
   const theme = useTheme();
@@ -55,6 +56,18 @@ const LeaveScreen = () => {
       fetchEmployees();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (modalVisible) {
+      const defaultStart = dayjs().hour(9).minute(0).second(0).millisecond(0).format('YYYY-MM-DD HH:mm');
+      const defaultEnd = dayjs().hour(18).minute(0).second(0).millisecond(0).format('YYYY-MM-DD HH:mm');
+      setFormData(prev => ({
+        ...prev,
+        startTime: prev.startTime || defaultStart,
+        endTime: prev.endTime || defaultEnd,
+      }));
+    }
+  }, [modalVisible]);
 
   const fetchEmployees = async () => {
     try {
@@ -105,7 +118,7 @@ const LeaveScreen = () => {
       return;
     }
 
-    if (new Date(formData.startTime) > new Date(formData.endTime)) {
+    if (new Date(start) > new Date(end)) {
       Alert.alert('提示', '结束时间不能早于开始时间');
       return;
     }
