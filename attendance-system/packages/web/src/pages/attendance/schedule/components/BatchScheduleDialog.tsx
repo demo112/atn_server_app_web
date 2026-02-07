@@ -121,6 +121,7 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
                     id="batchStartDate"
                     type="date" 
                     value={formData.startDate} 
+                    max={formData.endDate}
                     onChange={e => setFormData({...formData, startDate: e.target.value})} 
                     required 
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
@@ -132,6 +133,7 @@ export const BatchScheduleDialog: React.FC<BatchScheduleDialogProps> = ({ isOpen
                     id="batchEndDate"
                     type="date" 
                     value={formData.endDate} 
+                    min={formData.startDate}
                     onChange={e => setFormData({...formData, endDate: e.target.value})} 
                     required 
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
