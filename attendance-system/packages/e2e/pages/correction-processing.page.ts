@@ -53,16 +53,26 @@ export class CorrectionProcessingPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async filterByDate(start: string, end: string) {
+    await this.startDateInput.fill(start);
+    await this.endDateInput.fill(end);
+    // Trigger search? Usually inputs trigger or there is a search button.
+    // If no search button defined, maybe enter key?
+    // Let's assume enter on end date.
+    await this.endDateInput.press('Enter');
+    await this.waitForLoad();
+  }
+
   async openCheckIn(employeeName: string) {
     // Find row by employee name, then click check-in button
     // The table structure in standard TableComponent usually has rows.
     // If not using standard table, might be tricky.
     // Assuming standard table:
-    await this.table.getRowByText(employeeName).getByRole('button', { name: '补签到' }).click();
+    await this.table.findRowByText(employeeName).getByRole('button', { name: '补签到' }).click();
   }
 
   async openCheckOut(employeeName: string) {
-    await this.table.getRowByText(employeeName).getByRole('button', { name: '补签退' }).click();
+    await this.table.findRowByText(employeeName).getByRole('button', { name: '补签退' }).click();
   }
 
   async submitCheckIn(time: string, remark: string) {

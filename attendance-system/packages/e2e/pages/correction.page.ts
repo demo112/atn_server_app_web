@@ -90,40 +90,64 @@ export class CorrectionPage extends BasePage {
   }
 
   async edit(id: number, time: string) {
-    // Find row by ID
-    const row = this.table.getRowByText(id.toString());
-    await row.getByRole('button').filter({ has: this.page.locator('.material-icons:has-text("edit")') }).click();
+    // Find row by ID (exact match to avoid partial matches)
+    const row = this.table.rows.filter({ has: this.page.locator('td', { hasText: new RegExp(`^\\s*${id}\\s*$`) }) }).first();
+    
+    // Try title first, fallback to role, then to icon
+    const editBtn = row.getByTitle('编辑')
+        .or(row.getByRole('button', { name: '编辑' }))
+        .or(row.locator('button').filter({ has: this.page.locator('.material-icons, .material-symbols-outlined').filter({ hasText: /edit|mode_edit/i }) }));
+    
+    await editBtn.click();
     
     await expect(this.editModal).toBeVisible();
     await this.editTimeInput.fill(time);
+
+    // Wait for update and refresh
+    const updatePromise = this.page.waitForResponse(resp => 
+        resp.url().includes('/api/v1/attendance/corrections') && resp.request().method() === 'PUT'
+    );
+    const refreshPromise = this.page.waitForResponse(resp => 
+        resp.url().includes('/api/v1/attendance/corrections') && resp.request().method() === 'GET'
+    );
+
     await this.editConfirmBtn.click();
+    
+    await updatePromise;
+    await refreshPromise;
     await expect(this.editModal).not.toBeVisible();
-    // No toast in view code? Let's check.
-    // CorrectionView.tsx didn't show toast success.
-    // But we can check if table refreshes.
-    await this.page.waitForTimeout(500); 
   }
 
   async delete(id: number) {
-    // Select row
-    const row = this.table.getRowByText(id.toString());
+    // Select row (exact match)
+    const row = this.table.rows.filter({ has: this.page.locator('td', { hasText: new RegExp(`^\\s*${id}\\s*$`) }) }).first();
     await row.getByRole('checkbox').check();
     
     // Click delete
     await this.deleteBtn.click();
     
     // Confirm delete (if there is a confirmation)
-    // Usually StandardModal or confirm dialog.
-    // CorrectionView didn't show confirm logic in the snippet I read.
-    // But usually delete has confirmation.
-    // If not, it might just delete.
-    // Let's assume standard confirmation:
     const confirmModal = this.page.getByRole('dialog', { name: /确认|删除/ });
     if (await confirmModal.isVisible({ timeout: 2000 })) {
+        // Listen for requests before clicking confirm
+        const deletePromise = this.page.waitForResponse(resp => 
+            resp.url().includes('/api/v1/attendance/corrections') && resp.request().method() === 'DELETE'
+        );
+        const refreshPromise = this.page.waitForResponse(resp => 
+            resp.url().includes('/api/v1/attendance/corrections') && resp.request().method() === 'GET'
+        );
+
         await confirmModal.getByRole('button', { name: /确定|Confirm/ }).click();
+        
+        await deletePromise;
+        await refreshPromise;
+    } else {
+        // If no confirmation, assume requests already fired? 
+        // Or maybe we missed the modal.
+        // Usually there is confirmation.
+        // Let's add wait logic here just in case.
+        await this.page.waitForTimeout(1000);
     }
-    
-    await this.page.waitForTimeout(500);
   }
 
   async expectRecord(name: string, type: '补签到' | '补签退', time: string) {

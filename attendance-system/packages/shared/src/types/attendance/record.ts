@@ -115,7 +115,7 @@ export interface DailyRecordQuery extends QueryParams {
   endDate?: string;
   deptId?: number;
   deptName?: string;
-  employeeId?: number;
+  employeeId?: number | number[];
   employeeName?: string;
   status?: AttendanceStatus;
 }

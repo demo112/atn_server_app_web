@@ -145,18 +145,27 @@ export class TestDataFactory {
       employeeIds: [employeeId]
     });
     
-    // 2. Get record
-    const records = await this.api.getDailyRecords({
-      employeeId,
-      startDate: date,
-      endDate: date
-    });
-    
-    const item = Array.isArray(records) ? records[0] : (records.items && records.items[0]);
-    if (!item) {
-      throw new Error(`Failed to create/find daily record for employee ${employeeId} on ${date}`);
+    // 2. Poll for record with retry
+    const maxRetries = 10;
+    const interval = 500; // ms
+
+    for (let i = 0; i < maxRetries; i++) {
+      const records = await this.api.getDailyRecords({
+        employeeId,
+        startDate: date,
+        endDate: date
+      });
+      
+      const item = Array.isArray(records) ? records[0] : (records.items && records.items[0]);
+      if (item) {
+        return item;
+      }
+      
+      // Wait before next retry
+      await new Promise(resolve => setTimeout(resolve, interval));
     }
-    return item;
+    
+    throw new Error(`Failed to create/find daily record for employee ${employeeId} on ${date} after ${maxRetries} retries`);
   }
 
   async createCorrection(data: { employeeId: number; date: string; time: string; remark?: string }) {

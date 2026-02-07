@@ -24,13 +24,20 @@ test.describe('补签申请 (Correction)', () => {
     employeeId = emp.id;
 
     // 2.1 Create Schedule (Required for Daily Record generation)
-    const shift = await testData.createShift();
-    await testData.createSchedule({
-        employeeId: emp.id,
-        shiftId: shift.id,
-        startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-        endDate: dayjs().endOf('month').format('YYYY-MM-DD')
-    });
+          // Ensure shift covers all days (including weekends) to guarantee daily record generation
+          const period = await testData.createTimePeriod();
+          const days = Array.from({ length: 7 }, (_, i) => ({
+            dayOfCycle: i + 1,
+            periodIds: [period.id]
+          }));
+          const shift = await testData.createShift({ days });
+          
+          await testData.createSchedule({
+              employeeId: emp.id,
+              shiftId: shift.id,
+              startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
+              endDate: dayjs().endOf('month').format('YYYY-MM-DD')
+          });
 
     // 3. Create Correction via API
     const today = dayjs().format('YYYY-MM-DD');

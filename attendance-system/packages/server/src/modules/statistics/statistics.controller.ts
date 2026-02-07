@@ -24,17 +24,28 @@ export class StatisticsController {
         status,
         page = 1, 
         pageSize = 20 
-      } = req.query as unknown as DailyRecordQuery;
+      } = req.query as any;
 
       console.log('getDailyRecords request:', { startDate, endDate, page, pageSize });
 
       const user = (req as any).user;
+
+      let parsedEmployeeId: number | number[] | undefined;
+      if (employeeId) {
+        if (Array.isArray(employeeId)) {
+          parsedEmployeeId = employeeId.map((id: any) => Number(id));
+        } else if (typeof employeeId === 'string' && employeeId.includes(',')) {
+          parsedEmployeeId = employeeId.split(',').map((id: string) => Number(id));
+        } else {
+          parsedEmployeeId = Number(employeeId);
+        }
+      }
       
       const query: DailyRecordQuery = {
         startDate,
         endDate,
         deptId: deptId ? Number(deptId) : undefined,
-        employeeId: employeeId ? Number(employeeId) : undefined,
+        employeeId: parsedEmployeeId,
         employeeName,
         status: status as AttendanceStatus,
         page: Number(page),

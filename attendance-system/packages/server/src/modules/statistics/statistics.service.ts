@@ -141,7 +141,11 @@ export class StatisticsService {
 
     // 3. 员工筛选 (支持ID或模糊搜索)
     if (employeeId) {
-      whereClause.employeeId = Number(employeeId);
+      if (Array.isArray(employeeId)) {
+        whereClause.employeeId = { in: employeeId };
+      } else {
+        whereClause.employeeId = Number(employeeId);
+      }
     } else if (employeeName) {
       // 需要关联查询员工姓名，这里我们先查出员工ID
       const employees = await prisma.employee.findMany({
@@ -328,6 +332,10 @@ export class StatisticsService {
     const employeeIds = employees.map(e => e.id);
 
     // 2. 使用聚合查询获取统计数据
+    // 限制统计截止时间：不统计未来日期的异常
+    const now = new Date();
+    const effectiveEndDate = queryEnd > now ? now : queryEnd;
+
     const aggregations = await prisma.$queryRaw<AggregationResult[]>`
       SELECT 
         employee_id,
@@ -347,17 +355,18 @@ export class StatisticsService {
       FROM att_daily_records
       WHERE employee_id IN (${Prisma.join(employeeIds)})
         AND work_date >= ${queryStart}
-        AND work_date <= ${queryEnd}
+        AND work_date <= ${effectiveEndDate}
       GROUP BY employee_id
     `;
 
     // 2.5 获取每日详情用于生成 monthly grid
+    // Grid 需要显示整月的格子，但未来日期的数据应为空
     const dailyRecords = await prisma.attDailyRecord.findMany({
       where: {
         employeeId: { in: employeeIds },
         workDate: {
           gte: queryStart,
-          lte: queryEnd,
+          lte: effectiveEndDate, // 同样限制截止日期
         },
       },
       select: {
