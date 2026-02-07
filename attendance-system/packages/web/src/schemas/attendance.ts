@@ -20,15 +20,15 @@ export const TimePeriodRulesSchema = z.object({
 // TimePeriod Schema
 export const TimePeriodSchema = z.object({
   id: z.coerce.number(),
-  name: z.string(),
+  name: z.string().max(50),
   type: z.number(),
-  startTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
-  endTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
-  restStartTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
-  restEndTime: z.string().nullable().optional().transform((v): string | undefined => v ?? undefined),
+  startTime: z.string().max(50).nullable().optional().transform((v): string | undefined => v ?? undefined),
+  endTime: z.string().max(50).nullable().optional().transform((v): string | undefined => v ?? undefined),
+  restStartTime: z.string().max(50).nullable().optional().transform((v): string | undefined => v ?? undefined),
+  restEndTime: z.string().max(50).nullable().optional().transform((v): string | undefined => v ?? undefined),
   rules: TimePeriodRulesSchema.nullable().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string().optional(),
+  createdAt: z.string().max(50),
+  updatedAt: z.string().max(50).optional(),
 });
 
 // Shift Period Schema
@@ -50,12 +50,12 @@ export const ShiftDaySchema = z.object({
 // Shift Schema
 export const ShiftSchema = z.object({
   id: z.coerce.number(),
-  name: z.string(),
+  name: z.string().max(50),
   cycleDays: z.number(),
   periods: z.array(ShiftPeriodSchema).optional(),
   days: z.array(ShiftDaySchema).optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
+  createdAt: z.string().max(50).optional(),
+  updatedAt: z.string().max(50).optional(),
 });
 
 // Schedule Schema
@@ -63,16 +63,16 @@ export const ScheduleSchema = z.object({
   id: z.coerce.number(),
   employeeId: z.number(),
   shiftId: z.number(),
-  startDate: z.string(),
-  endDate: z.string(),
+  startDate: z.string().max(50),
+  endDate: z.string().max(50),
   // employee: EmployeeSchema.optional(), // 避免循环依赖，暂时不引入 Employee
   shift: ShiftSchema.optional(),
 });
 
 // Schedule VO Schema (extends Schedule)
 export const ScheduleVoSchema = ScheduleSchema.extend({
-  shiftName: z.string().optional(),
-  employeeName: z.string().optional(),
+  shiftName: z.string().max(50).optional(),
+  employeeName: z.string().max(50).optional(),
 });
 
 // Leave Schemas
@@ -83,17 +83,17 @@ export const LeaveVoSchema = z.object({
   id: z.coerce.number(),
   employeeId: z.coerce.number(),
   type: LeaveTypeSchema,
-  startTime: z.string(),
-  endTime: z.string(),
-  reason: z.string().nullable().optional(),
+  startTime: z.string().max(50),
+  endTime: z.string().max(50),
+  reason: z.string().max(200).nullable().optional(),
   status: LeaveStatusSchema,
   approverId: z.coerce.number().nullable().optional(),
-  approvedAt: z.string().nullable().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  employeeName: z.string().optional(),
-  deptName: z.string().optional(),
-  approverName: z.string().optional(),
+  approvedAt: z.string().max(50).nullable().optional(),
+  createdAt: z.string().max(50),
+  updatedAt: z.string().max(50),
+  employeeName: z.string().max(50).optional(),
+  deptName: z.string().max(50).optional(),
+  approverName: z.string().max(50).optional(),
 });
 
 export const PaginatedLeaveVoSchema = z.object({
@@ -111,18 +111,18 @@ export const ClockSourceSchema = z.enum(['app', 'web', 'device']);
 export const ClockRecordSchema = z.object({
   id: z.coerce.string(),
   employeeId: z.coerce.number(),
-  clockTime: z.string(),
+  clockTime: z.string().max(50),
   type: ClockTypeSchema,
   source: ClockSourceSchema,
-  deviceInfo: z.record(z.string(), z.unknown()).nullable().optional().transform(v => v ?? undefined),
-  location: z.record(z.string(), z.unknown()).nullable().optional().transform(v => v ?? undefined),
+  deviceInfo: z.record(z.string().max(50), z.unknown()).nullable().optional().transform(v => v ?? undefined),
+  location: z.record(z.string().max(50), z.unknown()).nullable().optional().transform(v => v ?? undefined),
   operatorId: z.coerce.number().nullable().optional().transform(v => v ?? undefined),
-  remark: z.string().nullable().optional().transform(v => v ?? undefined),
-  createdAt: z.string(),
-  employeeNo: z.string().nullable().optional().transform(v => v ?? undefined),
-  employeeName: z.string().nullable().optional().transform(v => v ?? undefined),
-  deptName: z.string().nullable().optional().transform(v => v ?? undefined),
-  operatorName: z.string().nullable().optional().transform(v => v ?? undefined),
+  remark: z.string().max(200).nullable().optional().transform(v => v ?? undefined),
+  createdAt: z.string().max(50),
+  employeeNo: z.string().max(20).nullable().optional().transform(v => v ?? undefined),
+  employeeName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  deptName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  operatorName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
 });
 
 export const PaginatedClockRecordSchema = z.object({
@@ -146,22 +146,22 @@ export const AttendanceStatusSchema = z.enum([
 export const DailyRecordVoSchema = z.object({
   id: z.coerce.string(), // Handle BigInt serialization
   employeeId: z.coerce.number(),
-  employeeName: z.string(),
-  deptName: z.string(),
-  workDate: z.string(),
-  shiftName: z.string().nullable().optional().transform(v => v ?? undefined),
-  startTime: z.string().nullable().optional().transform(v => v ?? undefined),
-  endTime: z.string().nullable().optional().transform(v => v ?? undefined),
-  checkInTime: z.string().nullable().optional().transform(v => v ?? undefined),
-  checkOutTime: z.string().nullable().optional().transform(v => v ?? undefined),
+  employeeName: z.string().max(50),
+  deptName: z.string().max(50),
+  workDate: z.string().max(50),
+  shiftName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  startTime: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  endTime: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  checkInTime: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  checkOutTime: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
   status: AttendanceStatusSchema,
   lateMinutes: z.number(),
   earlyLeaveMinutes: z.number(),
   absentMinutes: z.number(),
   leaveMinutes: z.number(),
   workMinutes: z.number().nullable().optional().transform(v => v ?? undefined),
-  remark: z.string().nullable().optional().transform(v => v ?? undefined),
-  employeeNo: z.string().nullable().optional().transform(v => v ?? undefined),
+  remark: z.string().max(200).nullable().optional().transform(v => v ?? undefined),
+  employeeNo: z.string().max(20).nullable().optional().transform(v => v ?? undefined),
 });
 
 export const PaginatedDailyRecordVoSchema = z.object({
@@ -178,13 +178,13 @@ export const CorrectionTypeSchema = z.enum(['check_in', 'check_out']);
 export const CorrectionVoSchema = z.object({
   id: z.coerce.number(),
   employeeId: z.coerce.number(),
-  employeeName: z.string(),
-  deptName: z.string(),
+  employeeName: z.string().max(50),
+  deptName: z.string().max(50),
   type: CorrectionTypeSchema,
-  correctionTime: z.string(),
-  operatorName: z.string(),
-  updatedAt: z.string(),
-  remark: z.string().optional(),
+  correctionTime: z.string().max(50),
+  operatorName: z.string().max(50),
+  updatedAt: z.string().max(50),
+  remark: z.string().max(200).optional(),
 });
 
 export const PaginatedCorrectionVoSchema = z.object({
@@ -202,6 +202,6 @@ export const SupplementResultVoSchema = z.object({
 
 // Settings Schema
 export const AttendanceSettingsSchema = z.object({
-  day_switch_time: z.string(),
-  auto_calc_time: z.string().optional(),
+  day_switch_time: z.string().max(50),
+  auto_calc_time: z.string().max(50).optional(),
 }).passthrough(); // Allow other keys as per interface [key: string]: any

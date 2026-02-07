@@ -8,8 +8,8 @@ export const PaginationSchema = z.object({
 });
 
 export const ErrorSchema = z.object({
-  code: z.string(),
-  message: z.string(),
+  code: z.string().max(50),
+  message: z.string().max(200),
 });
 
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T): z.ZodObject<{
@@ -43,6 +43,6 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T): 
 export const QueryParamsSchema = z.object({
   page: z.number().optional(),
   pageSize: z.number().optional(),
-  sortBy: z.string().optional(),
+  sortBy: z.string().max(50).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });

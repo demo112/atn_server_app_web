@@ -5,12 +5,20 @@ import { CreateDepartmentDto } from '@attendance/shared';
 import { createDepartment, updateDepartment, getDepartmentById } from '../../../services/department';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
 import { logger } from '../../../utils/logger';
+import { z } from 'zod';
 
 export const DepartmentEditScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
-  const isEdit = !!route.params?.id;
-  const initialParentId = route.params?.parentId || null;
+  // Validate params
+  const paramsSchema = z.object({
+    id: z.coerce.number().optional(),
+    parentId: z.coerce.number().optional()
+  });
+  const params = paramsSchema.parse(route.params || {});
+  
+  const isEdit = !!params.id;
+  const initialParentId = params.parentId || null;
 
   const [name, setName] = useState('');
   const [parentId, setParentId] = useState<number | null>(initialParentId);
@@ -41,7 +49,8 @@ export const DepartmentEditScreen = () => {
   const loadDetail = async () => {
     setLoading(true);
     try {
-      const res = await getDepartmentById(route.params.id);
+      if (!params.id) throw new Error('Missing ID');
+      const res = await getDepartmentById(params.id);
       setName(res.name);
       setParentId(res.parentId);
       setSortOrder(res.sortOrder.toString());
@@ -79,7 +88,8 @@ export const DepartmentEditScreen = () => {
       };
 
       if (isEdit) {
-        await updateDepartment(route.params.id, data);
+        if (!params.id) throw new Error('Missing ID');
+        await updateDepartment(params.id, data);
         Alert.alert('成功', '更新成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       } else {
         await createDepartment(data as CreateDepartmentDto);

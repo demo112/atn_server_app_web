@@ -5,11 +5,18 @@ import { CreateEmployeeDto } from '@attendance/shared';
 import { createEmployee, updateEmployee, getEmployeeById } from '../../../services/employee';
 import { DepartmentSelect } from '../../../components/DepartmentSelect';
 import { logger } from '../../../utils/logger';
+import { z } from 'zod';
 
 export const EmployeeEditScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
-  const isEdit = !!route.params?.id;
+  
+  const paramsSchema = z.object({
+    id: z.coerce.number().optional()
+  });
+  const params = paramsSchema.parse(route.params || {});
+  
+  const isEdit = !!params.id;
 
   const [name, setName] = useState('');
   const [employeeNo, setEmployeeNo] = useState('');
@@ -41,7 +48,8 @@ export const EmployeeEditScreen = () => {
   const loadDetail = async () => {
     setLoading(true);
     try {
-      const emp = await getEmployeeById(route.params.id);
+      if (!params.id) throw new Error('Missing ID');
+      const emp = await getEmployeeById(params.id);
       setName(emp.name);
       setEmployeeNo(emp.employeeNo);
       setPhone(emp.phone || '');
@@ -79,7 +87,8 @@ export const EmployeeEditScreen = () => {
           deptId,
           hireDate,
         };
-        await updateEmployee(route.params.id, data);
+        if (!params.id) throw new Error('Missing ID');
+        await updateEmployee(params.id, data);
         Alert.alert('成功', '更新成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       } else {
         const data: CreateEmployeeDto = {

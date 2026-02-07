@@ -30,6 +30,16 @@ const Login: React.FC = (): React.ReactElement => {
       return;
     }
 
+    if (username.length > 50) {
+      toast.warning('用户名不能超过50个字符');
+      return;
+    }
+
+    if (password.length > 100) {
+      toast.warning('密码不能超过100个字符');
+      return;
+    }
+
     if (!agreed) {
       toast.warning('请先阅读并同意服务协议和隐私协议');
       return;
@@ -76,6 +86,7 @@ const Login: React.FC = (): React.ReactElement => {
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 type="text"
                 placeholder="手机号/邮箱"
+                maxLength={50}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -88,6 +99,7 @@ const Login: React.FC = (): React.ReactElement => {
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 type="password"
                 placeholder="请输入密码"
+                maxLength={100}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

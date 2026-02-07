@@ -203,8 +203,59 @@ export class ApiClient {
     return res.data;
   }
 
+  async getShifts(params?: any) {
+    const res = await this.get('/api/v1/attendance/shifts', params);
+    return res.data;
+  }
+
+  async getTimePeriods(params?: any) {
+    const res = await this.get('/api/v1/attendance/time-periods', params);
+    return res.data;
+  }
+
   // Cleanup
   async cleanupTestData(prefix: string) {
+    // 0. Clean Shifts and TimePeriods first (as they might rely on employees/depts? No, usually other way around or independent)
+    // Actually, Schedule depends on Shift and Employee.
+    // If we delete Employee first, Schedule might be deleted (if cascade) or block deletion.
+    // In our DB, Schedule -> Employee is RESTRICT. So we must delete Schedule first.
+    // But we can't find Schedule easily.
+    // So let's try to delete Shift. If Shift -> Schedule is RESTRICT, it will fail.
+    
+    // Try to find Shifts with prefix
+    try {
+        const shifts = await this.getShifts({ name: prefix, pageSize: 100 });
+        const shiftItems = Array.isArray(shifts) ? shifts : shifts.items || [];
+        for (const shift of shiftItems) {
+            if (shift.name && shift.name.includes(prefix)) {
+                try {
+                    await this.deleteShift(shift.id);
+                } catch (e) {
+                    // console.warn(`Failed to delete shift ${shift.id}:`, e);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to cleanup shifts:', e);
+    }
+
+    // Try to find TimePeriods with prefix
+    try {
+        const periods = await this.getTimePeriods();
+        const periodItems = Array.isArray(periods) ? periods : periods.items || [];
+        for (const period of periodItems) {
+            if (period.name && period.name.includes(prefix)) {
+                try {
+                    await this.deleteTimePeriod(period.id);
+                } catch (e) {
+                    // console.warn(`Failed to delete time period ${period.id}:`, e);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to cleanup time periods:', e);
+    }
+
     // 1. Get all employees with prefix
     const emps = await this.getEmployees({ keyword: prefix });
     const items = Array.isArray(emps) ? emps : emps.items || [];

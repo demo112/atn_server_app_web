@@ -65,11 +65,20 @@ const DepartmentPicker = ({ visible, onDismiss, onSelect }: { visible: boolean; 
     </Portal>
   );
 };
+import { z } from 'zod';
+
+// ... existing imports ...
 
 export const UserEditScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
-  const isEdit = !!route.params?.id;
+  
+  const paramsSchema = z.object({
+    id: z.coerce.number().optional()
+  });
+  const params = paramsSchema.parse(route.params || {});
+  
+  const isEdit = !!params.id;
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -107,7 +116,8 @@ export const UserEditScreen = () => {
   const loadDetail = async () => {
     setLoading(true);
     try {
-      const user = await getUserById(route.params.id);
+      if (!params.id) throw new Error('Missing ID');
+      const user = await getUserById(params.id);
       setUsername(user.username);
       setRole(user.role);
       setStatus(user.status);
@@ -159,11 +169,12 @@ export const UserEditScreen = () => {
 
       // 2. Create/Update User
       if (isEdit) {
+        if (!params.id) throw new Error('Missing ID');
         const data = {
           role,
           status,
         };
-        await updateUser(route.params.id, data);
+        await updateUser(params.id, data);
         Alert.alert('成功', '更新成功', [{ text: '确定', onPress: () => navigation.goBack() }]);
       } else {
         const data: CreateUserDto = {

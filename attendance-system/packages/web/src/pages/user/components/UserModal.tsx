@@ -126,6 +126,7 @@ const UserModal: React.FC<UserModalProps> = ({
               required
               className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-primary focus:border-primary text-sm outline-none ${errors.username ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="请输入用户名"
+              maxLength={50}
               value={formData.username}
               onChange={e => {
                 setFormData({...formData, username: e.target.value});
@@ -147,6 +148,7 @@ const UserModal: React.FC<UserModalProps> = ({
               required={!isEdit}
               className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-primary focus:border-primary text-sm outline-none ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
               placeholder={isEdit ? "留空则不修改密码" : "请输入密码"}
+              maxLength={100}
               value={formData.password}
               onChange={e => {
                 setFormData({...formData, password: e.target.value});

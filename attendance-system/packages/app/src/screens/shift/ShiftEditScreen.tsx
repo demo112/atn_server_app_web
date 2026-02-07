@@ -30,11 +30,18 @@ const DEFAULT_TIME_SLOT: TimeSlot = {
   checkOutWindow: '17:30-18:30',
 };
 
+import { z } from 'zod';
+
 export default function ShiftEditScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { shift } = route.params as { shift: Shift | null };
+  
+  const paramsSchema = z.object({
+    shift: z.custom<Shift>().nullable().optional()
+  });
+  const params = paramsSchema.parse(route.params || {});
+  const { shift } = params as { shift: Shift | null };
 
   React.useLayoutEffect(() => {
     (navigation as any).setOptions({ title: shift ? '编辑班次' : '新增班次' });

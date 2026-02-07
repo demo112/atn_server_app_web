@@ -53,8 +53,8 @@ export const getDailyRecords = async (params: QueryDailyRecordsDto): Promise<Pag
 export const triggerRecalculation = async (data: { startDate: string; endDate: string; employeeIds?: number[] }): Promise<string> => {
   const res = await api.post('/attendance/recalculate', data);
   const validated = validateResponse(z.object({
-    message: z.string(),
-    batchId: z.string()
+    message: z.string().max(200),
+    batchId: z.string().max(50)
   }), res);
   return validated.batchId;
 };
@@ -71,7 +71,7 @@ export const getRecalculationStatus = async (batchId: string): Promise<Calculati
   return validateResponse(z.object({
     status: z.enum(['pending', 'processing', 'completed', 'failed', 'completed_with_errors']),
     progress: z.number(),
-    message: z.string().optional(),
-    error: z.string().optional()
+    message: z.string().max(200).optional(),
+    error: z.string().max(200).optional()
   }), res);
 };

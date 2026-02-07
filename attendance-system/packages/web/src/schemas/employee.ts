@@ -7,18 +7,18 @@ export const EmployeeStatusSchema = z.nativeEnum(EmployeeStatus);
 // 员工视图对象 Schema
 export const EmployeeVoSchema = z.object({
   id: z.number(),
-  employeeNo: z.string(),
-  name: z.string(),
-  phone: z.string().nullable().optional(),
-  email: z.string().nullable().optional(),
+  employeeNo: z.string().max(20),
+  name: z.string().max(50),
+  phone: z.string().max(20).nullable().optional(),
+  email: z.string().max(100).nullable().optional(),
   deptId: z.number().nullable().optional(),
-  deptName: z.string().optional(),
+  deptName: z.string().max(50).optional(),
   status: EmployeeStatusSchema,
-  hireDate: z.string().nullable().optional(),
+  hireDate: z.string().max(50).nullable().optional(),
   userId: z.number().nullable().optional(),
-  username: z.string().nullable().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  username: z.string().max(50).nullable().optional(),
+  createdAt: z.string().max(50),
+  updatedAt: z.string().max(50),
 });
 
 // 分页响应 Schema (通用泛型很难在 Zod 中直接定义，这里定义具体的 Employee 分页)

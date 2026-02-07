@@ -34,7 +34,7 @@ export const getDailyRecords = async (params: DailyRecordQuery): Promise<Paginat
 export const getCalendar = async (year: number, month: number, employeeId?: number): Promise<CalendarDailyVo[]> => {
   const res = await api.get('/statistics/card', { params: { year, month, employeeId } });
   return validateResponse(z.array(z.object({
-    date: z.string(),
+    date: z.string().max(50),
     status: AttendanceStatusSchema,
     isAbnormal: z.boolean()
   })), res);
@@ -52,16 +52,16 @@ export const getRecalculationStatus = async (batchId: string): Promise<Calculati
   return validateResponse(z.object({
     status: z.enum(['pending', 'processing', 'completed', 'failed', 'completed_with_errors']),
     progress: z.number(),
-    message: z.string().optional(),
-    error: z.string().optional()
+    message: z.string().max(200).optional(),
+    error: z.string().max(200).optional()
   }), res);
 };
 
 export const triggerCalculation = async (data: TriggerCalculationDto): Promise<string> => {
   const res = await api.post('/statistics/calculate', data);
   const validated = validateResponse(z.object({
-    message: z.string(),
-    batchId: z.string()
+    message: z.string().max(200),
+    batchId: z.string().max(50)
   }), res);
   return validated.batchId;
 };

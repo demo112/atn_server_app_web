@@ -29,10 +29,13 @@ async function main() {
   });
    console.log('Existing TimePeriods sample:', periods.map(p => p.name));
  
-   const pattern = '-[W';
-  
-    // 1. Find target IDs
-   const dirtyDepts = await prisma.department.findMany({ where: { name: { contains: pattern } }, select: { id: true } });
+   const patterns = ['-[W', '-undefined-'];
+   
+   for (const pattern of patterns) {
+     console.log(`Cleaning up pattern: ${pattern}`);
+     
+      // 1. Find target IDs
+     const dirtyDepts = await prisma.department.findMany({ where: { name: { contains: pattern } }, select: { id: true } });
    const dirtyDeptIds = dirtyDepts.map(d => d.id);
  
    const dirtyEmployees = await prisma.employee.findMany({
@@ -74,7 +77,7 @@ async function main() {
 
   if (dirtyDeptIds.length === 0 && dirtyEmployeeIds.length === 0 && dirtyUserIds.length === 0 && dirtyShiftIds.length === 0 && dirtyPeriodIds.length === 0) {
     console.log('No dirty data found.');
-    return;
+    continue;
   }
 
   // 2. Delete dependencies first
@@ -120,16 +123,32 @@ async function main() {
 
   // AttDailyRecord
   if (dirtyEmployeeIds.length > 0 || dirtyShiftIds.length > 0 || dirtyPeriodIds.length > 0) {
-    const { count } = await prisma.attDailyRecord.deleteMany({
+    // First find the daily records to be deleted
+    const dailyRecordsToDelete = await prisma.attDailyRecord.findMany({
       where: {
         OR: [
           { employeeId: { in: dirtyEmployeeIds } },
           { shiftId: { in: dirtyShiftIds } },
           { periodId: { in: dirtyPeriodIds } }
         ]
-      }
+      },
+      select: { id: true }
     });
-    console.log(`Deleted ${count} AttDailyRecord records`);
+    const dailyRecordIds = dailyRecordsToDelete.map(d => d.id);
+
+    if (dailyRecordIds.length > 0) {
+      // Delete Corrections referencing these daily records
+      const { count: correctionCount } = await prisma.attCorrection.deleteMany({
+        where: { dailyRecordId: { in: dailyRecordIds } }
+      });
+      console.log(`Deleted ${correctionCount} AttCorrection records (by dailyRecordId)`);
+
+      // Now delete the daily records
+      const { count } = await prisma.attDailyRecord.deleteMany({
+        where: { id: { in: dailyRecordIds } }
+      });
+      console.log(`Deleted ${count} AttDailyRecord records`);
+    }
   }
 
   // AttSchedule
@@ -195,6 +214,8 @@ async function main() {
     const { count } = await prisma.department.deleteMany({ where: { id: { in: dirtyDeptIds } } });
     console.log(`Deleted ${count} Department records`);
   }
+  
+  } // End of patterns loop
 
   console.log('Cleanup completed successfully.');
 }

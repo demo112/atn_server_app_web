@@ -5,28 +5,28 @@ export const UserStatusSchema = z.enum(['active', 'inactive']);
 
 export const UserSchema = z.object({
   id: z.number(),
-  username: z.string(),
+  username: z.string().max(50),
   employeeId: z.number().nullable().optional(),
   role: UserRoleSchema,
   status: UserStatusSchema,
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().max(50),
+  updatedAt: z.string().max(50),
 });
 
 export const CreateUserDtoSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(6).optional(),
+  username: z.string().min(1).max(50),
+  password: z.string().min(6).max(100).optional(),
   role: UserRoleSchema,
   employeeId: z.number().optional(),
 });
 
 export const UserListItemSchema = z.object({
   id: z.number(),
-  username: z.string(),
+  username: z.string().max(50),
   role: UserRoleSchema,
   status: UserStatusSchema,
-  employeeName: z.string().optional(),
-  createdAt: z.string(),
+  employeeName: z.string().max(50).optional(),
+  createdAt: z.string().max(50),
 });
 
 export const UserListVoSchema = z.object({

@@ -3,8 +3,8 @@ import { z } from 'zod';
 // import { UserRole, UserStatus } from '@attendance/shared';
 
 export const createUserSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+  username: z.string().min(3, 'Username must be at least 3 characters').max(50, 'Username cannot exceed 50 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password cannot exceed 100 characters').optional(),
   role: z.enum(['admin', 'user']).default('user'),
   employeeId: z.number().optional(),
 });
@@ -12,14 +12,14 @@ export const createUserSchema = z.object({
 export const updateUserSchema = z.object({
   role: z.enum(['admin', 'user']).optional(),
   status: z.enum(['active', 'inactive']).optional(),
-  password: z.string().min(6).optional(),
+  password: z.string().min(6).max(100).optional(),
   employeeId: z.number().optional(),
 });
 
 export const getUsersSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   pageSize: z.coerce.number().min(1).default(10),
-  keyword: z.string().optional(),
+  keyword: z.string().max(50).optional(),
   status: z.enum(['active', 'inactive']).optional(),
 });
 

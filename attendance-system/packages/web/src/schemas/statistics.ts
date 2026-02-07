@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 export const AttendanceSummaryVoSchema = z.object({
   employeeId: z.number(),
-  employeeNo: z.string(),
-  employeeName: z.string(),
+  employeeNo: z.string().max(20),
+  employeeName: z.string().max(50),
   deptId: z.number(),
-  deptName: z.string(),
+  deptName: z.string().max(50),
   totalDays: z.number(),
   actualDays: z.number(),
   lateCount: z.number(),
@@ -19,12 +19,12 @@ export const AttendanceSummaryVoSchema = z.object({
   leaveMinutes: z.number(),
   actualMinutes: z.number(),
   effectiveMinutes: z.number(),
-  daily: z.array(z.string()).optional(),
+  daily: z.array(z.string().max(50)).optional(),
 });
 
 export const DeptStatsVoSchema = z.object({
   deptId: z.number(),
-  deptName: z.string(),
+  deptName: z.string().max(50),
   totalHeadcount: z.number(),
   normalCount: z.number(),
   lateCount: z.number(),
@@ -36,11 +36,11 @@ export const DeptStatsVoSchema = z.object({
 
 export const ChartStatsVoSchema = z.object({
   dailyTrend: z.array(z.object({
-    date: z.string(),
+    date: z.string().max(50),
     attendanceRate: z.number(),
   })),
   statusDistribution: z.array(z.object({
-    status: z.string(),
+    status: z.string().max(50),
     count: z.number(),
   })),
 });

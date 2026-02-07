@@ -6,14 +6,23 @@ import { DepartmentVO } from '@attendance/shared';
 import { getDepartmentTree, deleteDepartment } from '../../../services/department';
 import { logger } from '../../../utils/logger';
 
+import { z } from 'zod';
+
 export const DepartmentListScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  
+  const paramsSchema = z.object({
+    parentId: z.coerce.number().optional(),
+    title: z.string().max(50).optional()
+  });
+  const params = paramsSchema.parse(route.params || {});
+
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<DepartmentVO[]>([]);
-  const parentId = route.params?.parentId || null;
-  const parentName = route.params?.title || '部门管理';
+  const parentId = params.parentId || null;
+  const parentName = params.title || '部门管理';
 
   useLayoutEffect(() => {
     navigation.setOptions({
