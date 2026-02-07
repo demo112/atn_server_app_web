@@ -17,7 +17,6 @@ import AttendanceSettingsPage from '@/pages/attendance/settings/AttendanceSettin
 import LeavePage from '@/pages/attendance/leave/LeavePage';
 import DailyRecords from '@/pages/attendance/DailyRecords';
 import AttendanceDetailsPage from '@/pages/attendance/details/AttendanceDetailsPage';
-import GroupPage from '@/pages/attendance/group/GroupPage';
 import SummaryPage from '@/pages/statistics/SummaryPage';
 import ReportPage from '@/pages/statistics/ReportPage';
 import StatisticsDashboard from '@/pages/statistics/StatisticsDashboard';

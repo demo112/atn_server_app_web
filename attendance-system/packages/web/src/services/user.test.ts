@@ -2,7 +2,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { userService } from './user';
 import { api } from './api';
-import { z } from 'zod';
 
 // Mock api module
 vi.mock('./api', async () => {

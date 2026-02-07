@@ -38,6 +38,12 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
         error('请选择签到时间');
         return;
       }
+      
+      if (dayjs(checkInTime).isAfter(dayjs())) {
+        error('不能补签未来时间');
+        return;
+      }
+
       setLoading(true);
 
       await correctionService.supplementCheckIn({
@@ -85,6 +91,7 @@ export const CheckInDialog: React.FC<CheckInDialogProps> = ({
             <div className="relative group">
               <input 
                 type="datetime-local"
+                max={dayjs().format('YYYY-MM-DDTHH:mm')}
                 className="w-full border-slate-300 rounded-md px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none bg-white border"
                 value={checkInTime}
                 onChange={(e) => setCheckInTime(e.target.value)}

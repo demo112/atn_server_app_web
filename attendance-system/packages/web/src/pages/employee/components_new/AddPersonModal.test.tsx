@@ -1,12 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, render, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, render, fireEvent } from '@testing-library/react';
 import AddPersonModal from './AddPersonModal';
-import { employeeService } from '../../../services/employee';
 
 // Mock dependencies
 vi.mock('../../../services/employee', () => ({
