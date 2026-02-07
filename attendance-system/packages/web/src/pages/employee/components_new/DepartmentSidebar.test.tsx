@@ -40,8 +40,8 @@ describe('DepartmentSidebar', () => {
       expect(screen.getByText('市场部')).toBeInTheDocument();
     });
     
-    // Should NOT have virtual root "全公司"
-    expect(screen.queryByText('全公司')).not.toBeInTheDocument();
+    // Should have virtual root "全公司"
+    expect(screen.getByText('全公司')).toBeInTheDocument();
   });
 
   it('handles department selection', async () => {
@@ -61,7 +61,41 @@ describe('DepartmentSidebar', () => {
     expect(onSelect).toHaveBeenCalledWith('1');
   });
 
-  it('department node has all buttons', async () => {
+  it('handles root selection', async () => {
+    (departmentService.getTree as any).mockResolvedValue(mockTreeData);
+    const onSelect = vi.fn();
+    
+    render(<DepartmentSidebar onSelect={onSelect} />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('全公司')).toBeInTheDocument();
+    });
+    
+    // Click root
+    fireEvent.click(screen.getByText('全公司'));
+    
+    // Should call onSelect with empty string
+    expect(onSelect).toHaveBeenCalledWith('');
+  });
+
+  it('root node has only add button', async () => {
+    (departmentService.getTree as any).mockResolvedValue(mockTreeData);
+    
+    render(<DepartmentSidebar />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('全公司')).toBeInTheDocument();
+    });
+
+    const node = screen.getByText('全公司').closest('.group');
+    const buttons = node?.querySelectorAll('button');
+    
+    // Root should only have Add button
+    expect(buttons?.length).toBe(1);
+    expect(buttons?.[0]).toHaveAttribute('title', '添加子部门');
+  });
+
+  it('child node has all buttons', async () => {
     (departmentService.getTree as any).mockResolvedValue(mockTreeData);
     
     render(<DepartmentSidebar />);
@@ -73,7 +107,7 @@ describe('DepartmentSidebar', () => {
     const node = screen.getByText('研发部').closest('.group');
     const buttons = node?.querySelectorAll('button');
     
-    // Expect 3 buttons: Add, Edit, Delete
+    // Child should have 3 buttons: Add, Edit, Delete
     expect(buttons?.length).toBe(3);
   });
 });

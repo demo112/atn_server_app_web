@@ -33,6 +33,7 @@ const DepartmentItem: React.FC<DepartmentItemProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(dept.isOpen);
   const isSelected = selectedId === dept.id;
+  const isRoot = dept.id === '-1';
 
   const handleExpandClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -77,20 +78,24 @@ const DepartmentItem: React.FC<DepartmentItemProps> = ({
           >
             <span className="material-icons text-[14px]">add</span>
           </button>
-          <button 
-            className="p-1 hover:bg-white rounded text-gray-400 hover:text-blue-500 transition-colors" 
-            title="编辑部门"
-            onClick={(e) => { e.stopPropagation(); onEdit(dept); }}
-          >
-            <span className="material-icons text-[14px]">edit</span>
-          </button>
-          <button 
-            className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-colors" 
-            title="删除部门"
-            onClick={(e) => { e.stopPropagation(); onDelete(dept); }}
-          >
-            <span className="material-icons text-[14px]">delete</span>
-          </button>
+          {!isRoot && (
+            <>
+              <button 
+                className="p-1 hover:bg-white rounded text-gray-400 hover:text-blue-500 transition-colors" 
+                title="编辑部门"
+                onClick={(e) => { e.stopPropagation(); onEdit(dept); }}
+              >
+                <span className="material-icons text-[14px]">edit</span>
+              </button>
+              <button 
+                className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-colors" 
+                title="删除部门"
+                onClick={(e) => { e.stopPropagation(); onDelete(dept); }}
+              >
+                <span className="material-icons text-[14px]">delete</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
       
@@ -141,7 +146,14 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
     setLoading(true);
     try {
       const tree = await departmentService.getTree();
-      setDepartments(tree.map(mapDepartment));
+      // Add virtual root node
+      const virtualRoot: Department = {
+        id: '-1',
+        name: '全公司',
+        children: tree.map(mapDepartment),
+        isOpen: true
+      };
+      setDepartments([virtualRoot]);
     } catch (error) {
       console.error('Failed to fetch departments:', error);
       setDepartments([]);
@@ -189,12 +201,17 @@ const DepartmentSidebar: React.FC<DepartmentSidebarProps> = ({ onSelect }) => {
   const handleSelect = (dept: Department) => {
     setSelectedId(dept.id);
     if (onSelect) {
-      onSelect(dept.id);
+      // If virtual root is selected, pass empty string to show all
+      onSelect(dept.id === '-1' ? '' : dept.id);
     }
   };
 
   const handleAdd = (dept: Department) => {
-    setParentDept({ id: Number(dept.id), name: dept.name } as DepartmentVO);
+    if (dept.id === '-1') {
+      setParentDept(null);
+    } else {
+      setParentDept({ id: Number(dept.id), name: dept.name } as DepartmentVO);
+    }
     setCurrentDept(null);
     setModalMode('create');
     setModalVisible(true);
