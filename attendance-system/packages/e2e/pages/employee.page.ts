@@ -23,21 +23,14 @@ class CustomModal {
     await this.root.waitFor({ state: 'hidden' });
   }
 
-  async fillField(label: string, value: string): Promise<void> {
-    // DepartmentModal uses labelled inputs
-    await this.root.locator('input').filter({ hasText: value }).first().fill(value); // Fallback? 
-    // Actually, DepartmentModal has explicit labels.
-    // EmployeeModal also has labels.
-    // We can try getByLabel but scoped to root.
-    // Since root covers the whole screen, we need to be careful.
-    // The inner .bg-white box is the actual modal content.
-    const content = this.root.locator('.bg-white.rounded-lg');
-    await content.getByPlaceholder(label).or(content.getByLabel(label)).fill(value);
-  }
-
-  async fillByName(placeholder: string, value: string): Promise<void> {
+  async fillByPlaceholder(placeholder: string, value: string): Promise<void> {
     const content = this.root.locator('.bg-white.rounded-lg');
     await content.getByPlaceholder(placeholder).fill(value);
+  }
+
+  async fillByName(name: string, value: string): Promise<void> {
+    const content = this.root.locator('.bg-white.rounded-lg');
+    await content.locator(`input[name="${name}"]`).fill(value);
   }
 
   async confirm(): Promise<void> {
@@ -66,7 +59,6 @@ export class EmployeePage extends BasePage {
 
   private getDepartmentNode(name: string): Locator {
     // Matches the row container (.group) that contains the exact text of the department name
-    // The .group element contains the buttons and the name span, but NOT the children tree nodes
     return this.page.locator('.group').filter({ has: this.page.getByText(name, { exact: true }) });
   }
 
@@ -77,7 +69,6 @@ export class EmployeePage extends BasePage {
 
   async addDepartment(parentName: string | null, newName: string): Promise<void> {
     if (parentName) {
-      // Add sub-department
       const node = this.getDepartmentNode(parentName);
       await node.hover();
       await node.locator('button[title="添加子部门"]').click();
@@ -86,8 +77,7 @@ export class EmployeePage extends BasePage {
     }
 
     await this.customModal.waitForOpen();
-    // DepartmentModal input placeholder is "请输入部门名称"
-    await this.customModal.fillByName('请输入部门名称', newName);
+    await this.customModal.fillByPlaceholder('请输入部门名称', newName);
     await this.customModal.confirm();
     await this.customModal.waitForClose();
   }
@@ -98,7 +88,7 @@ export class EmployeePage extends BasePage {
     await node.locator('button[title="编辑部门"]').click();
 
     await this.customModal.waitForOpen();
-    await this.customModal.fillByName('请输入部门名称', newName);
+    await this.customModal.fillByPlaceholder('请输入部门名称', newName);
     await this.customModal.confirm();
     await this.customModal.waitForClose();
   }
@@ -108,10 +98,6 @@ export class EmployeePage extends BasePage {
     await node.hover();
     await node.locator('button[title="删除部门"]').click();
 
-    // The delete confirmation MIGHT be using StandardModal or another custom one.
-    // EmployeeList.tsx uses `StandardModal` for delete confirmation?
-    // Actually, EmployeeList.tsx has `<StandardModal ... title="删除确认">`
-    // So for delete, we use standardModal.
     await this.standardModal.waitForOpen();
     await this.standardModal.confirm();
     await this.standardModal.waitForClose();
@@ -125,38 +111,118 @@ export class EmployeePage extends BasePage {
     await expect(this.getDepartmentNode(name)).not.toBeVisible();
   }
 
-  // --- Employee Modal Actions (for Verification) ---
+  // --- Employee Actions ---
 
   async openAddEmployeeModal(): Promise<void> {
     await this.page.getByRole('button', { name: /添加/ }).click();
-    // EmployeeModal is Custom
     await this.customModal.waitForOpen();
   }
 
   async closeAddEmployeeModal(): Promise<void> {
-      await this.customModal.close();
-      await this.customModal.waitForClose();
+    await this.customModal.close();
+    await this.customModal.waitForClose();
+  }
+
+  async fillEmployeeForm(data: {
+    name: string;
+    employeeNo: string;
+    department?: string;
+    phone?: string;
+    hireDate?: string;
+  }): Promise<void> {
+    await this.customModal.fillByName('name', data.name);
+    
+    if (data.employeeNo) {
+        await this.customModal.fillByName('employeeNo', data.employeeNo);
+    }
+
+    if (data.phone) {
+      await this.customModal.fillByName('phone', data.phone);
+    }
+
+    if (data.hireDate) {
+      await this.customModal.fillByName('hireDate', data.hireDate);
+    }
+
+    if (data.department) {
+      // Click department input to open selection modal
+      const content = this.customModal.root.locator('.bg-white.rounded-lg');
+      await content.getByPlaceholder('请选择部门').click();
+      
+      // Wait for selection modal (StandardModal structure, role="dialog")
+      // Note: PersonnelSelectionModal uses StandardModal which has role="dialog"
+      // We need to target the one that says "选择部门"
+      const selectionModal = this.page.locator('[role="dialog"]').filter({ hasText: '选择部门' });
+      await selectionModal.waitFor();
+      
+      // Select department in the tree inside the modal
+      // Assuming DepartmentTree component is reused and has same locators
+      // We can use getByText for the department name inside the modal
+      await selectionModal.getByText(data.department, { exact: true }).click();
+      
+      // Confirm selection
+      await selectionModal.getByRole('button', { name: '确定' }).click();
+      await selectionModal.waitFor({ state: 'hidden' });
+    }
+  }
+
+  async saveEmployee(): Promise<void> {
+    await this.customModal.confirm();
+    await this.customModal.waitForClose();
+  }
+
+  async expectEmployeeVisible(name: string): Promise<void> {
+    await expect(this.page.locator('tbody tr').filter({ hasText: name })).toBeVisible();
+  }
+
+  async expectEmployeeNotVisible(name: string): Promise<void> {
+    await expect(this.page.locator('tbody tr').filter({ hasText: name })).not.toBeVisible();
+  }
+
+  async deleteEmployee(name: string): Promise<void> {
+    const row = this.page.locator('tbody tr').filter({ hasText: name });
+    // Click delete icon
+    await row.locator('.material-icons').filter({ hasText: 'delete_outline' }).click();
+    
+    // Confirm delete (Custom Modal)
+    // The confirm modal in EmployeeList.tsx has similar structure to CustomModal
+    // We can reuse the customModal instance or create a temporary one if needed
+    // But since it's the same structure, `this.customModal` should work
+    await this.customModal.waitForOpen();
+    await this.customModal.confirm(); // "确定"
+    await this.customModal.waitForClose();
+  }
+
+  async editEmployee(oldName: string, data: { name?: string, phone?: string }): Promise<void> {
+    const row = this.page.locator('tbody tr').filter({ hasText: oldName });
+    // Click edit icon
+    await row.locator('.material-icons').filter({ hasText: 'edit' }).click();
+    
+    await this.customModal.waitForOpen();
+    
+    if (data.name) {
+      await this.customModal.fillByName('name', data.name);
+    }
+    if (data.phone) {
+      await this.customModal.fillByName('phone', data.phone);
+    }
+    
+    await this.customModal.confirm();
+    await this.customModal.waitForClose();
   }
 
   /**
    * Check if a department exists in the department selector of the Employee Modal
    */
   async checkDepartmentInSelect(deptName: string): Promise<void> {
-    // 1. Click "请选择部门" input in EmployeeModal (Custom)
-    const customContent = this.customModal.root.locator('.bg-white.rounded-lg');
-    await customContent.getByPlaceholder('请选择部门').click();
+    const content = this.customModal.root.locator('.bg-white.rounded-lg');
+    await content.getByPlaceholder('请选择部门').click();
     
-    // 2. This opens PersonnelSelectionModal (Standard, role="dialog")
-    // Wait for the SECOND modal (Standard) to be on top
-    await this.standardModal.waitForOpen();
+    const selectionModal = this.page.locator('[role="dialog"]').filter({ hasText: '选择部门' });
+    await selectionModal.waitFor();
+    await expect(selectionModal.getByText(deptName)).toBeVisible();
     
-    // 3. Check if department is visible in the tree inside StandardModal
-    // The PersonnelSelectionModal has a left panel with DepartmentTree
-    // We can look for the text of the department
-    await expect(this.standardModal.root.getByText(deptName)).toBeVisible();
-    
-    // 4. Close the PersonnelSelectionModal
-    await this.standardModal.close();
-    await this.standardModal.waitForClose();
+    await selectionModal.getByRole('button', { name: '取消' }).click();
+    await selectionModal.waitFor({ state: 'hidden' });
   }
 }
