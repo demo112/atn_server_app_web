@@ -1,6 +1,17 @@
 ---
 name: technical-design
-description: 将需求文档转化为可执行的技术设计方案，包括数据模型、API定义和文件变更清单。
+description: "技术设计、设计方案、架构设计、API设计、数据模型、怎么实现、如何实现"
+triggers:
+  - 技术设计
+  - 设计方案
+  - 架构设计
+  - API设计
+  - 数据模型
+  - 怎么实现
+related_rules:
+  - rules/04-api-spec
+next_skills:
+  - task-planning (设计确认后)
 ---
 
 # 技术设计

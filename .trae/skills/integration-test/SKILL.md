@@ -1,6 +1,17 @@
 ---
 name: integration-test
-description: 执行集成测试，基于需求AC验证完整功能流程，确保端到端可用。
+description: "集成测试、端到端测试、E2E、完整测试、全量测试、测试功能、验证流程"
+triggers:
+  - 集成测试
+  - 端到端测试
+  - E2E
+  - 完整测试
+  - 测试功能
+related_rules:
+  - rules/11-testing
+next_skills:
+  - git-operation (测试通过后push)
+  - problem-fixing (测试失败时)
 ---
 
 # 集成测试

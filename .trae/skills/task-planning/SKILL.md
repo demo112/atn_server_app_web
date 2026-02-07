@@ -1,6 +1,17 @@
 ---
 name: task-planning
-description: 将设计文档转化为有序的、可独立验证的任务清单，每个任务是AI可执行的最小单元。
+description: "任务拆分、拆分任务、任务规划、任务清单、拆成小任务、怎么开始、先做什么"
+triggers:
+  - 任务拆分
+  - 拆分任务
+  - 任务规划
+  - 任务清单
+  - 怎么开始
+  - 先做什么
+related_rules:
+  - rules/13-doc-management
+next_skills:
+  - code-implementation (任务确认后)
 ---
 
 # 任务规划

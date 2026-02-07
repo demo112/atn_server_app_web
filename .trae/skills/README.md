@@ -8,51 +8,52 @@
 
 ## 流程层 Skill（主导开发流程）
 
-| Skill | 使用场景 | 关联 Rules |
-|-------|----------|-----------|
-| requirement-analysis | 阶段1：需求分析 | 20-project-overview |
-| technical-design | 阶段2：技术设计 | 04-api-spec |
-| task-planning | 阶段3：任务规划 | 13-doc-management |
-| code-implementation | 阶段5：代码实现 | 02-typescript, 03-file-structure |
-| code-logging | 阶段5：日志检查 | 06-logging |
-| code-verification | 阶段5：四维验证 | 14-definition-of-done |
-| problem-fixing | 阶段5：问题修复 | - |
-| verification-before-completion | 阶段5：完成前验证 | 14-definition-of-done |
-| git-operation | 阶段5：Git提交 | 07-git-basic, 08-git-commit |
-| git-conflict-resolution | Git冲突处理 | 09-git-conflict |
-| integration-test | 阶段6：集成测试 | 11-testing |
-| doc-sync | 文档同步 | 13-doc-management |
-| project-logging | 进度记录 | 13-doc-management |
+| Skill | 触发词 | 关联 Rules | 下一步 |
+|-------|--------|-----------|--------|
+| requirement-analysis | 需求分析、我想做、能不能实现 | 20-project-overview | → technical-design |
+| technical-design | 技术设计、怎么实现、API设计 | 04-api-spec | → task-planning |
+| task-planning | 任务拆分、怎么开始、先做什么 | 13-doc-management | → code-implementation |
+| code-implementation | 写代码、实现、开始做 | 02-typescript, 03-file-structure | → code-logging |
+| code-logging | 检查日志、补日志、console.log | 06-logging | → code-verification |
+| code-verification | 验证、测一下、ACV、代码写完了 | 14-definition-of-done | → git-operation / problem-fixing |
+| problem-fixing | 报错、bug、跑不起来、失败了 | 14-definition-of-done | → code-verification |
+| verification-before-completion | 完成了吗、验收、DoD | 14-definition-of-done | - |
+| git-operation | 提交代码、commit、push | 07-git-basic, 08-git-commit | → code-implementation / integration-test |
+| git-conflict-resolution | git冲突、合并冲突、conflict | 09-git-conflict | → git-operation |
+| integration-test | 集成测试、E2E、完整测试 | 11-testing | → git-operation / problem-fixing |
+| doc-sync | 同步文档、更新文档 | 13-doc-management | - |
+| project-logging | 记录进度、今日进展 | 13-doc-management | - |
 
 ## 参考层 Skill（技术知识库）
 
 编写代码时按模块查阅：
 
-| 模块 | 参考 Skill |
-|------|-----------|
-| Server (Express/Prisma) | nodejs-backend-patterns |
-| Web (React/Vite) | react-best-practices, vite-patterns |
-| App (React Native/Expo) | react-native-patterns, expo-native-ui, expo-networking |
-| App 调试 | app-debugging, expo-dev-client |
-| Web 调试 | web-debugging |
+| 模块 | 参考 Skill | 触发词 |
+|------|-----------|--------|
+| Server (Express/Prisma) | nodejs-backend-patterns | - |
+| Web (React/Vite) | react-best-practices, vite-patterns | - |
+| App (React Native/Expo) | react-native-patterns, expo-native-ui, expo-networking | - |
+| App 调试 | app-debugging, expo-dev-client | - |
+| Web 调试 | web-debugging | - |
 
 ## 方法论层 Skill（可选）
 
-| Skill | 说明 | 融入位置 |
-|-------|------|---------|
-| systematic-debugging | 系统化调试 | 已融入 problem-fixing |
-| test-driven-development | TDD 模式 | code-implementation 可选 |
+| Skill | 触发词 | 融入位置 |
+|-------|--------|---------|
+| systematic-debugging | 系统调试、定位问题、debug | 已融入 problem-fixing |
+| test-driven-development | TDD、测试驱动、先写测试 | code-implementation 可选 |
 
 ## 业务领域 Skill
 
-| 业务 | Skill | 说明 |
-|------|-------|------|
-| 考勤系统 | attendance-domain | 考勤概念、数据模型、业务规则 |
+| 业务 | Skill | 触发词 |
+|------|-------|--------|
+| 考勤系统 | attendance-domain | 考勤、打卡、排班、班次 |
 
 ## UI 相关 Skill
 
-| Skill | 说明 |
-|-------|------|
+| Skill | 触发词 |
+|-------|--------|
+| ui-ux-pro-max | 做界面、UI设计、配色、字体、设计系统 |
 | ui-cloning | 截图模仿界面 |
 | mobile-android-design | Android 设计规范 |
 

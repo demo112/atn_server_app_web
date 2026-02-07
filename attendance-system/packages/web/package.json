@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@attendance/shared": "workspace:*",
+    "@headlessui/react": "^2.2.9",
     "antd": "^5.14.0",
     "axios": "^1.6.0",
     "date-fns": "^4.1.0",

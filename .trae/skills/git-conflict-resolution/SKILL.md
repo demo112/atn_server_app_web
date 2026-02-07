@@ -1,6 +1,16 @@
 ---
 name: git-conflict-resolution
-description: Git 冲突检测、分析与解决的完整操作知识，覆盖 pull/rebase/merge 场景，提供分类处理策略和验证流程。
+description: "git冲突、合并冲突、conflict、冲突解决、rebase冲突、merge冲突、pull冲突"
+triggers:
+  - git冲突
+  - 合并冲突
+  - conflict
+  - 冲突解决
+  - rebase冲突
+related_rules:
+  - rules/09-git-conflict
+next_skills:
+  - git-operation (冲突解决后)
 ---
 
 # Git 冲突解决

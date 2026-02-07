@@ -1,6 +1,20 @@
 ---
 name: code-verification
-description: "纯AI编码场景下的多重验证系统，通过契约验证、自洽性验证、对抗性验证、交叉验证四个维度，不依赖人类编码能力判断代码正确性。输入\"验证\"或\"ACV\"即可激活。"
+description: "验证代码、检查代码、测一下、ACV、代码写完了、确认能用、跑测试、四维验证、代码验证"
+triggers:
+  - 验证
+  - 检查代码
+  - 测一下
+  - ACV
+  - 代码写完了
+  - 确认能用
+  - 跑测试
+related_rules:
+  - rules/14-definition-of-done
+  - rules/11-testing
+next_skills:
+  - git-operation (验证通过后)
+  - problem-fixing (验证失败时)
 ---
 
 # AI 代码验证系统

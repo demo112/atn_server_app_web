@@ -1,6 +1,17 @@
 ---
 name: code-logging
-description: 主动检查和补充代码日志，确保关键场景有完整的日志记录，便于问题排查和系统监控。
+description: "检查日志、补日志、日志规范、console.log、Logger、日志检查、代码日志"
+triggers:
+  - 检查日志
+  - 补日志
+  - 日志规范
+  - console.log
+  - Logger
+related_rules:
+  - rules/06-logging
+  - rules/14-definition-of-done
+next_skills:
+  - code-verification (日志检查后)
 ---
 
 # 代码日志
