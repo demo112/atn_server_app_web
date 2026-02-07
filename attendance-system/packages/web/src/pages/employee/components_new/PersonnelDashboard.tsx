@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Person, FilterParams } from '../types_ui';
 import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
+import { useToast } from '@/components/common/ToastProvider';
 
 interface Props {
   data: Person[];
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, onBatchDelete, onAdd, onEdit }) => {
+  const { toast } = useToast();
   const [localFilters, setLocalFilters] = useState<FilterParams>({ name: '', idNumber: '', status: 'all' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
@@ -114,12 +116,18 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
           <span className="material-icons text-gray-500 text-base">swap_horiz</span>
           <span>更换部门</span>
         </button>
-        <button className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700">
+        <button 
+          onClick={() => toast.info('人员导入功能开发中')}
+          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700"
+        >
           <span className="material-icons text-gray-500 text-base">file_download</span>
           <span>导入</span>
           <span className="material-icons text-xs">expand_more</span>
         </button>
-        <button className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700">
+        <button 
+          onClick={() => toast.info('人员导出功能开发中')}
+          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700"
+        >
           <span className="material-icons text-gray-500 text-base">file_upload</span>
           <span>导出人员</span>
         </button>
