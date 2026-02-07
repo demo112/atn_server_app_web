@@ -28,6 +28,7 @@ export function analyzeErrorResponse(status: number, data: any): ErrorAction {
     ERR_INVALID_DATE: '日期格式无效',
     ERR_INVALID_DATE_RANGE: '日期范围无效',
     ERR_SCHEDULE_CONFLICT: '存在排班冲突'
+    ,ERR_EMPLOYEE_EXISTS: '工号已存在'
   };
   const phraseMap: Array<{ test: (msg: string) => boolean; zh: string }> = [
     { test: (m) => m.includes('employeeId is required for admin'), zh: '管理员创建请假时必须指定员工（employeeId）' },
@@ -44,7 +45,8 @@ export function analyzeErrorResponse(status: number, data: any): ErrorAction {
     { test: (m) => m.includes('Invalid token format'), zh: '认证信息格式错误' },
     { test: (m) => m.includes('No token provided'), zh: '缺少认证信息' },
     { test: (m) => m.includes('Username already exists'), zh: '用户名已存在' },
-    { test: (m) => m.includes('Employee is already linked to a user'), zh: '该员工已关联用户' }
+    { test: (m) => m.includes('Employee is already linked to a user'), zh: '该员工已关联用户' },
+    { test: (m) => m.includes('Employee No already exists'), zh: '工号已存在' }
   ];
   let errorMessage = rawMessage;
   const matched = typeof rawMessage === 'string' ? phraseMap.find(p => p.test(rawMessage)) : undefined;
