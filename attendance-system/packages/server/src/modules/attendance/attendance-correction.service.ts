@@ -63,7 +63,8 @@ export class AttendanceCorrectionService {
         } catch (err) {
           const code = (err as any)?.code;
           if (code === 'P2003') {
-            throw new AppError('ERR_INVALID_PARAM', '关联员工或每日记录不存在', 400);
+            // 前置逻辑已检查 dailyRecord 和 employee，此处 P2003 仅可能由 operatorId 触发
+            throw new AppError('ERR_INVALID_PARAM', '操作人账号异常，请尝试重新登录', 400);
           }
           throw err;
         }
@@ -80,7 +81,7 @@ export class AttendanceCorrectionService {
     } catch (error) {
       const code = (error as any)?.code;
       if (code === 'P2003') {
-        throw new AppError('ERR_INVALID_PARAM', '关联员工或每日记录不存在', 400);
+        throw new AppError('ERR_INVALID_PARAM', '操作人账号异常或数据不一致', 400);
       }
       this.logger.error(error, 'checkIn: failed');
       throw error;
@@ -127,7 +128,8 @@ export class AttendanceCorrectionService {
           });
         } catch (err) {
           if ((err as any)?.code === 'P2003') {
-            throw new AppError('ERR_INVALID_PARAM', '关联员工或每日记录不存在', 400);
+            // 前置逻辑已检查 dailyRecord 和 employee，此处 P2003 仅可能由 operatorId 触发
+            throw new AppError('ERR_INVALID_PARAM', '操作人账号异常，请尝试重新登录', 400);
           }
           throw err;
         }
