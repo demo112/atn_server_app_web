@@ -70,7 +70,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
           page: 1,
           pageSize: 1000,
         };
-        if (activeDeptId && activeDeptId !== -1) {
+        if (activeDeptId !== null && activeDeptId !== undefined && activeDeptId !== -1) {
           params.deptId = activeDeptId;
         }
         if (searchName) {
@@ -243,7 +243,18 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
                 {loadingEmployees ? (
                   <div className="flex justify-center py-8 text-gray-400">加载中...</div>
                 ) : employees.length === 0 ? (
-                  <div className="flex justify-center py-8 text-gray-400">暂无数据</div>
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <div>暂无数据</div>
+                    <div className="text-xs mt-2 text-gray-300">
+                      Dept: {activeDeptId ?? 'All'}
+                    </div>
+                    <button 
+                      onClick={() => { setActiveDeptId(null); setSearchName(''); }}
+                      className="mt-2 text-xs text-primary hover:underline"
+                    >
+                      显示所有员工
+                    </button>
+                  </div>
                 ) : (
                   <div className="space-y-1">
                     {employees.map(emp => {
