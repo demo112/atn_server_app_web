@@ -1,6 +1,21 @@
 ---
 name: problem-fixing
-description: 系统化分析错误并修复，融合四阶段调查法、止损机制与完成验证。
+description: "报错、出问题、修复、bug、跑不起来、失败了、错误、异常、fix"
+triggers:
+  - 报错
+  - 出问题
+  - 修复
+  - bug
+  - 跑不起来
+  - 失败了
+  - 错误
+related_rules:
+  - rules/14-definition-of-done
+related_skills:
+  - systematic-debugging (根因调查方法论)
+  - verification-before-completion (验证要求)
+next_skills:
+  - code-verification (修复后验证)
 ---
 
 ## 输入

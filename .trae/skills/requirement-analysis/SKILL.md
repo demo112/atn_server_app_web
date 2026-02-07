@@ -1,6 +1,17 @@
 ---
 name: requirement-analysis
-description: 将用户的模糊需求转化为结构化、可验证的需求文档，并判断需求规模决定是否拆分。
+description: "需求分析、分析需求、梳理需求、需求文档、用户故事、我想做、能不能实现"
+triggers:
+  - 需求分析
+  - 分析需求
+  - 梳理需求
+  - 需求文档
+  - 我想做
+  - 能不能实现
+related_rules:
+  - rules/20-project-overview
+next_skills:
+  - technical-design (需求确认后)
 ---
 
 # 需求分析

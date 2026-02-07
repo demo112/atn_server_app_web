@@ -1,6 +1,13 @@
 ---
 name: project-logging
-description: 记录项目级别的日志（进度、决策、问题等），功能完成后触发，让项目历程可追溯。
+description: "记录进度、进度日志、今日进展、工作记录、记录决策、记录问题"
+triggers:
+  - 记录进度
+  - 进度日志
+  - 今日进展
+  - 工作记录
+related_rules:
+  - rules/13-doc-management
 ---
 
 # 项目日志

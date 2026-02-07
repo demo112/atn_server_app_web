@@ -1,6 +1,14 @@
 ---
 name: verification-before-completion
-description: "完成前验证 - 证据先于声明。来源：obra/superpowers"
+description: "完成了吗、确认完成、验收、DoD、真的好了吗、证据、验证完成、完成前验证"
+triggers:
+  - 完成了吗
+  - 确认完成
+  - 验收
+  - DoD
+  - 真的好了吗
+related_rules:
+  - rules/14-definition-of-done
 ---
 
 # 完成前验证

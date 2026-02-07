@@ -1,6 +1,21 @@
 ---
 name: code-implementation
-description: 根据任务描述实现代码，遵循设计文档和项目规范，一次只做一个Task。
+description: "写代码、实现、编码、开始做、实现功能、写服务、写接口、写组件、开始吧"
+triggers:
+  - 写代码
+  - 实现
+  - 编码
+  - 开始做
+  - 实现功能
+  - 写服务
+  - 写接口
+related_rules:
+  - rules/02-typescript
+  - rules/03-file-structure
+  - rules/06-logging
+next_skills:
+  - code-logging (代码写完后)
+  - code-verification (验证代码)
 ---
 
 # 代码实现

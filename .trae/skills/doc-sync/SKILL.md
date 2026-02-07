@@ -1,6 +1,13 @@
 ---
 name: doc-sync
-description: 保持文档与代码同步，每个Task完成后自动更新相关文档，确保文档是人机信息对接的可靠来源。
+description: "同步文档、更新文档、文档同步、文档更新、API文档、数据库文档"
+triggers:
+  - 同步文档
+  - 更新文档
+  - 文档同步
+  - 文档更新
+related_rules:
+  - rules/13-doc-management
 ---
 
 # 文档同步

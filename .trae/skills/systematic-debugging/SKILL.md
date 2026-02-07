@@ -1,7 +1,15 @@
 ---
 name: systematic-debugging
-description: "系统化调试方法论，四阶段根因分析。来源：obra/superpowers"
+description: "系统调试、调试方法、定位问题、排查问题、debug、根因分析、四阶段调试"
 type: methodology
+triggers:
+  - 系统调试
+  - 调试方法
+  - 定位问题
+  - 排查问题
+  - debug
+related_skills:
+  - problem-fixing (本skill是其方法论来源)
 ---
 
 # 系统化调试

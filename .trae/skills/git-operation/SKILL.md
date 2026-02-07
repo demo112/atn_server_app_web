@@ -1,6 +1,20 @@
 ---
 name: git-operation
-description: 执行Git操作（提交、分支等），精准暂存本次任务变更（hunk级精度），每个Task完成后提交形成检查点。
+description: "提交代码、commit、push、git、提交一下、推上去、创建分支、git操作"
+triggers:
+  - 提交代码
+  - commit
+  - push
+  - git
+  - 提交一下
+  - 推上去
+  - 创建分支
+related_rules:
+  - rules/07-git-basic
+  - rules/08-git-commit
+next_skills:
+  - code-implementation (继续下一个Task)
+  - integration-test (所有Task完成后)
 ---
 
 # Git操作
