@@ -74,9 +74,11 @@ const EmployeeList: React.FC = () => {
 
   // Handlers
   const handleDeptSelect = (deptId: string) => {
+    // If deptId is '-1' (Virtual Root), treat it as undefined to fetch all employees
+    const parsedId = (deptId && deptId !== '-1') ? Number(deptId) : undefined;
     setParams(prev => ({ 
       ...prev, 
-      deptId: deptId ? Number(deptId) : undefined, 
+      deptId: parsedId, 
       page: 1 
     }));
   };
