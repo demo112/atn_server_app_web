@@ -44,11 +44,15 @@ const DailyStatsReport: React.FC = () => {
       };
 
       if (selectedItems.length > 0) {
-        const item = selectedItems[0];
-        if (item.type === 'department') {
-          params.deptId = item.id;
-        } else {
-          params.employeeId = item.id;
+        const emps = selectedItems.filter(i => i.type === 'employee');
+        const depts = selectedItems.filter(i => i.type === 'department');
+        
+        if (emps.length > 0) {
+          params.employeeId = emps.map(i => i.id);
+        }
+        
+        if (depts.length > 0) {
+          params.deptId = depts[0].id;
         }
       }
 
@@ -85,11 +89,15 @@ const DailyStatsReport: React.FC = () => {
       };
 
       if (selectedItems.length > 0) {
-        const item = selectedItems[0];
-        if (item.type === 'department') {
-          params.deptId = item.id;
-        } else {
-          params.employeeId = item.id;
+        const emps = selectedItems.filter(i => i.type === 'employee');
+        const depts = selectedItems.filter(i => i.type === 'department');
+        
+        if (emps.length > 0) {
+          params.employeeId = emps.map(i => i.id);
+        }
+        
+        if (depts.length > 0) {
+          params.deptId = depts[0].id;
         }
       }
 
@@ -182,22 +190,14 @@ const DailyStatsReport: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center text-slate-500 mb-6 cursor-pointer hover:text-blue-600 w-fit" onClick={() => navigate('/statistics/dashboard')}>
-        <span className="material-icons-outlined mr-2">chevron_left</span>
-        <span className="text-sm font-medium">返回统计报表</span>
+    <div className="flex flex-col h-full overflow-hidden bg-slate-50">
+      <div className="px-6 py-3 bg-white border-b border-slate-200 flex items-center text-sm">
+        <span className="material-icons-outlined text-slate-400 mr-2 text-lg cursor-pointer hover:text-blue-600" onClick={() => navigate('/statistics/dashboard')}>chevron_left</span>
+        <span className="font-semibold text-slate-800">每日统计全字段报表</span>
       </div>
 
-      <div className="flex flex-col gap-6 mb-6">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">每日统计全字段报表</h2>
-            <p className="text-slate-500 mt-1">查看和管理员工的每日出勤详细数据。</p>
-          </div>
-        </div>
-
-        {/* 优化后的查询栏：保留日期和统一的范围查询 */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+      {/* 优化后的查询栏：保留日期和统一的范围查询 */}
+      <div className="m-4 p-5 bg-white rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">开始日期</label>
             <input 
@@ -277,12 +277,12 @@ const DailyStatsReport: React.FC = () => {
             // Optionally auto-search here? Let's stick to explicit search for now as there's a Search button
           }}
           selectType="all"
-          multiple={false}
+          multiple={true}
           title="选择部门或人员"
           initialSelected={selectedItems}
         />
 
-        <div className="flex items-center justify-between">
+        <div className="mx-4 mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
              <button 
                onClick={handleExport}
@@ -303,10 +303,9 @@ const DailyStatsReport: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden flex flex-col">
-        <div className="overflow-x-auto relative w-full custom-scrollbar">
+      <div className="mx-4 flex-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden flex flex-col mb-4">
+        <div className="flex-1 overflow-auto custom-scrollbar relative w-full">
           <table className="w-full text-left border-collapse min-w-[2600px]">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
