@@ -309,31 +309,31 @@ const DailyStatsReport: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[2600px]">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
-                <th rowSpan={2} className="sticky left-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[150px] border-r border-slate-200">姓名</th>
-                <th rowSpan={2} className="sticky left-[150px] z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[150px] border-r border-slate-200 shadow-sm">部门</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">工号</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">工作日期</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">考勤组</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">班次</th>
-                <th colSpan={2} className="px-6 py-3 text-xs font-bold text-blue-600 bg-blue-50/30 border-l-2 border-l-blue-200 text-center">第1次上下班</th>
-                <th colSpan={2} className="px-6 py-3 text-xs font-bold text-blue-600 bg-blue-50/30 text-center">第2次上下班</th>
-                <th colSpan={2} className="px-6 py-3 text-xs font-bold text-indigo-600 bg-indigo-50/30 border-l-2 border-l-indigo-200 text-center">第3次上下班</th>
-                <th colSpan={2} className="px-6 py-3 text-xs font-bold text-indigo-600 bg-indigo-50/30 text-center">第4次上下班</th>
-                <th colSpan={2} className="px-6 py-3 text-xs font-bold text-purple-600 bg-purple-50/30 border-l-2 border-l-purple-200 text-center">第5次上下班</th>
-                <th colSpan={2} className="px-6 py-3 text-xs font-bold text-purple-600 bg-purple-50/30 text-center">第6次上下班</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-l-2 border-l-slate-200">应出勤工时</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">实际出勤工时</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">迟到 (分)</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">早退 (分)</th>
-                <th rowSpan={2} className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">缺勤 (分)</th>
+                <th rowSpan={2} className="sticky left-0 top-0 z-30 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[150px] border-r border-slate-200">姓名</th>
+                <th rowSpan={2} className="sticky left-[150px] top-0 z-30 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[150px] border-r border-slate-200 shadow-sm">部门</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">工号</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">工作日期</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">考勤组</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">班次</th>
+                <th colSpan={2} className="sticky top-0 z-20 bg-blue-50 px-6 py-3 text-xs font-bold text-blue-600 border-l-2 border-l-blue-200 text-center">第1次上下班</th>
+                <th colSpan={2} className="sticky top-0 z-20 bg-blue-50 px-6 py-3 text-xs font-bold text-blue-600 text-center">第2次上下班</th>
+                <th colSpan={2} className="sticky top-0 z-20 bg-indigo-50 px-6 py-3 text-xs font-bold text-indigo-600 border-l-2 border-l-indigo-200 text-center">第3次上下班</th>
+                <th colSpan={2} className="sticky top-0 z-20 bg-indigo-50 px-6 py-3 text-xs font-bold text-indigo-600 text-center">第4次上下班</th>
+                <th colSpan={2} className="sticky top-0 z-20 bg-purple-50 px-6 py-3 text-xs font-bold text-purple-600 border-l-2 border-l-purple-200 text-center">第5次上下班</th>
+                <th colSpan={2} className="sticky top-0 z-20 bg-purple-50 px-6 py-3 text-xs font-bold text-purple-600 text-center">第6次上下班</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-l-2 border-l-slate-200">应出勤工时</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">实际出勤工时</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">迟到 (分)</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">早退 (分)</th>
+                <th rowSpan={2} className="sticky top-0 z-20 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">缺勤 (分)</th>
               </tr>
-              <tr className="bg-slate-50/50 border-b border-slate-200">
-                <th className="px-4 py-2 text-[10px] text-slate-400 border-l-2 border-l-blue-100">打卡时间</th><th className="px-4 py-2 text-[10px] text-slate-400">结果</th>
-                <th className="px-4 py-2 text-[10px] text-slate-400">打卡时间</th><th className="px-4 py-2 text-[10px] text-slate-400">结果</th>
-                <th className="px-4 py-2 text-[10px] text-slate-400 border-l-2 border-l-indigo-100">打卡时间</th><th className="px-4 py-2 text-[10px] text-slate-400">结果</th>
-                <th className="px-4 py-2 text-[10px] text-slate-400">打卡时间</th><th className="px-4 py-2 text-[10px] text-slate-400">结果</th>
-                <th className="px-4 py-2 text-[10px] text-slate-400 border-l-2 border-l-purple-100">打卡时间</th><th className="px-4 py-2 text-[10px] text-slate-400">结果</th>
-                <th className="px-4 py-2 text-[10px] text-slate-400">打卡时间</th><th className="px-4 py-2 text-[10px] text-slate-400">结果</th>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400 border-l-2 border-l-blue-100">打卡时间</th><th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">结果</th>
+                <th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">打卡时间</th><th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">结果</th>
+                <th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400 border-l-2 border-l-indigo-100">打卡时间</th><th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">结果</th>
+                <th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">打卡时间</th><th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">结果</th>
+                <th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400 border-l-2 border-l-purple-100">打卡时间</th><th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">结果</th>
+                <th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">打卡时间</th><th className="sticky top-[41px] z-20 bg-slate-50 px-4 py-2 text-[10px] text-slate-400">结果</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
