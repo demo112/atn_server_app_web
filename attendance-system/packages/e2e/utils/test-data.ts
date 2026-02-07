@@ -9,6 +9,7 @@ export class TestDataFactory {
   private createdScheduleIds: number[] = [];
   private createdShiftIds: number[] = [];
   private createdTimePeriodIds: number[] = [];
+  private createdUserIds: number[] = [];
 
   constructor(workerId: number | string, api?: ApiClient) {
     this.prefix = `[W${workerId}]`;
@@ -41,12 +42,24 @@ export class TestDataFactory {
       name: `${this.prefix}User_${faker.person.firstName()}`,
       employeeNo: this.generateEmployeeNo(),
       phone: this.generatePhone(),
-      position: 'Staff',
       email: faker.internet.email(),
       hireDate: '2024-01-01',
       status: 'active',
       ...overrides,
     };
+  }
+
+  /** 创建带前缀的用户（需要先设置 API） */
+  async createUser(data: { username: string; password?: string; role?: string; employeeId?: number }) {
+    if (!this.api) throw new Error('API client not set');
+    const user = await this.api.createUser({
+      username: `${this.prefix}${data.username}`,
+      password: data.password || '123456',
+      role: data.role || 'user',
+      employeeId: data.employeeId,
+    });
+    this.createdUserIds.push(user.id);
+    return user;
   }
 
   /** 创建带前缀的员工（需要先设置 API） */

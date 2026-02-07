@@ -55,7 +55,15 @@ request.interceptors.response.use(
   (error: AxiosError<{ message?: string; error?: { message?: string; code?: string } }>) => {
     if (error.response) {
       const { status, data } = error.response;
-      const errorMessage = translateError(data?.error?.code, data?.message || data?.error?.message);
+      let errorMessage = translateError(data?.error?.code, data?.message || data?.error?.message);
+
+      if (data?.error?.code === 'ERR_VALIDATION' && (data.error as any).details) {
+         const details = (data.error as any).details;
+         const detailMsg = Array.isArray(details) 
+            ? details.map((d: any) => `${d.path}: ${d.message}`).join(', ')
+            : JSON.stringify(details);
+         errorMessage += `: ${detailMsg}`;
+      }
 
       switch (status) {
         case 400:

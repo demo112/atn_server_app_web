@@ -136,6 +136,10 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         email: formData.email || undefined,
       };
 
+      // Handle optional fields: convert empty strings to undefined
+      if (!values.email) delete values.email;
+      if (!values.phone) delete values.phone;
+
       if (mode === 'edit') {
         delete values.employeeNo;
       }

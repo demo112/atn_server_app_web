@@ -47,4 +47,14 @@ export class ToastComponent {
     // Wait for the container to be empty or last toast to be hidden
     await expect(this.container.locator('> div')).toHaveCount(0, { timeout: 5000 });
   }
+
+  async waitForAnyError(timeout = 5000): Promise<string> {
+    const errorToast = this.container.locator('> div').filter({ hasText: /失败|Error|错误/ });
+    try {
+      await errorToast.first().waitFor({ state: 'visible', timeout });
+      return await errorToast.first().innerText();
+    } catch (e) {
+      return '';
+    }
+  }
 }

@@ -208,6 +208,33 @@ export class SchedulePage extends BasePage {
   }
 
   /**
+   * Get all options from the Employee Select
+   */
+  async getEmployeeOptions(): Promise<string[]> {
+    const select = this.dialog.getByLabel('选择员工');
+    await expect(select).toBeVisible();
+    // Wait for at least 2 options (placeholder + data)
+    await expect(async () => {
+        const count = await select.locator('option').count();
+        expect(count).toBeGreaterThan(1);
+    }).toPass();
+    return await select.locator('option').allInnerTexts();
+  }
+
+  /**
+   * Get all options from the Shift Select
+   */
+  async getShiftOptions(): Promise<string[]> {
+    const select = this.dialog.getByLabel('选择班次');
+    await expect(select).toBeVisible();
+    await expect(async () => {
+        const count = await select.locator('option').count();
+        expect(count).toBeGreaterThan(1);
+    }).toPass();
+    return await select.locator('option').allInnerTexts();
+  }
+
+  /**
    * Fill Batch Schedule Form
    */
   async fillBatchForm(data: {

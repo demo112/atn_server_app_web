@@ -110,6 +110,21 @@ export class ApiClient {
     return this.delete(`/api/v1/departments/${id}`);
   }
 
+  // User CRUD
+  async getUsers(params?: any) {
+    const res = await this.get('/api/v1/users', params);
+    return res.data;
+  }
+
+  async createUser(data: any) {
+    const res = await this.post('/api/v1/users', data);
+    return res.data;
+  }
+
+  async deleteUser(id: number) {
+    return this.delete(`/api/v1/users/${id}`);
+  }
+
   // Employee CRUD
   async createEmployee(data: any) {
     const res = await this.post('/api/v1/employees', data);
@@ -215,6 +230,27 @@ export class ApiClient {
 
   // Cleanup
   async cleanupTestData(prefix: string) {
+    // 0. Clean Users with prefix (User -> Employee might be CASCADE, or we delete User then Employee)
+    // If User -> Employee is CASCADE, deleting User deletes Employee.
+    // If RESTRICT, we must delete User first (since Employee is usually the parent in business logic, but database FK might be on User.employeeId).
+    // In our schema: User has employeeId (optional).
+    // Let's delete Users first.
+    try {
+        const users = await this.getUsers({ keyword: prefix, pageSize: 100 });
+        const userItems = Array.isArray(users) ? users : users.items || [];
+        for (const user of userItems) {
+            if (user.username && user.username.includes(prefix)) {
+                try {
+                    await this.deleteUser(user.id);
+                } catch (e) {
+                    console.warn(`Failed to delete user ${user.id}:`, e);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to cleanup users:', e);
+    }
+
     // 0. Clean Shifts and TimePeriods first (as they might rely on employees/depts? No, usually other way around or independent)
     // Actually, Schedule depends on Shift and Employee.
     // If we delete Employee first, Schedule might be deleted (if cascade) or block deletion.

@@ -62,6 +62,8 @@ test.describe('User Management - Creation', () => {
     await userPage.searchInput.fill(username);
     await userPage.searchButton.click();
     
-    await expect(userPage.page.getByText(username)).toBeVisible();
+    // 使用 first() 避免 strict mode violation (如果列表中有多个相同文本)
+    // 或者更严谨地：检查特定列
+    await expect(userPage.page.getByText(username).first()).toBeVisible();
   });
 });

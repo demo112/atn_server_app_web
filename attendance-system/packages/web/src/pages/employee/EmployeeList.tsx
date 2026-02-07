@@ -149,7 +149,9 @@ const EmployeeList: React.FC = () => {
       setIsEmployeeModalOpen(false);
       fetchEmployees();
     } catch (error: any) {
-        toast.error('操作失败');
+        console.error('Employee operation failed:', error);
+        const message = error.response?.data?.message || error.message || '操作失败';
+        toast.error(message);
     }
   };
 

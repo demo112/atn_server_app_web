@@ -52,6 +52,22 @@ test.describe('排班管理 (SW65)', () => {
   });
 
   test.describe('个人排班', () => {
+    test('数据完整性 - 验证下拉选项', async () => {
+      await schedulePage.openCreateDialog();
+      
+      // 验证员工下拉
+      const employeeOptions = await schedulePage.getEmployeeOptions();
+      const empFound = employeeOptions.some(opt => opt.includes(employeeName));
+      expect(empFound, `Employee "${employeeName}" should be in options: ${employeeOptions}`).toBeTruthy();
+      
+      // 验证班次下拉
+      const shiftOptions = await schedulePage.getShiftOptions();
+      const shiftFound = shiftOptions.some(opt => opt.includes(shiftName));
+      expect(shiftFound, `Shift "${shiftName}" should be in options: ${shiftOptions}`).toBeTruthy();
+      
+      await schedulePage.dialog.getByRole('button', { name: '取消' }).click();
+    });
+
     test('创建排班 - 成功场景', async () => {
       const startDate = dayjs().format('YYYY-MM-DD');
       const endDate = dayjs().add(5, 'day').format('YYYY-MM-DD');
@@ -69,8 +85,8 @@ test.describe('排班管理 (SW65)', () => {
       
       // 验证列表显示
       await schedulePage.filterByDate(startDate, endDate);
-      // 这里的验证依赖于 SchedulePage 的实现，假设有方法验证表格内容
-      // 如果没有，暂时先验证 Toast，后续完善
+      const startDay = dayjs(startDate).date();
+      await schedulePage.expectScheduleInCell(startDay, employeeName, shiftName);
     });
 
     test('创建排班 - 冲突检测 (Force=false)', async () => {
@@ -149,8 +165,7 @@ test.describe('排班管理 (SW65)', () => {
             force: true
         });
         
-        // TODO: 需要在 BatchScheduleDialog 中选择部门
-        // await schedulePage.selectDepartment(departmentName); 
+        // 部门已经在 beforeEach 中选择，BatchScheduleDialog 会自动使用当前选中的部门ID
         
         await schedulePage.submitDialog();
         await schedulePage.toast.expectSuccess(/批量排班成功/);

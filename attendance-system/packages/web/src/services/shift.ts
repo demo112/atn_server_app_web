@@ -35,5 +35,7 @@ export const updateShift = async (id: number, data: UpdateShiftDaysDto): Promise
 
 export const deleteShift = async (id: number): Promise<void> => {
   const res = await api.delete<unknown, ApiResponse<{ id: number }>>(`/attendance/shifts/${id}`);
-  validateResponse(z.object({ id: z.number() }), res);
+  // Backend returns { message: '...' }, not { id: ... }
+  // We don't need the return value, just ensure success=true (handled by validateResponse base logic)
+  validateResponse(z.any(), res);
 };

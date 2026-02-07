@@ -30,29 +30,24 @@ export class TimePeriodPage extends BasePage {
     await this.createButton.click();
     await this.modal.waitForOpen();
     
-    await this.page.getByLabel('名称').fill(data.name);
+    await this.page.getByLabel(/名称/).fill(data.name);
     
-    // Handle type selection if needed (assuming default or simple select)
-    // If it's a select/radio, we might need to click it.
-    // Based on standard implementation, it might be a select.
-    // For now assuming the default is Fixed or we can select it.
     if (data.type) {
-        // Try to select if there is a combobox, otherwise skip if default
-        // page.getByLabel('类型').click(); ...
-        // Simplified for now, will adjust if test fails
+        const typeValue = data.type === '固定班制' ? '0' : '1';
+        await this.page.getByLabel(/类型/).selectOption(typeValue);
     }
 
     if (data.startTime) {
-        await this.page.getByLabel('上班时间').fill(data.startTime);
+        await this.page.getByLabel(/上班时间/).fill(data.startTime);
     }
     if (data.endTime) {
-        await this.page.getByLabel('下班时间').fill(data.endTime);
+        await this.page.getByLabel(/下班时间/).fill(data.endTime);
     }
     if (data.restStartTime) {
-        await this.page.getByLabel('午休开始').fill(data.restStartTime);
+        await this.page.getByLabel(/午休开始/).fill(data.restStartTime);
     }
     if (data.restEndTime) {
-        await this.page.getByLabel('午休结束').fill(data.restEndTime);
+        await this.page.getByLabel(/午休结束/).fill(data.restEndTime);
     }
 
     await this.modal.confirm();

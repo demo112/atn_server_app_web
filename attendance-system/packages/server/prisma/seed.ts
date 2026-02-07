@@ -24,6 +24,10 @@ async function main() {
 
   // eslint-disable-next-line no-console
   console.log('Seeded admin user:', admin);
+
+  // Verification
+  const verify = await prisma.user.findUnique({ where: { username: 'admin' } });
+  console.log('Verification check:', verify);
 }
 
 main()
