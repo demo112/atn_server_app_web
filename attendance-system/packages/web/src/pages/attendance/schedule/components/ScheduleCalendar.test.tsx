@@ -34,7 +34,7 @@ describe('ScheduleCalendar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // 设置当前时间为 2024-02-01，以便日历显示该月
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2024-02-01'));
   });
 
@@ -51,6 +51,17 @@ describe('ScheduleCalendar', () => {
     await waitFor(() => {
       // 检查是否显示了员工姓名和班次名称
       expect(screen.getByText(/张三: 早班/)).toBeInTheDocument();
+    });
+  });
+
+  it('calls getSchedules with undefined deptId when deptId is -1', async () => {
+    (attendanceService.getSchedules as any).mockResolvedValue([]);
+    renderWithProviders(<ScheduleCalendar deptId={-1} />);
+    
+    await waitFor(() => {
+        expect(attendanceService.getSchedules).toHaveBeenCalledWith(expect.objectContaining({
+            deptId: undefined
+        }));
     });
   });
 });

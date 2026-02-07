@@ -193,6 +193,7 @@ export const PersonnelSelectionModal: React.FC<PersonnelSelectionModalProps> = (
               onSelect={handleDeptSelect} 
               onNodeSelect={handleDeptNodeSelect}
               selectedId={activeDeptId} 
+              showVirtualRoot={true}
             />
           </div>
           {/* If selecting departments, allow adding current dept */}

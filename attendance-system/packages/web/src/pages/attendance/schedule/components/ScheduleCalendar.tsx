@@ -39,7 +39,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ deptId }): R
         const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`;
         
         const res = await attendanceService.getSchedules({
-          deptId: deptId,
+          deptId: deptId === -1 ? undefined : deptId,
           startDate,
           endDate
         });

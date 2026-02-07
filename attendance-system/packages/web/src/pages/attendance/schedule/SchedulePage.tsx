@@ -26,7 +26,7 @@ const SchedulePage: React.FC = (): React.ReactElement => {
           onSelect={setSelectedDeptId} 
           selectedId={selectedDeptId}
           onNodeSelect={(node: DepartmentVO | null) => setSelectedDeptName(node?.name || '')}
-          showVirtualRoot={false}
+          showVirtualRoot={true}
         />
       </div>
 
