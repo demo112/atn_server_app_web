@@ -25,10 +25,12 @@
 ## 修复方案
 - **修复思路**：
   1. `DepartmentSidebar`: 手动包裹 ID 为 `-1` 的虚拟根节点“全公司”，处理点击事件传递空 ID。
-  2. `SchedulePage` & `PersonnelSelectionModal`: 启用 `DepartmentTree` 的 `showVirtualRoot={true}` 属性。
-  3. `ScheduleCalendar`: 兼容处理 `deptId=-1` 的情况，将其转换为 `undefined` 传递给 API，以查询所有数据。
+  2. `DepartmentTree`: 修改点击虚拟根节点的行为，传递 ID `-1` 而不是 `null`。
+  3. `SchedulePage` & `PersonnelSelectionModal`: 启用 `DepartmentTree` 的 `showVirtualRoot={true}` 属性。
+  4. `ScheduleCalendar`: 兼容处理 `deptId=-1` 的情况，将其转换为 `undefined` 传递给 API，以查询所有数据。
 - **改动文件**：
   - `packages/web/src/pages/employee/components_new/DepartmentSidebar.tsx`
+  - `packages/web/src/components/common/DepartmentTree.tsx`
   - `packages/web/src/pages/attendance/schedule/SchedulePage.tsx`
   - `packages/web/src/components/common/PersonnelSelectionModal.tsx`
   - `packages/web/src/pages/attendance/schedule/components/ScheduleCalendar.tsx`
@@ -39,6 +41,7 @@
 | 组件 | 文件路径 | 是否同步修复 |
 |------|----------|--------------|
 | DepartmentSidebar | `packages/web/src/pages/employee/components_new/DepartmentSidebar.tsx` | ✅ |
+| DepartmentTree | `packages/web/src/components/common/DepartmentTree.tsx` | ✅ (修改根节点点击行为) |
 | SchedulePage | `packages/web/src/pages/attendance/schedule/SchedulePage.tsx` | ✅ (启用虚拟根节点) |
 | PersonnelSelectionModal | `packages/web/src/components/common/PersonnelSelectionModal.tsx` | ✅ (启用虚拟根节点) |
 | ScheduleCalendar | `packages/web/src/pages/attendance/schedule/components/ScheduleCalendar.tsx` | ✅ (处理 -1 ID) |
@@ -63,6 +66,7 @@
 fix(web): 部门树增加"全公司"虚拟根节点
 
 - DepartmentSidebar: 增加虚拟根节点，点击清除筛选
+- DepartmentTree: 点击虚拟根节点传递 ID -1
 - SchedulePage: 启用虚拟根节点，支持查看所有排班
 - PersonnelSelectionModal: 启用虚拟根节点
 - ScheduleCalendar: 兼容处理 -1 部门ID

@@ -38,10 +38,10 @@ const TreeNode: React.FC<{
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={(e) => {
           e.stopPropagation();
-          // 如果是虚拟根节点，点击视为取消选择或选择空
+          // 如果是虚拟根节点，传递其 ID (-1)
           if (isVirtualRoot) {
-            onSelect(null);
-            onNodeSelect?.(null);
+            onSelect(node.id);
+            onNodeSelect?.(node);
           } else {
             onSelect(node.id);
             onNodeSelect?.(node);
