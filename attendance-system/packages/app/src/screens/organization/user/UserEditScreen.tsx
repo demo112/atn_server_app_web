@@ -121,7 +121,9 @@ export const UserEditScreen = () => {
 
   const handleSave = async () => {
     if (!username.trim()) return Alert.alert('提示', '请输入用户名');
+    if (username.trim().length < 3) return Alert.alert('提示', '用户名至少需要3个字符');
     if (!isEdit && !password.trim()) return Alert.alert('提示', '请输入密码');
+    if (!isEdit && password.trim().length < 6) return Alert.alert('提示', '密码至少需要6个字符');
 
     if (createEmployeeMode) {
       if (!employeeNo.trim()) return Alert.alert('提示', '请输入工号');
@@ -147,7 +149,8 @@ export const UserEditScreen = () => {
           logger.info('Employee created automatically', { id: emp.id });
         } catch (err: any) {
           logger.error(err);
-          const msg = err?.response?.data?.error?.message || err.message || '创建人员失败';
+          const { getErrorMessage } = await import('../../../utils/error');
+          const msg = getErrorMessage(err);
           Alert.alert('错误', `创建人员失败: ${msg}`);
           setLoading(false);
           return; // Stop here if employee creation fails

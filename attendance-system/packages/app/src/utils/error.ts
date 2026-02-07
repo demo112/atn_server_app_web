@@ -22,6 +22,7 @@ export const getErrorMessage = (error: unknown): string => {
     ERR_INVALID_DATE: '日期格式无效',
     ERR_INVALID_DATE_RANGE: '日期范围无效',
     ERR_SCHEDULE_CONFLICT: '存在排班冲突'
+    ,ERR_EMPLOYEE_EXISTS: '工号已存在'
     };
     if (code && translations[code]) {
       return translations[code];
@@ -43,7 +44,8 @@ export const getErrorMessage = (error: unknown): string => {
     { test: (m) => m.includes('Clock in too frequent'), zh: '打卡过于频繁，请稍后再试' },
     { test: (m) => m.includes('Token expired or invalid'), zh: '认证信息已过期或无效' },
     { test: (m) => m.includes('Invalid token format'), zh: '认证信息格式错误' },
-    { test: (m) => m.includes('No token provided'), zh: '缺少认证信息' }
+    { test: (m) => m.includes('No token provided'), zh: '缺少认证信息' },
+    { test: (m) => m.includes('Employee No already exists'), zh: '工号已存在' }
   ];
   if (typeof msg === 'string') {
     const matched = phraseMap.find(p => p.test(msg));
