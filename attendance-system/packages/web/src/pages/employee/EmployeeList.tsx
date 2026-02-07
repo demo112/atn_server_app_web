@@ -137,6 +137,27 @@ const EmployeeList: React.FC = () => {
     );
   };
 
+  const handleBatchDelete = (ids: string[]): void => {
+    showConfirm(
+      '确定要批量删除选中员工吗？',
+      `即将删除 ${ids.length} 名员工，此操作不可恢复。`,
+      async () => {
+        try {
+          // 循环调用删除接口
+          for (const id of ids) {
+            await employeeService.deleteEmployee(Number(id));
+          }
+          toast.success('批量删除成功');
+          fetchEmployees();
+        } catch (error) {
+          console.error('Batch delete failed:', error);
+          toast.error('批量删除过程中发生错误');
+          fetchEmployees();
+        }
+      }
+    );
+  };
+
   const handleEmployeeModalOk = async (values: CreateEmployeeDto | UpdateEmployeeDto): Promise<void> => {
     try {
       if (employeeModalMode === 'create') {
@@ -176,6 +197,7 @@ const EmployeeList: React.FC = () => {
           data={data}
           onFilterChange={handleFilterChange}
           onDelete={handleDelete}
+          onBatchDelete={handleBatchDelete}
           onAdd={handleAdd}
           onEdit={handleEdit}
         />

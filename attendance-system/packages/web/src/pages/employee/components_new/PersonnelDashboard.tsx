@@ -114,14 +114,14 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <button 
           onClick={() => toast.info('批量更换部门功能暂未开放')}
-          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700"
+          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700 opacity-70 cursor-not-allowed"
         >
           <span className="material-icons text-gray-500 text-base">swap_horiz</span>
           <span>更换部门</span>
         </button>
         <button 
           onClick={() => toast.info('导入功能暂未开放')}
-          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700"
+          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700 opacity-70 cursor-not-allowed"
         >
           <span className="material-icons text-gray-500 text-base">file_download</span>
           <span>导入</span>
@@ -129,7 +129,7 @@ const PersonnelDashboard: React.FC<Props> = ({ data, onFilterChange, onDelete, o
         </button>
         <button 
           onClick={() => toast.info('导出功能暂未开放')}
-          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700"
+          className="flex items-center space-x-1 border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded text-sm transition text-gray-700 opacity-70 cursor-not-allowed"
         >
           <span className="material-icons text-gray-500 text-base">file_upload</span>
           <span>导出人员</span>
