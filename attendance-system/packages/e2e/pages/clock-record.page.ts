@@ -58,7 +58,9 @@ export class ClockRecordPage extends BasePage {
     }).toPass();
     
     // Check if the employee option exists
-    const optionText = await employeeSelect.locator('option', { hasText: employeeName }).textContent();
+    // The option text format might be "Name (No)" or just "Name"
+    const optionText = await employeeSelect.locator('option', { hasText: employeeName }).first().textContent();
+    
     if (!optionText) {
         // If exact match by label fails, try to find by text content and get value
         // Or just fail with a better message
@@ -66,7 +68,8 @@ export class ClockRecordPage extends BasePage {
         throw new Error(`Employee "${employeeName}" not found in options: ${options.join(', ')}`);
     }
 
-    await employeeSelect.selectOption({ label: employeeName });
+    // Use the exact text found for selection (handles "Name (No)" format)
+    await employeeSelect.selectOption({ label: optionText.trim() });
     
     // Fill time
     await this.modal.locator('input[type="datetime-local"]').fill(time);
