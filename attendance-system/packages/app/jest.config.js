@@ -6,7 +6,7 @@ const config = {
   rootDir: __dirname,
   roots: ['<rootDir>'],
   transformIgnorePatterns: [
-    'node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@attendance))',
+    'node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@attendance|react-native-paper))',
   ],
   setupFiles: [
     '<rootDir>/jest-init.js',
@@ -16,6 +16,11 @@ const config = {
   ],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
   moduleDirectories: ['node_modules', path.resolve(__dirname, '../../node_modules')],
+  moduleNameMapper: {
+    ...jestExpoPreset.moduleNameMapper,
+    'react-native/Libraries/Utilities/NativePlatformConstantsIOS': '<rootDir>/__mocks__/NativePlatformConstantsIOS.js',
+    'react-native/src/private/specs_DEPRECATED/modules/NativePlatformConstantsIOS': '<rootDir>/__mocks__/NativePlatformConstantsIOS.js',
+  },
   testMatch: ['**/*.test.tsx', '**/*.test.ts'],
 };
 

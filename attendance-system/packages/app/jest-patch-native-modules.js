@@ -57,6 +57,13 @@ if (!NativeModules.NativePlatformConstantsIOS) {
   };
 }
 
+if (!NativeModules.KeyboardObserver) {
+  NativeModules.KeyboardObserver = {
+    addListener: () => {},
+    removeListeners: () => {},
+  };
+}
+
   
 } else {
   console.error('NativeModules could not be required.');

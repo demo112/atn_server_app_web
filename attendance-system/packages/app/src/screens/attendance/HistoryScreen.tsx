@@ -104,7 +104,7 @@ const HistoryScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Surface style={styles.header} elevation={2}>
-        <IconButton icon="chevron-left" onPress={() => changeMonth(-1)} />
+        <IconButton icon="chevron-left" onPress={() => changeMonth(-1)} testID="prev-month-btn" />
         <Text variant="titleLarge" style={{ fontWeight: 'bold' }}>
           {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月
         </Text>
@@ -114,7 +114,7 @@ const HistoryScreen = () => {
             testID="calendar-btn"
             onPress={() => navigation.navigate('AttendanceCalendar' as never)} 
           />
-          <IconButton icon="chevron-right" onPress={() => changeMonth(1)} />
+          <IconButton icon="chevron-right" onPress={() => changeMonth(1)} testID="next-month-btn" />
         </View>
       </Surface>
 
