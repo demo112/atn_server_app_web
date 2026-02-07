@@ -171,14 +171,30 @@ const CorrectionProcessingPage: React.FC = () => {
                 <input 
                   type="date" 
                   value={params.startDate}
-                  onChange={(e) => setParams({ ...params, startDate: e.target.value })}
+                  max={params.endDate}
+                  onChange={(e) => {
+                    const newStart = e.target.value;
+                    if (newStart > params.endDate) {
+                      setParams({ ...params, startDate: newStart, endDate: newStart });
+                    } else {
+                      setParams({ ...params, startDate: newStart });
+                    }
+                  }}
                   className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
                 />
                 <span className="text-slate-400">-</span>
                 <input 
                   type="date" 
                   value={params.endDate}
-                  onChange={(e) => setParams({ ...params, endDate: e.target.value })}
+                  min={params.startDate}
+                  onChange={(e) => {
+                    const newEnd = e.target.value;
+                    if (newEnd < params.startDate) {
+                      setParams({ ...params, endDate: newEnd, startDate: newEnd });
+                    } else {
+                      setParams({ ...params, endDate: newEnd });
+                    }
+                  }}
                   className="border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary outline-none"
                 />
               </div>

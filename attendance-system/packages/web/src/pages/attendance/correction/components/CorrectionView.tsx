@@ -104,14 +104,28 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
                 className="w-32 border-none text-sm px-3 focus:ring-0 outline-none" 
                 type="date" 
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                max={endDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setStartDate(val);
+                  if (val > endDate) {
+                    setEndDate(val);
+                  }
+                }}
               />
               <span className="text-slate-300">-</span>
               <input 
                 className="w-32 border-none text-sm px-3 focus:ring-0 outline-none" 
                 type="date" 
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEndDate(val);
+                  if (val < startDate) {
+                    setStartDate(val);
+                  }
+                }}
               />
               <div className="px-2 text-slate-400 border-l border-slate-100 flex items-center">
                 <span className="material-icons text-lg">calendar_today</span>
