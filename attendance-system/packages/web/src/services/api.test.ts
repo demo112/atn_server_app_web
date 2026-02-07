@@ -35,12 +35,12 @@ describe('services/api', () => {
       expect(result).toBeNull();
     });
 
-    it('should handle null data correctly with z.void() (fix applied)', () => {
+    it('should throw when using z.void() with null data', () => {
       const schema = z.void();
       const response = { success: true, data: null };
       
-      const result = validateResponse(schema, response);
-      expect(result).toBeUndefined();
+      // This confirms why the bug happened
+      expect(() => validateResponse(schema, response)).toThrow();
     });
   });
 });

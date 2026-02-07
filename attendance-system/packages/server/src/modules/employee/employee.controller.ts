@@ -40,7 +40,7 @@ export class EmployeeController {
     const id = parseInt(req.params.id);
     if (isNaN(id)) throw AppError.badRequest('Invalid ID');
     await employeeService.delete(id);
-    res.json({ success: true, data: null });
+    res.json({ success: true, data: { id } });
   }
 
   async bindUser(req: Request, res: Response) {

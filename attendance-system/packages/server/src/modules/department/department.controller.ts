@@ -37,7 +37,7 @@ export class DepartmentController {
     await departmentService.delete(id);
     res.json({
       success: true,
-      data: null,
+      data: { id },
     });
   }
 

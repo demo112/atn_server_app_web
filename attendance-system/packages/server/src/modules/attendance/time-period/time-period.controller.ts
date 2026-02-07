@@ -72,7 +72,7 @@ export class TimePeriodController {
     await this.timePeriodService.remove(id);
     res.status(200).json({
       success: true,
-      data: null,
+      data: { id },
     });
   }
 }

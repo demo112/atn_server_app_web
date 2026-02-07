@@ -38,8 +38,13 @@ export const employeeService = {
 
   // 删除员工
   deleteEmployee: async (id: number): Promise<void> => {
-    const res = await api.delete<unknown, ApiResponse<void>>(`/employees/${id}`);
-    validateResponse(z.null(), res);
+    const res = await api.delete<unknown, ApiResponse<{ id: number }>>(`/employees/${id}`);
+    validateResponse(z.object({ id: z.number() }), res);
+  },
+
+  unbindUser: async (id: number): Promise<void> => {
+    const res = await api.delete<unknown, ApiResponse<{ id: number }>>(`/employees/${id}/user`);
+    validateResponse(z.object({ id: z.number() }), res);
   },
 
   // 绑定用户
