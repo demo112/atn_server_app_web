@@ -28,6 +28,8 @@
   2. `DepartmentTree`: 修改点击虚拟根节点的行为，传递 ID `-1` 而不是 `null`。
   3. `SchedulePage` & `PersonnelSelectionModal`: 启用 `DepartmentTree` 的 `showVirtualRoot={true}` 属性。
   4. `ScheduleCalendar`: 兼容处理 `deptId=-1` 的情况，将其转换为 `undefined` 传递给 API，以查询所有数据。
+  5. `SchedulePage`: 在批量排班操作前增加校验，禁止在选择“全公司”时进行批量排班。
+  6. `schedule.test.tsx`: 修复集成测试中的 mock 错误和过时的期望调用（`batchCreateSchedule` -> `createSchedule`）。
 - **改动文件**：
   - `packages/web/src/pages/employee/components_new/DepartmentSidebar.tsx`
   - `packages/web/src/components/common/DepartmentTree.tsx`
@@ -36,6 +38,7 @@
   - `packages/web/src/pages/attendance/schedule/components/ScheduleCalendar.tsx`
   - `packages/web/src/pages/employee/components_new/DepartmentSidebar.test.tsx`
   - `packages/web/src/pages/attendance/schedule/components/ScheduleCalendar.test.tsx`
+  - `packages/web/src/__tests__/integration/schedule/schedule.test.tsx`
 
 ## 关联组件
 | 组件 | 文件路径 | 是否同步修复 |

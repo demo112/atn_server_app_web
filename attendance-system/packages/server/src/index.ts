@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import * as fs from 'fs';
 import * as path from 'path';
+import express from 'express';
 
 // Startup logger
 const logPath = path.join(process.cwd(), 'startup.log');
@@ -9,17 +10,38 @@ const log = (msg: string) => {
   try {
     fs.appendFileSync(logPath, `[${time}] ${msg}\n`);
   } catch (e) {
-    console.error('Failed to write to log file:', e);
+    // Ignore log write errors
   }
-  console.log(msg);
+  process.stdout.write(msg + '\n');
+};
+
+// Hook console.log and console.error to file log
+const originalLog = console.log;
+const originalError = console.error;
+
+console.log = (...args) => {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  log(`[CONSOLE] ${msg}`);
+};
+
+console.error = (...args) => {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  log(`[ERROR] ${msg}`);
 };
 
 log('DEBUG: Index.ts loaded - Starting application');
 
 try {
   log('Importing dotenv/config...');
-  require('dotenv/config');
-  log('dotenv imported');
+  // Force load .env from project root or server root
+  const envResult = require('dotenv').config({ path: path.join(process.cwd(), '.env'), override: true });
+  if (envResult.error) {
+    log(`dotenv error: ${envResult.error.message}`);
+  } else {
+    log('dotenv loaded successfully');
+  }
+  
+  log(`PORT from env: ${process.env.PORT}`);
 
   log('Importing app...');
   const { app } = require('./app');
@@ -29,38 +51,44 @@ try {
   const { logger } = require('./common/logger');
   log('logger imported');
 
-  process.on('uncaughtException', (err) => {
-    log(`Uncaught Exception: ${err.message}\n${err.stack}`);
-    console.error('Uncaught Exception:', err);
-    process.exit(1);
-  });
-
-  process.on('unhandledRejection', (reason) => {
-    log(`Unhandled Rejection: ${reason}`);
-    console.error('Unhandled Rejection:', reason);
-  });
-
-  logger.info('Starting server initialization...');
   log('Initializing server configuration...');
+  const PORT = process.env.PORT || 3001;
 
-  const PORT = process.env.PORT || 3000;
-  const HOST = '0.0.0.0';
-
-  const server = app.listen(PORT, HOST, () => {
-    log(`[Startup] Server started on http://${HOST}:${PORT}`);
-    console.log(`[Startup] Server started on http://${HOST}:${PORT}`);
-    logger.info({ port: PORT, env: process.env.NODE_ENV }, 'Server started');
+  log(`Calling app.listen on port ${PORT}...`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    const msg = `[Startup] Server started on http://0.0.0.0:${PORT}`;
+    log(msg);
+    logger.info(msg);
   });
+  log('app.listen returned server instance');
 
-  server.on('error', (err: any) => {
-    log(`[Startup] Server listen error: ${err.message}`);
-    console.error('[Startup] Server listen error:', err);
-    logger.error({ err }, 'Server listen error');
+  server.on('error', (e: any) => {
+    log(`SERVER ERROR: ${e.message}`);
+    if (e.code === 'EADDRINUSE') {
+      log(`Port ${PORT} is already in use`);
+    }
     process.exit(1);
   });
+
+  // Handle graceful shutdown
+  const shutdown = () => {
+    log('Received shutdown signal');
+    server.close(() => {
+      log('Server closed');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+
+  // PREVENT PREMATURE EXIT: Keep event loop alive
+  setInterval(() => {
+    // No-op to keep process running if event loop empties
+  }, 60000);
 
 } catch (error: any) {
-  log(`CRITICAL ERROR during startup: ${error.message}\n${error.stack}`);
-  console.error('CRITICAL ERROR:', error);
+  log(`CRITICAL ERROR: ${error.message}`);
+  console.error(error);
   process.exit(1);
 }

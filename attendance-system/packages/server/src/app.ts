@@ -29,9 +29,9 @@ console.log('DEBUG: app.ts - Creating express app');
 export const app: express.Application = express();
 
 // 初始化调度器
-attendanceScheduler.init().catch(err => {
-  logger.error({ err }, 'Failed to initialize attendance scheduler');
-});
+// attendanceScheduler.init().catch(err => {
+//   logger.error({ err }, 'Failed to initialize attendance scheduler');
+// });
 
 // 中间件
 app.use(cors());

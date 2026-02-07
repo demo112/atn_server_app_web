@@ -47,6 +47,7 @@ const SchedulePage: React.FC = (): React.ReactElement => {
             <button 
               onClick={() => {
                 if (!selectedDeptId) return toast.error('请先选择部门');
+                if (selectedDeptId === -1) return toast.error('请选择具体部门进行批量排班');
                 setIsBatchOpen(true);
               }}
               className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors text-sm font-medium"

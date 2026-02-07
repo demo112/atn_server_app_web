@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SchedulePage from '../../../pages/attendance/schedule/SchedulePage';
-import { renderWithProviders } from '../../../test/utils';
-import { attendanceService } from '../../../services/attendance';
-import { employeeService } from '../../../services/employee';
+import SchedulePage from '@/pages/attendance/schedule/SchedulePage';
+import { renderWithProviders } from '@/test/utils';
+import { attendanceService } from '@/services/attendance';
+import { employeeService } from '@/services/employee';
 
 // Mock Services
-vi.mock('../../../services/attendance', () => ({
+vi.mock('@/services/attendance', () => ({
   attendanceService: {
     getSchedules: vi.fn(),
     createSchedule: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('../../../services/attendance', () => ({
   },
 }));
 
-vi.mock('../../../services/employee', () => ({
+vi.mock('@/services/employee', () => ({
   employeeService: {
     getEmployees: vi.fn(),
   },
@@ -32,7 +32,7 @@ vi.mock('@/components/common/DepartmentTree', () => ({
   ),
 }));
 
-vi.mock('../../../pages/attendance/schedule/components/ScheduleCalendar', () => ({
+vi.mock('@/pages/attendance/schedule/components/ScheduleCalendar', () => ({
   ScheduleCalendar: ({ deptId }: any) => (
     <div data-testid="mock-calendar">Calendar for Dept {deptId}</div>
   ),
@@ -140,7 +140,7 @@ describe('Schedule Integration Test', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(attendanceService.batchCreateSchedule).toHaveBeenCalledWith(expect.objectContaining({
+      expect(attendanceService.createSchedule).toHaveBeenCalledWith(expect.objectContaining({
         employeeId: 101,
         shiftId: 1,
         startDate: '2023-07-01',

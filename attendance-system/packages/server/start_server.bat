@@ -1,0 +1,1 @@
+call npm run dev > server_debug.log 2>&1

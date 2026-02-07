@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserListVo } from '@attendance/shared';
+import { EmployeeVo } from '@attendance/shared';
 import PersonnelSelectionModal, { SelectionItem } from '@/components/common/PersonnelSelectionModal';
 
 interface PunchFilterProps {
@@ -12,7 +12,7 @@ interface PunchFilterProps {
   setParams: (params: any) => void;
   onSearch: () => void;
   onReset: () => void;
-  users: UserListVo['items'];
+  employees: EmployeeVo[];
 }
 
 const PunchFilter: React.FC<PunchFilterProps> = ({
@@ -20,22 +20,22 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
   setParams,
   onSearch,
   onReset,
-  users,
+  employees,
 }) => {
   const [deptModalOpen, setDeptModalOpen] = useState(false);
   const [empModalOpen, setEmpModalOpen] = useState(false);
   const [deptName, setDeptName] = useState('');
   const [empName, setEmpName] = useState('');
 
-  // Sync empName with users list if possible
+  // Sync empName with employees list if possible
   React.useEffect(() => {
-    if (params.employeeId && users.length > 0) {
-      const u = users.find(u => u.id === Number(params.employeeId));
-      if (u) setEmpName(u.username);
+    if (params.employeeId && employees.length > 0) {
+      const u = employees.find(u => u.id === Number(params.employeeId));
+      if (u) setEmpName(u.name);
     } else if (!params.employeeId) {
       setEmpName('');
     }
-  }, [params.employeeId, users]);
+  }, [params.employeeId, employees]);
 
   const handleDeptConfirm = (selected: SelectionItem[]) => {
     if (selected.length > 0) {
@@ -83,14 +83,16 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-gray-500 dark:text-gray-400">筛选部门</label>
-        <div className="w-48 relative">
-          <input
-            readOnly
-            placeholder="选择部门"
-            value={deptName || (params.deptId ? `部门ID: ${params.deptId}` : '')}
-            onClick={() => setDeptModalOpen(true)}
-            className="block w-full px-3 py-1.5 text-sm border-gray-300 dark:border-gray-600 bg-transparent rounded focus:ring-primary focus:border-primary dark:text-gray-200 cursor-pointer transition-all"
-          />
+        <div 
+          className="w-48 relative border border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800 transition-colors"
+          onClick={() => setDeptModalOpen(true)}
+        >
+          <div className="px-3 py-1.5 text-sm min-h-[34px] flex items-center">
+            <span className={deptName || params.deptId ? "text-gray-900 dark:text-gray-200" : "text-gray-400"}>
+              {deptName || (params.deptId ? `部门ID: ${params.deptId}` : '选择部门')}
+            </span>
+          </div>
+          
           {params.deptId && (
             <button
               onClick={(e) => {
@@ -98,7 +100,7 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
                 setParams({ ...params, deptId: undefined });
                 setDeptName('');
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
             >
               ×
             </button>
@@ -108,14 +110,16 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-gray-500 dark:text-gray-400">筛选员工</label>
-        <div className="w-48 relative">
-          <input
-            readOnly
-            placeholder="全部员工"
-            value={empName || (params.employeeId ? `员工ID: ${params.employeeId}` : '')}
-            onClick={() => setEmpModalOpen(true)}
-            className="block w-full px-3 py-1.5 text-sm border-gray-300 dark:border-gray-600 bg-transparent rounded focus:ring-primary focus:border-primary dark:text-gray-200 cursor-pointer transition-all"
-          />
+        <div 
+          className="w-48 relative border border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800 transition-colors"
+          onClick={() => setEmpModalOpen(true)}
+        >
+          <div className="px-3 py-1.5 text-sm min-h-[34px] flex items-center">
+             <span className={empName || params.employeeId ? "text-gray-900 dark:text-gray-200" : "text-gray-400"}>
+              {empName || (params.employeeId ? `员工ID: ${params.employeeId}` : '全部员工')}
+            </span>
+          </div>
+          
           {params.employeeId && (
             <button
               onClick={(e) => {
@@ -123,7 +127,7 @@ const PunchFilter: React.FC<PunchFilterProps> = ({
                 setParams({ ...params, employeeId: '' });
                 setEmpName('');
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
             >
               ×
             </button>

@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/components/common/ToastProvider';
 import dayjs from 'dayjs';
 import { getClockRecords, manualClock } from '../../../services/clock';
-import { userService } from '../../../services/user';
-import type { ClockRecord, ClockType, UserListVo } from '@attendance/shared';
+import { employeeService } from '@/services/employee';
+import type { ClockRecord, ClockType, EmployeeVo } from '@attendance/shared';
 import { logger } from '../../../utils/logger';
 import StandardModal from '@/components/common/StandardModal';
 import PunchFilter from './components/PunchFilter';
@@ -38,7 +38,7 @@ const ClockRecordPage: React.FC = () => {
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [users, setUsers] = useState<UserListVo['items']>([]);
+  const [employees, setEmployees] = useState<EmployeeVo[]>([]);
   const [manualClockForm, setManualClockForm] = useState({
     employeeId: '',
     clockTime: '',
@@ -72,12 +72,12 @@ const ClockRecordPage: React.FC = () => {
     }
   }, [queryParams]);
 
-  const loadUsers = useCallback(async (): Promise<void> => {
+  const loadEmployees = useCallback(async (): Promise<void> => {
     try {
-      const res = await userService.getUsers({ page: 1, pageSize: 100 });
-      setUsers(res.items || []); 
+      const res = await employeeService.getEmployees({ page: 1, pageSize: 1000 });
+      setEmployees(res.items || []); 
     } catch (error) {
-      logger.error('Failed to load users', error);
+      logger.error('Failed to load employees', error);
     }
   }, []);
 
@@ -86,8 +86,8 @@ const ClockRecordPage: React.FC = () => {
   }, [fetchData]);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    loadEmployees();
+  }, [loadEmployees]);
 
   const handleSearch = () => {
     setQueryParams(prev => ({
@@ -177,7 +177,7 @@ const ClockRecordPage: React.FC = () => {
           setParams={setFilterParams}
           onSearch={handleSearch}
           onReset={handleReset}
-          users={users}
+          employees={employees}
         />
         
         <div className="flex-1 overflow-hidden relative flex flex-col">
@@ -210,8 +210,8 @@ const ClockRecordPage: React.FC = () => {
               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-shadow"
             >
               <option value="">选择员工</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id}>{u.username}</option>
+              {employees.map(u => (
+                <option key={u.id} value={u.id}>{u.name} ({u.employeeNo})</option>
               ))}
             </select>
           </div>

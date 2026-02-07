@@ -603,6 +603,7 @@ export class AttendanceScheduler {
 
       const onEnd = () => {
         cleanup();
+        redis.disconnect(); // Ensure it stops trying and doesn't emit further errors
         reject(new Error(`${name} Redis connection failed`));
       };
 
@@ -613,7 +614,8 @@ export class AttendanceScheduler {
       const cleanup = () => {
         redis.removeListener('ready', onReady);
         redis.removeListener('end', onEnd);
-        redis.removeListener('error', onError);
+        // Do NOT remove error listener to prevent unhandled 'error' events crashing the process
+        // redis.removeListener('error', onError);
       };
 
       redis.once('ready', onReady);

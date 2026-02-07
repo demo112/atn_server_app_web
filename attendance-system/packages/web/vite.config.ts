@@ -13,9 +13,9 @@ function getServerPort() {
       if (match) return parseInt(match[1], 10);
     }
   } catch (e) {
-    console.warn('Failed to load server .env, using default port 3001');
+    console.warn('Failed to load server .env, using default port 3000');
   }
-  return 3001;
+  return 3000;
 }
 
 const SERVER_PORT = getServerPort();
