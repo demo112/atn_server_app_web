@@ -1,13 +1,22 @@
 const path = require('path');
+const jestExpoPreset = require('jest-expo/jest-preset');
 
-module.exports = {
-  preset: 'jest-expo',
-  rootDir: path.resolve(__dirname, '../../'),
-  roots: ['<rootDir>/packages/app'],
+const config = {
+  ...jestExpoPreset,
+  rootDir: __dirname,
+  roots: ['<rootDir>'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
+    'node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@attendance))',
   ],
-  setupFilesAfterEnv: ['<rootDir>/packages/app/jest-setup.ts'],
-  moduleDirectories: ['node_modules', '<rootDir>/node_modules'],
-  testMatch: ['<rootDir>/packages/app/**/*.test.tsx', '<rootDir>/packages/app/**/*.test.ts'],
+  setupFiles: [
+    '<rootDir>/jest-init.js',
+    jestExpoPreset.setupFiles[0], // react-native/jest/setup.js
+    '<rootDir>/jest-patch-native-modules.js',
+    '<rootDir>/jest-expo-setup-patched.js'
+  ],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
+  moduleDirectories: ['node_modules', path.resolve(__dirname, '../../node_modules')],
+  testMatch: ['**/*.test.tsx', '**/*.test.ts'],
 };
+
+module.exports = config;

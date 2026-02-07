@@ -31,9 +31,9 @@ export const updateDepartment = (id: number, data: UpdateDepartmentDto): Promise
   );
 };
 
-export const deleteDepartment = (id: number): Promise<void> => {
-  return validateResponse(
-    request.delete<any, ApiResponse<void>>(`/departments/${id}`),
-    z.void()
+export const deleteDepartment = async (id: number): Promise<void> => {
+  await validateResponse(
+    request.delete<any, ApiResponse<{ id: number }>>(`/departments/${id}`),
+    z.object({ id: z.number() })
   );
 };

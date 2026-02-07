@@ -31,9 +31,9 @@ export const updateUser = (id: number, data: UpdateUserDto): Promise<User> => {
   );
 };
 
-export const deleteUser = (id: number): Promise<void> => {
-  return validateResponse(
-    request.delete<unknown, ApiResponse<void>>(`/users/${id}`),
-    z.void()
+export const deleteUser = async (id: number): Promise<void> => {
+  await validateResponse(
+    request.delete<unknown, ApiResponse<{ id: number }>>(`/users/${id}`),
+    z.object({ id: z.number() })
   );
 };

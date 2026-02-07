@@ -31,16 +31,16 @@ export const updateEmployee = (id: number, data: UpdateEmployeeDto): Promise<Emp
   );
 };
 
-export const deleteEmployee = (id: number): Promise<void> => {
-  return validateResponse(
-    request.delete<unknown, ApiResponse<void>>(`/employees/${id}`),
-    z.void()
+export const deleteEmployee = async (id: number): Promise<void> => {
+  await validateResponse(
+    request.delete<unknown, ApiResponse<{ id: number }>>(`/employees/${id}`),
+    z.object({ id: z.number() })
   );
 };
 
-export const bindUser = (id: number, data: BindUserDto): Promise<void> => {
-  return validateResponse(
-    request.post<unknown, ApiResponse<void>>(`/employees/${id}/bind-user`, data),
-    z.void()
+export const bindUser = async (id: number, data: BindUserDto): Promise<void> => {
+  await validateResponse(
+    request.post<unknown, ApiResponse<{ id: number }>>(`/employees/${id}/bind-user`, data),
+    z.object({ id: z.number() })
   );
 };

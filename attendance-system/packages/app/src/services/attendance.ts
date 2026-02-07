@@ -71,10 +71,10 @@ export const createLeave = (data: CreateLeaveDto): Promise<LeaveVo> => {
 /**
  * 撤销请假
  */
-export const cancelLeave = (id: number): Promise<void> => {
-  return validateResponse(
-    request.delete<any, ApiResponse<void>>(`/attendance/leaves/${id}`),
-    z.void()
+export const cancelLeave = async (id: number): Promise<void> => {
+  await validateResponse(
+    request.delete<any, ApiResponse<{ id: number }>>(`/attendance/leaves/${id}`),
+    z.object({ id: z.number() })
   );
 };
 
