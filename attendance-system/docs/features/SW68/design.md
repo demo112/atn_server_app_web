@@ -57,8 +57,10 @@ model AttCorrection {
 ```typescript
 interface QueryCorrectionsDto {
   deptId?: number
+  employeeId?: number | string // 筛选特定员工 (支持逗号分隔)
   startDate?: string // YYYY-MM-DD
   endDate?: string   // YYYY-MM-DD
+  type?: 'check_in' | 'check_out' // 筛选处理类型
   page?: number
   pageSize?: number
 }

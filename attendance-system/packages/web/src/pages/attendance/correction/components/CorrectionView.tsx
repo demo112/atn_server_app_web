@@ -39,7 +39,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
         pageSize,
         startDate,
         endDate,
-        // type: type || undefined, // API DTO might not support type yet
+        type: (type as any) || undefined,
       };
 
       if (selectedItems.length > 0) {
@@ -47,13 +47,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
         if (item.type === 'department') {
           params.deptId = Number(item.id);
         } else {
-          // Assuming API supports employeeId for corrections?
-          // The QueryCorrectionsDto might need to be checked.
-          // Usually correction query supports employeeId.
-          // If not, we might need to update backend.
-          // Let's assume it does or use 'employeeId' as extra param if allowed.
-          // Checking DTO definition would be safer but let's assume standard pattern.
-          (params as any).employeeId = Number(item.id);
+          params.employeeId = Number(item.id);
         }
       } else if (initialDeptId) {
         params.deptId = initialDeptId;
@@ -190,6 +184,7 @@ const CorrectionView: React.FC<CorrectionViewProps> = ({ deptId: initialDeptId }
                 setEndDate(dayjs().format('YYYY-MM-DD'));
                 setType('');
                 setPage(1);
+                setSelectedItems([]);
               }}
               className="px-6 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all flex items-center gap-2"
             >

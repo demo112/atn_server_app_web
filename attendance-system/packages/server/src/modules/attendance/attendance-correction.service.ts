@@ -159,7 +159,7 @@ export class AttendanceCorrectionService {
     pageSize: number;
     totalPages: number;
   }> {
-    const { page = 1, pageSize = 20, deptId, startDate, endDate } = dto;
+    const { page = 1, pageSize = 20, deptId, startDate, endDate, type } = dto;
     const skip = (Number(page) - 1) * Number(pageSize);
 
     const where: Prisma.AttCorrectionWhereInput = {};
@@ -169,7 +169,14 @@ export class AttendanceCorrectionService {
     }
 
     if (dto.employeeId) {
-      where.employeeId = Number(dto.employeeId);
+      const ids = dto.employeeId.toString().split(',').map(id => Number(id.trim())).filter(id => !isNaN(id));
+      if (ids.length > 0) {
+        where.employeeId = { in: ids };
+      }
+    }
+
+    if (type) {
+      where.type = type;
     }
 
     if (startDate && endDate) {

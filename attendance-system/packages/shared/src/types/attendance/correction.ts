@@ -60,9 +60,10 @@ export interface SupplementResultVo {
 // 查询补签记录参数
 export interface QueryCorrectionsDto extends QueryParams {
   deptId?: number;
-  employeeId?: number; // 筛选特定员工
+  employeeId?: number | string; // 筛选特定员工 (支持逗号分隔)
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
+  type?: CorrectionType; // 筛选处理类型
 }
 
 // 补签记录视图对象
