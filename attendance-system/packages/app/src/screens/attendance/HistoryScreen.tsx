@@ -8,6 +8,7 @@ import { withAlpha } from '../../utils/colors';
 
 const HistoryScreen = () => {
   const theme = useTheme();
+  const navigation = useNavigation();
   const [records, setRecords] = useState<DailyRecordVo[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -110,6 +111,7 @@ const HistoryScreen = () => {
         <View style={{ flexDirection: 'row' }}>
           <IconButton 
             icon="calendar" 
+            testID="calendar-btn"
             onPress={() => navigation.navigate('AttendanceCalendar' as never)} 
           />
           <IconButton icon="chevron-right" onPress={() => changeMonth(1)} />

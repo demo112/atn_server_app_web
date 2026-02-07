@@ -14,8 +14,9 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 // Mock navigation
+const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: jest.fn() }),
+  useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
 describe('HistoryScreen', () => {
@@ -102,5 +103,15 @@ describe('HistoryScreen', () => {
     await waitFor(() => {
       expect(getByText('本月无记录')).toBeTruthy();
     });
+  });
+
+  it('navigates to calendar view when calendar icon is pressed', async () => {
+    const { getByTestId } = render(<HistoryScreen />);
+    
+    await waitFor(() => expect(getDailyRecords).toHaveBeenCalled());
+    
+    fireEvent.press(getByTestId('calendar-btn'));
+    
+    expect(mockNavigate).toHaveBeenCalledWith('AttendanceCalendar');
   });
 });
