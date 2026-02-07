@@ -153,7 +153,7 @@ const MonthlyCardReport: React.FC = () => {
         employeeName
       };
 
-      toast.info('正在请求重新计算...', { duration: 2000 });
+      toast.info('正在请求重新计算...');
 
       const batchId = await triggerCalculation(params);
       
@@ -377,7 +377,7 @@ const MonthlyCardReport: React.FC = () => {
               </button>
             </div>
             
-            <div className="p-8 overflow-y-auto custom-scrollbar bg-slate-50/30">
+            <div className="p-8 overflow-y-auto custom-scrollbar bg-slate-50/30 flex-1">
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>

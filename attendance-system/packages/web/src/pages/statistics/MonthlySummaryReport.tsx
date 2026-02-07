@@ -58,7 +58,7 @@ const MonthlySummaryReport: React.FC = () => {
         employeeName
       };
 
-      toast.info('正在请求重新计算...', { duration: 2000 });
+      toast.info('正在请求重新计算...');
 
       const batchId = await triggerCalculation(params);
       
