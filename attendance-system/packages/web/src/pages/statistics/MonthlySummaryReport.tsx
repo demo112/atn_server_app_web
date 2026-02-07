@@ -265,35 +265,35 @@ const MonthlySummaryReport: React.FC = () => {
       <div className="mx-4 flex-1 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col mb-4">
         <div className="flex-1 overflow-x-auto custom-scrollbar">
           <table className="min-w-[3000px] w-full text-sm text-center border-collapse">
-            <thead className="bg-slate-50 sticky top-0 z-10">
+            <thead className="bg-slate-50">
               <tr className="border-b border-slate-200 text-slate-700">
-                <th colSpan={3} className="sticky left-0 bg-slate-50 px-4 py-3 border-r border-slate-200 shadow-sm z-30 font-bold">基本信息</th>
-                <th colSpan={4} className="px-4 py-2 border-r border-slate-200 font-bold bg-blue-50/40 text-blue-700">概况</th>
-                <th colSpan={8} className="px-4 py-2 border-r border-slate-200 font-bold bg-red-50/40 text-red-700">异常情况</th>
-                <th colSpan={31} className="px-4 py-2 font-bold bg-indigo-50/40 text-indigo-700">每日统计</th>
+                <th colSpan={3} className="sticky top-0 left-0 bg-slate-50 px-4 py-3 border-r border-slate-200 shadow-sm z-50 font-bold h-[49px]">基本信息</th>
+                <th colSpan={4} className="sticky top-0 px-4 py-2 border-r border-slate-200 font-bold bg-blue-50/40 text-blue-700 z-40 h-[49px]">概况</th>
+                <th colSpan={8} className="sticky top-0 px-4 py-2 border-r border-slate-200 font-bold bg-red-50/40 text-red-700 z-40 h-[49px]">异常情况</th>
+                <th colSpan={31} className="sticky top-0 px-4 py-2 font-bold bg-indigo-50/40 text-indigo-700 z-40 h-[49px]">每日统计</th>
               </tr>
               <tr className="border-b border-slate-200 text-[10px] text-slate-500 bg-slate-50/80">
                 {/* 基本信息子项 */}
-                <th className="sticky left-0 bg-slate-50 px-4 py-2 border-r border-slate-200 min-w-[120px] z-30 font-bold">姓名</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">部门</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[100px]">工号</th>
+                <th className="sticky left-0 top-[49px] bg-slate-50 px-4 py-2 border-r border-slate-200 min-w-[120px] z-50 font-bold">姓名</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[120px] z-40">部门</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[100px] z-40">工号</th>
                 {/* 概况 */}
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[80px]">应打卡(天)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[80px]">正常(天)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[90px]">应出勤(h)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[90px]">实际出勤(h)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[80px] z-40">应打卡(天)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[80px] z-40">正常(天)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[90px] z-40">应出勤(h)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[90px] z-40">实际出勤(h)</th>
                 {/* 异常情况 */}
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[60px]">迟到(次)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[70px]">迟到(m)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[60px]">早退(次)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[70px]">早退(m)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[60px]">旷工(次)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[60px]">旷工(m)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[60px]">缺卡(次)</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[60px]">请假(次)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[60px] z-40">迟到(次)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[70px] z-40">迟到(m)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[60px] z-40">早退(次)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[70px] z-40">早退(m)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[60px] z-40">旷工(次)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[60px] z-40">旷工(m)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[60px] z-40">缺卡(次)</th>
+                <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[60px] z-40">请假(次)</th>
                 {/* 每日统计 1-31 */}
                 {days.map(d => (
-                  <th key={d} className="px-1 py-2 min-w-[30px] border-r border-slate-100 last:border-r-0 font-medium">{d}</th>
+                  <th key={d} className="sticky top-[49px] bg-slate-50 px-1 py-2 min-w-[30px] border-r border-slate-100 last:border-r-0 font-medium z-40">{d}</th>
                 ))}
               </tr>
             </thead>
