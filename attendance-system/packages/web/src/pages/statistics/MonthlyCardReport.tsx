@@ -212,13 +212,13 @@ const MonthlyCardReport: React.FC = () => {
         </div>
       </div>
 
-      <div className="p-6 bg-white m-4 rounded-xl shadow-md border border-slate-200">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end border-b border-slate-100 pb-8 mb-6">
+      <div className="m-4 p-5 bg-white rounded-xl shadow-sm border border-slate-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">统计月份</label>
             <div className="flex gap-2">
               <select 
-                className="text-sm border border-slate-300 rounded-lg py-2.5 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
+                className="text-sm border border-slate-300 rounded-lg py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
                 value={currentMonth.split('-')[0]}
                 onChange={(e) => {
                   const newYear = e.target.value;
@@ -231,7 +231,7 @@ const MonthlyCardReport: React.FC = () => {
                 ))}
               </select>
               <select 
-                className="text-sm border border-slate-300 rounded-lg py-2.5 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
+                className="text-sm border border-slate-300 rounded-lg py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex-1"
                 value={parseInt(currentMonth.split('-')[1])}
                 onChange={(e) => {
                   const year = currentMonth.split('-')[0];
@@ -249,7 +249,7 @@ const MonthlyCardReport: React.FC = () => {
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">查询范围</label>
             <div className="flex border border-slate-300 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 shadow-sm transition-all">
               <select 
-                className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-300 w-36 py-2.5 font-medium"
+                className="text-sm border-none bg-slate-50 focus:ring-0 border-r border-slate-300 w-28 py-2 font-medium"
                 value={searchType}
                 onChange={(e) => setSearchType(e.target.value as any)}
               >
@@ -259,7 +259,7 @@ const MonthlyCardReport: React.FC = () => {
               <input 
                 type="text" 
                 placeholder="输入搜索词..." 
-                className="flex-1 text-sm border-none focus:ring-0 py-2.5 px-4"
+                className="flex-1 text-sm border-none focus:ring-0 py-2 px-4"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchData()}
@@ -267,35 +267,45 @@ const MonthlyCardReport: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={fetchData} className="flex-1 bg-blue-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md text-sm active:scale-95">查询</button>
-            <button className="flex-1 border border-slate-300 px-8 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition text-sm text-slate-600 active:scale-95">重置</button>
+            <button 
+              onClick={fetchData} 
+              className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm text-sm active:scale-95"
+              disabled={loading}
+            >
+              {loading ? '查询中...' : '查询'}
+            </button>
+            <button className="flex-1 bg-white border border-slate-300 px-6 py-2 rounded-lg font-bold hover:bg-slate-50 transition text-sm text-slate-600 active:scale-95">重置</button>
           </div>
         </div>
+      </div>
 
-        <div className="flex gap-4 mb-8">
+      <div className="mx-4 mb-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
           <button 
             onClick={handleExport}
-            disabled={isExporting}
-            className="flex items-center gap-2 border border-slate-300 px-6 py-2.5 rounded-xl text-sm font-bold hover:border-blue-600 hover:text-blue-600 transition group shadow-sm bg-white text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isExporting || data.length === 0}
+            className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600">{isExporting ? 'hourglass_top' : 'download'}</span> 
-            {isExporting ? '导出中...' : '导出数据'}
+            <span>{isExporting ? '导出中...' : '导出数据'}</span>
           </button>
           <button 
             onClick={handleDirectRecalculate}
             disabled={recalcLoading}
-            className="flex items-center gap-2 border border-slate-300 px-6 py-2.5 rounded-xl text-sm font-bold hover:border-blue-600 hover:text-blue-600 transition group shadow-sm bg-white text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-lg hover:border-blue-600 hover:text-blue-600 group transition shadow-sm text-sm font-bold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className={`material-icons-outlined text-xl text-slate-500 group-hover:text-blue-600 ${recalcLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`}>refresh</span>
-            {recalcLoading ? '计算中...' : '考勤计算'}
+            <span>{recalcLoading ? '计算中...' : '考勤计算'}</span>
             <span className="material-icons-outlined text-sm text-slate-300 ml-1">help_outline</span>
           </button>
         </div>
+      </div>
 
-        <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+      <div className="mx-4 flex-1 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col mb-4">
+        <div className="flex-1 overflow-x-auto custom-scrollbar">
           <table className="w-full text-sm border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="bg-slate-50 text-slate-700 border-b border-slate-200">
+            <thead className="bg-slate-50 sticky top-0 z-10">
+              <tr className="border-b border-slate-200 text-slate-700">
                 <th className="px-6 py-4 font-black uppercase text-xs tracking-widest text-left">姓名</th>
                 <th className="px-6 py-4 font-black uppercase text-xs tracking-widest text-left">部门</th>
                 <th className="px-6 py-4 font-black uppercase text-xs tracking-widest text-left">工号</th>
@@ -330,13 +340,16 @@ const MonthlyCardReport: React.FC = () => {
           </table>
         </div>
 
-        <div className="mt-8 flex items-center justify-end gap-5 text-[11px] font-bold text-slate-400">
-          <span>共 {data.length} 条数据</span>
+        <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
+          <div className="flex items-center gap-4">
+            <span>共 {data.length} 条数据</span>
+          </div>
+          
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition text-xs font-medium"
+              className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition"
             >
               上一页
             </button>
@@ -344,7 +357,7 @@ const MonthlyCardReport: React.FC = () => {
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition text-xs font-medium"
+              className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition"
             >
               下一页
             </button>
