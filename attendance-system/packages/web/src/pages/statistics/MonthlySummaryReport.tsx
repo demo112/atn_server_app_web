@@ -268,11 +268,11 @@ const MonthlySummaryReport: React.FC = () => {
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200 text-slate-700">
                 <th colSpan={3} className="sticky top-0 left-0 bg-slate-50 px-4 py-3 border-r border-slate-200 shadow-sm z-50 font-bold h-[49px]">基本信息</th>
-                <th colSpan={4} className="sticky top-0 px-4 py-2 border-r border-slate-200 font-bold bg-blue-50/40 text-blue-700 z-40 h-[49px]">概况</th>
-                <th colSpan={8} className="sticky top-0 px-4 py-2 border-r border-slate-200 font-bold bg-red-50/40 text-red-700 z-40 h-[49px]">异常情况</th>
-                <th colSpan={31} className="sticky top-0 px-4 py-2 font-bold bg-indigo-50/40 text-indigo-700 z-40 h-[49px]">每日统计</th>
+                <th colSpan={4} className="sticky top-0 px-4 py-2 border-r border-slate-200 font-bold bg-blue-50 text-blue-700 z-40 h-[49px]">概况</th>
+                <th colSpan={8} className="sticky top-0 px-4 py-2 border-r border-slate-200 font-bold bg-red-50 text-red-700 z-40 h-[49px]">异常情况</th>
+                <th colSpan={31} className="sticky top-0 px-4 py-2 font-bold bg-indigo-50 text-indigo-700 z-40 h-[49px]">每日统计</th>
               </tr>
-              <tr className="border-b border-slate-200 text-[10px] text-slate-500 bg-slate-50/80">
+              <tr className="border-b border-slate-200 text-[10px] text-slate-500 bg-slate-50">
                 {/* 基本信息子项 */}
                 <th className="sticky left-0 top-[49px] bg-slate-50 px-4 py-2 border-r border-slate-200 min-w-[120px] z-50 font-bold">姓名</th>
                 <th className="sticky top-[49px] bg-slate-50 px-3 py-2 border-r border-slate-200 min-w-[120px] z-40">部门</th>
@@ -307,8 +307,8 @@ const MonthlySummaryReport: React.FC = () => {
                   <td colSpan={44} className="py-10 text-slate-500">暂无数据</td>
                 </tr>
               ) : displayedData.map((row, idx) => (
-                <tr key={idx} className="hover:bg-blue-50/40 transition-colors">
-                  <td className="sticky left-0 bg-white px-4 py-4 text-blue-600 font-bold border-r border-slate-200 shadow-sm z-20 group-hover:bg-blue-50/40">{row.employeeName}</td>
+                <tr key={idx} className="hover:bg-blue-50 transition-colors">
+                  <td className="sticky left-0 bg-white px-4 py-4 text-blue-600 font-bold border-r border-slate-200 shadow-sm z-20 group-hover:bg-blue-50">{row.employeeName}</td>
                   <td className="px-3 py-4 text-slate-600 border-r border-slate-200 text-xs">{row.deptName}</td>
                   <td className="px-3 py-4 text-slate-500 border-r border-slate-200 font-mono text-xs">{row.employeeNo}</td>
                   
