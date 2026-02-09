@@ -272,4 +272,25 @@ export class LeaveService {
 
     return this.mapToVo(updated);
   }
+
+  /**
+   * 删除请假记录 (物理删除)
+   */
+  async delete(id: number) {
+    const record = await prisma.attLeave.findUnique({ where: { id } });
+    if (!record) {
+      throw new AppError('ERR_LEAVE_NOT_FOUND', 'Record not found', 404);
+    }
+
+    await prisma.attLeave.delete({ where: { id } });
+    
+    this.logger.info(`Deleted leave record: ID ${id}`);
+
+    // 如果原记录是已通过，需要重算
+    if (record.status === LeaveStatus.approved) {
+       await this.triggerRecalculation(record.employeeId, record.startTime, record.endTime);
+    }
+
+    return { id };
+  }
 }

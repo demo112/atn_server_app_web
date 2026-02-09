@@ -137,4 +137,21 @@ export class LeaveController {
     
     res.json(success(result));
   }
+
+  /**
+   * 删除请假记录
+   * 仅限管理员
+   */
+  async delete(req: Request, res: Response) {
+    const { id } = req.params;
+    const user = (req as any).user;
+
+    if (user.role !== 'admin') {
+      throw new AppError('ERR_FORBIDDEN', '仅管理员可删除请假记录', 403);
+    }
+
+    const result = await service.delete(Number(id));
+    
+    res.json(success(result));
+  }
 }

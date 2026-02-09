@@ -18,10 +18,10 @@ router.post('/', leaveController.create.bind(leaveController));
 // 更新请假记录
 router.put('/:id', leaveController.update.bind(leaveController));
 
-// 撤销/删除请假记录
-router.delete('/:id', leaveController.cancel.bind(leaveController));
-
-// 兼容前端使用的取消路径
+// 撤销请假记录
 router.post('/:id/cancel', leaveController.cancel.bind(leaveController));
+
+// 删除请假记录
+router.delete('/:id', leaveController.delete.bind(leaveController));
 
 export { router as leaveRouter };

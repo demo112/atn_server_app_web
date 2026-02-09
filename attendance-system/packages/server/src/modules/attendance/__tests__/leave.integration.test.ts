@@ -65,6 +65,36 @@ describe('Leave Integration', () => {
   });
 
   describe('DELETE /leaves/:id', () => {
+      it('should delete leave (admin only)', async () => {
+          prismaMock.attLeave.findUnique.mockResolvedValue({
+              id: 1,
+              employeeId: 101,
+              status: LeaveStatus.approved,
+              startTime: new Date(),
+              endTime: new Date()
+          } as any);
+
+          prismaMock.attLeave.delete.mockResolvedValue({
+              id: 1
+          } as any);
+          
+          const appAdmin = express();
+          appAdmin.use(express.json());
+          appAdmin.use((req, res, next) => {
+              (req as any).user = { id: 1, role: 'admin', employeeId: 101 };
+              next();
+          });
+          appAdmin.use('/api/v1/leaves', leaveRouter);
+          appAdmin.use(errorHandler);
+
+          const res = await request(appAdmin).delete('/api/v1/leaves/1');
+          expect(res.status).toBe(200);
+          expect(res.body.success).toBe(true);
+          expect(prismaMock.attLeave.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+      });
+  });
+
+  describe('POST /leaves/:id/cancel', () => {
       it('should cancel leave (admin only)', async () => {
           prismaMock.attLeave.findUnique.mockResolvedValue({
               id: 1,
@@ -88,9 +118,10 @@ describe('Leave Integration', () => {
           appAdmin.use('/api/v1/leaves', leaveRouter);
           appAdmin.use(errorHandler);
 
-          const res = await request(appAdmin).delete('/api/v1/leaves/1');
+          const res = await request(appAdmin).post('/api/v1/leaves/1/cancel');
           expect(res.status).toBe(200);
           expect(res.body.success).toBe(true);
+          expect(prismaMock.attLeave.update).toHaveBeenCalled();
       });
   });
 });
