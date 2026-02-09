@@ -10,7 +10,8 @@ import userEvent from '@testing-library/user-event';
 vi.mock('../../../services/leave', () => ({
   getLeaves: vi.fn(),
   createLeave: vi.fn(),
-  cancelLeave: vi.fn(),
+  updateLeave: vi.fn(),
+  deleteLeave: vi.fn(),
 }));
 
 // Helper to fill form
@@ -21,7 +22,9 @@ const fillLeaveForm = async (user: any) => {
   console.log('fillLeaveForm: modal found');
 
   // Employee ID
-  const empInput = within(modal).getByPlaceholderText('请输入员工ID');
+  // const empInput = within(modal).getByPlaceholderText('请输入员工ID');
+  const empInput = within(modal).getByRole('spinbutton');
+  await user.clear(empInput);
   await user.type(empInput, '102');
   console.log('fillLeaveForm: empId filled');
 
@@ -31,9 +34,14 @@ const fillLeaveForm = async (user: any) => {
   console.log('fillLeaveForm: type selected');
 
   // Reason
-  const reasonInput = within(modal).getByPlaceholderText('请输入请假/出差事由');
-  await user.type(reasonInput, 'Sick leave');
-  console.log('fillLeaveForm: reason filled');
+  // const reasonInput = within(modal).getByPlaceholderText('请输入请假/出差事由');
+  const reasonInput = modal.querySelector('textarea');
+  if (reasonInput) {
+      await user.type(reasonInput, 'Sick leave');
+      console.log('fillLeaveForm: reason filled');
+  } else {
+      throw new Error('Reason textarea not found');
+  }
 
   // Date Range
   // Tailwind implementation uses input[type="datetime-local"]
@@ -94,7 +102,6 @@ describe('Leave Integration Test', () => {
       pageSize: 10,
       totalPages: 1
     });
-    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ id: 1 });
   });
 
   it('renders leave list correctly', async () => {
@@ -106,7 +113,7 @@ describe('Leave Integration Test', () => {
       // 'Vacation' (reason) is not in the table columns, so check for '年假' (type) and '101' (employeeId)
       const typeElements = screen.getAllByText('年假');
       expect(typeElements.length).toBeGreaterThan(0);
-      expect(screen.getAllByText('101')[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/101/)[0]).toBeInTheDocument();
     }, { timeout: 5000 });
   });
 
@@ -121,19 +128,19 @@ describe('Leave Integration Test', () => {
     renderWithProviders(<LeavePage />);
 
     // Click "Apply" button
-    const createBtn = screen.getByText('申请请假');
+    const createBtn = screen.getByText('新增记录');
     await user.click(createBtn);
 
     await waitFor(() => {
       // StandardModal title is h2
-      expect(screen.getByRole('heading', { name: '申请请假' })).toBeVisible();
+      expect(screen.getByRole('heading', { name: '新增记录' })).toBeVisible();
     });
 
     // Fill form
     await fillLeaveForm(user);
     
     // Submit
-    const submitBtn = screen.getByText('确定');
+    const submitBtn = screen.getByText('保存');
     await user.click(submitBtn);
 
     await waitFor(() => {
@@ -149,44 +156,18 @@ describe('Leave Integration Test', () => {
 
     renderWithProviders(<LeavePage />);
 
-    await user.click(screen.getByText('申请请假'));
+    await user.click(screen.getByText('新增记录'));
 
     // Fill form
     await fillLeaveForm(user);
 
-    await user.click(screen.getByText('确定'));
+    await user.click(screen.getByText('保存'));
 
     await waitFor(() => {
       // Expect error toast
-      expect(screen.getByText('操作失败')).toBeInTheDocument();
+      expect(screen.getByText('创建失败')).toBeInTheDocument();
     }, { timeout: 15000 });
   }, 20000); // Test timeout
 
-  it('cancels a leave request', async () => {
-    const user = userEvent.setup();
-    vi.mocked(leaveService.cancelLeave).mockResolvedValue({ id: 1 });
 
-    renderWithProviders(<LeavePage />);
-
-    // Wait for list to load
-    await waitFor(() => {
-      expect(screen.getAllByText('年假')[0]).toBeInTheDocument();
-    }, { timeout: 5000 });
-
-    const cancelLink = screen.getAllByText('撤销')[0];
-    await user.click(cancelLink);
-    
-    // Confirm dialog (StandardModal)
-    // Title '确认撤销'
-    const confirmTitle = await screen.findByRole('heading', { name: '确认撤销' });
-    expect(confirmTitle).toBeVisible();
-
-    const confirmBtn = await screen.findByText('确定');
-    await user.click(confirmBtn);
-
-    await waitFor(() => {
-      expect(leaveService.cancelLeave).toHaveBeenCalledWith(1);
-      expect(screen.getByText('撤销成功')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
 });

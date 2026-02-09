@@ -4,8 +4,7 @@ import {
   getLeaves, 
   createLeave, 
   updateLeave, 
-  deleteLeave,
-  cancelLeave 
+  deleteLeave
 } from '../../../services/leave';
 import { LeaveVo, CreateLeaveDto, LeaveStatus, LeaveType } from '@attendance/shared';
 import PersonnelSelectionModal, { SelectionItem } from '../../../components/common/PersonnelSelectionModal';
@@ -121,17 +120,6 @@ const LeavePage: React.FC = () => {
       fetchLeaves();
     } catch (error) {
       showToast('删除失败', 'error');
-    }
-  };
-
-  const handleCancel = async (id: number) => {
-    if (!window.confirm('确定要撤销吗？')) return;
-    try {
-      await cancelLeave(id, '管理员撤销'); // SW67: 管理员操作无需原因输入，默认原因
-      showToast('撤销成功', 'success');
-      fetchLeaves();
-    } catch (error) {
-      showToast('撤销失败', 'error');
     }
   };
 
@@ -303,14 +291,7 @@ const LeavePage: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4 text-right space-x-2">
-                      {leave.status === LeaveStatus.approved && (
-                        <button
-                          onClick={() => handleCancel(leave.id)}
-                          className="text-orange-600 hover:text-orange-900 text-sm font-medium"
-                        >
-                          撤销
-                        </button>
-                      )}
+
                       <button
                         onClick={() => openEditModal(leave)}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium"
@@ -360,7 +341,7 @@ const LeavePage: React.FC = () => {
 
       {/* 创建/编辑弹窗 */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
               {editingId ? '编辑记录' : '新增记录'}
