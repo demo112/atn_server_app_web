@@ -91,9 +91,9 @@ export const LeaveVoSchema = z.object({
   approvedAt: z.string().max(50).nullable().optional(),
   createdAt: z.string().max(50),
   updatedAt: z.string().max(50),
-  employeeName: z.string().max(50).optional(),
-  deptName: z.string().max(50).optional(),
-  approverName: z.string().max(50).optional(),
+  employeeName: z.string().max(100).optional(),
+  deptName: z.string().max(100).optional(),
+  approverName: z.string().max(100).optional(),
 });
 
 export const PaginatedLeaveVoSchema = z.object({
@@ -119,10 +119,10 @@ export const ClockRecordSchema = z.object({
   operatorId: z.coerce.number().nullable().optional().transform(v => v ?? undefined),
   remark: z.string().max(200).nullable().optional().transform(v => v ?? undefined),
   createdAt: z.string().max(50),
-  employeeNo: z.string().max(20).nullable().optional().transform(v => v ?? undefined),
-  employeeName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
-  deptName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
-  operatorName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  employeeNo: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
+  employeeName: z.string().max(100).nullable().optional().transform(v => v ?? undefined),
+  deptName: z.string().max(100).nullable().optional().transform(v => v ?? undefined),
+  operatorName: z.string().max(100).nullable().optional().transform(v => v ?? undefined),
 });
 
 export const PaginatedClockRecordSchema = z.object({
@@ -146,8 +146,8 @@ export const AttendanceStatusSchema = z.enum([
 export const DailyRecordVoSchema = z.object({
   id: z.coerce.string(), // Handle BigInt serialization
   employeeId: z.coerce.number(),
-  employeeName: z.string().max(50),
-  deptName: z.string().max(50),
+  employeeName: z.string().max(100),
+  deptName: z.string().max(100),
   workDate: z.string().max(50),
   shiftName: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
   startTime: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
@@ -161,7 +161,7 @@ export const DailyRecordVoSchema = z.object({
   leaveMinutes: z.number(),
   workMinutes: z.number().nullable().optional().transform(v => v ?? undefined),
   remark: z.string().max(200).nullable().optional().transform(v => v ?? undefined),
-  employeeNo: z.string().max(20).nullable().optional().transform(v => v ?? undefined),
+  employeeNo: z.string().max(50).nullable().optional().transform(v => v ?? undefined),
 });
 
 export const PaginatedDailyRecordVoSchema = z.object({
@@ -178,11 +178,11 @@ export const CorrectionTypeSchema = z.enum(['check_in', 'check_out']);
 export const CorrectionVoSchema = z.object({
   id: z.coerce.number(),
   employeeId: z.coerce.number(),
-  employeeName: z.string().max(50),
-  deptName: z.string().max(50),
+  employeeName: z.string().max(100),
+  deptName: z.string().max(100),
   type: CorrectionTypeSchema,
   correctionTime: z.string().max(50),
-  operatorName: z.string().max(50),
+  operatorName: z.string().max(100),
   updatedAt: z.string().max(50),
   remark: z.string().max(200).optional(),
 });
