@@ -2,7 +2,7 @@ import { prisma } from '../../common/db/prisma';
 import { createLogger } from '../../common/logger';
 import { AppError } from '../../common/errors';
 import { CreateLeaveDto, UpdateLeaveDto, LeaveQueryDto, AttLeaveVo } from './leave.dto';
-import { Prisma, LeaveStatus } from '@prisma/client';
+import { Prisma, LeaveStatus, LeaveType } from '@prisma/client';
 import invariant from 'tiny-invariant';
 import dayjs from 'dayjs';
 import { attendanceScheduler } from './attendance-scheduler';
@@ -40,6 +40,28 @@ export class LeaveService {
    */
   async create(data: CreateLeaveDto & { status?: LeaveStatus, approverId?: number, approvedAt?: Date }) {
     // 1. 验证参数
+    // Fix: 兼容前端可能传来的中文类型
+    if (!Object.values(LeaveType).includes(data.type)) {
+      const typeMap: Record<string, LeaveType> = {
+        '事假': LeaveType.personal,
+        '病假': LeaveType.sick,
+        '年假': LeaveType.annual,
+        '出差': LeaveType.business_trip,
+        '产假': LeaveType.maternity,
+        '陪产假': LeaveType.paternity,
+        '婚假': LeaveType.marriage,
+        '丧假': LeaveType.bereavement,
+        '其他': LeaveType.other
+      };
+      
+      const mappedType = typeMap[data.type as unknown as string];
+      if (mappedType) {
+        data.type = mappedType;
+      } else {
+        throw new AppError('ERR_INVALID_PARAMS', `Invalid leave type: ${data.type}`, 400);
+      }
+    }
+
     const startTime = new Date(data.startTime);
     const endTime = new Date(data.endTime);
     
