@@ -23,6 +23,7 @@ vi.mock('../../common/db/prisma', () => ({
     department: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -30,6 +31,7 @@ vi.mock('../../common/db/prisma', () => ({
     },
     employee: {
       count: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }));
@@ -44,16 +46,16 @@ describe('Department API Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/v1/departments', () => {
+  describe('GET /api/v1/departments/tree', () => {
     it('AC1: should return department tree structure', async () => {
       const depts = [
-        { id: 1, name: 'Root', parentId: null, order: 0, createdAt: new Date(), updatedAt: new Date() },
-        { id: 2, name: 'Child', parentId: 1, order: 0, createdAt: new Date(), updatedAt: new Date() },
+        { id: 1, name: 'Root', parentId: null, sortOrder: 0, createdAt: new Date(), updatedAt: new Date() },
+        { id: 2, name: 'Child', parentId: 1, sortOrder: 0, createdAt: new Date(), updatedAt: new Date() },
       ];
       (prisma.department.findMany as any).mockResolvedValue(depts);
 
       const res = await request(app)
-        .get('/api/v1/departments')
+        .get('/api/v1/departments/tree')
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
@@ -68,7 +70,7 @@ describe('Department API Integration', () => {
 
   describe('POST /api/v1/departments', () => {
     it('AC2: should create sub-department', async () => {
-      const dto = { name: 'New Dept', parentId: 1, order: 0 };
+      const dto = { name: 'New Dept', parentId: 1, sortOrder: 0 };
       (prisma.department.findUnique as any).mockResolvedValue({ id: 1, name: 'Root' }); // Check parent exists
       (prisma.department.create as any).mockResolvedValue({ 
         id: 3, 
@@ -90,8 +92,8 @@ describe('Department API Integration', () => {
 
   describe('PUT /api/v1/departments/:id', () => {
     it('AC3: should update department name', async () => {
-      const dto = { name: 'Updated Name' };
-      (prisma.department.findUnique as any).mockResolvedValue({ id: 2, name: 'Old', parentId: 1 });
+      const dto = { name: 'Updated Name', sortOrder: 0 };
+      (prisma.department.findUnique as any).mockResolvedValue({ id: 2, name: 'Old', parentId: 1, sortOrder: 0 });
       // For circular check, it might fetch all or traverse up. 
       // Assuming logic: if parentId changes, check circle. Here parentId doesn't change.
       (prisma.department.update as any).mockResolvedValue({ 
@@ -120,8 +122,8 @@ describe('Department API Integration', () => {
       
       // 2. Service might fetch all depts to build tree for cycle check
       (prisma.department.findMany as any).mockResolvedValue([
-         { id: 1, name: 'Root', parentId: null },
-         { id: 2, name: 'Child', parentId: 1 }
+         { id: 1, name: 'Root', parentId: null, sortOrder: 0, createdAt: new Date(), updatedAt: new Date() },
+         { id: 2, name: 'Child', parentId: 1, sortOrder: 0, createdAt: new Date(), updatedAt: new Date() }
       ]);
 
       const res = await request(app)
@@ -155,8 +157,8 @@ describe('Department API Integration', () => {
 
     it('AC5: should prevent deletion if has children', async () => {
       (prisma.department.findUnique as any).mockResolvedValue({ id: 1, name: 'Root' });
-      // Check children -> returns 1
-      (prisma.department.count as any).mockResolvedValueOnce(1); 
+      // Check children -> returns existing child
+      (prisma.department.findFirst as any).mockResolvedValueOnce({ id: 2 }); 
 
       const res = await request(app)
         .delete('/api/v1/departments/1')
@@ -168,10 +170,10 @@ describe('Department API Integration', () => {
 
     it('AC5: should prevent deletion if has employees', async () => {
       (prisma.department.findUnique as any).mockResolvedValue({ id: 3, name: 'Leaf' });
-      // Check children -> 0
-      (prisma.department.count as any).mockResolvedValueOnce(0);
-      // Check employees -> 5
-      (prisma.employee.count as any).mockResolvedValue(5); 
+      // Check children -> null
+      (prisma.department.findFirst as any).mockResolvedValueOnce(null);
+      // Check employees -> returns existing employee
+      (prisma.employee.findFirst as any).mockResolvedValue({ id: 100 }); 
 
       const res = await request(app)
         .delete('/api/v1/departments/3')
