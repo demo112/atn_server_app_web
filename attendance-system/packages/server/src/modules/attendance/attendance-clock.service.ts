@@ -84,6 +84,16 @@ export class AttendanceClockService {
         throw new AppError('ERR_EMPLOYEE_NOT_FOUND', 'Employee not found', 404);
       }
 
+      // 检查操作人是否存在（防止外键约束错误导致的 500）
+      if (data.operatorId) {
+        const operator = await tx.user.findUnique({
+          where: { id: data.operatorId }
+        });
+        if (!operator) {
+          throw new AppError('ERR_AUTH_INVALID_TOKEN', 'Operator user not found, please relogin', 401);
+        }
+      }
+
       // 创建记录
       const record = await tx.attClockRecord.create({
         data: {

@@ -114,6 +114,12 @@ describe('Attendance Clock Integration', () => {
 
   describe('POST /clock (Web)', () => {
     it('should create a clock-in record for web operator', async () => {
+      // Mock operator check
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 1,
+        username: 'test_user'
+      } as any);
+
       prismaMock.employee.findUnique.mockResolvedValue({
         id: 102,
         name: 'Target Employee',
@@ -148,6 +154,29 @@ describe('Attendance Clock Integration', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.source).toBe('web');
       expect(res.body.data.operatorId).toBe(1);
+    });
+
+    it('should fail with 401 if operator user does not exist', async () => {
+      // Mock operator check returning null (user not found)
+      prismaMock.user.findUnique.mockResolvedValue(null);
+
+      prismaMock.employee.findUnique.mockResolvedValue({
+        id: 102,
+        name: 'Target Employee',
+      } as any);
+
+      const res = await request(app)
+        .post('/api/v1/attendance/clock')
+        .send({
+          employeeId: 102,
+          clockTime: '2023-01-01T09:00:00Z',
+          type: 'sign_in',
+          source: 'web',
+          remark: 'Manual entry'
+        });
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('ERR_AUTH_INVALID_TOKEN');
     });
 
     it('should fail if employeeId is missing for web source', async () => {
