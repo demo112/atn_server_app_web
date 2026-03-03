@@ -85,7 +85,7 @@ const Login: React.FC = (): React.ReactElement => {
               <input
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 type="text"
-                placeholder="手机号/邮箱"
+                placeholder="用户名 / 手机号"
                 maxLength={50}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}

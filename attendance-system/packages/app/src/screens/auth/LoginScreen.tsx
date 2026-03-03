@@ -41,12 +41,12 @@ const LoginScreen = () => {
       <Text style={styles.title}>考勤系统</Text>
       
       <View style={styles.form}>
-        <Text style={styles.label}>用户名</Text>
+        <Text style={styles.label}>用户名 / 手机号</Text>
         <TextInput
           style={styles.input}
           value={username}
           onChangeText={setUsername}
-          placeholder="请输入用户名"
+          placeholder="请输入用户名或手机号"
           autoCapitalize="none"
         />
         

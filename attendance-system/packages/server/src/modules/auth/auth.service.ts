@@ -12,10 +12,28 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export class AuthService {
   async login(dto: LoginDto): Promise<LoginVo> {
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { username: dto.username },
       include: { employee: true }
     });
+
+    if (!user) {
+      const usersByPhone = await prisma.user.findMany({
+        where: {
+          employee: {
+            phone: dto.username
+          }
+        },
+        include: { employee: true }
+      });
+
+      if (usersByPhone.length === 1) {
+        user = usersByPhone[0];
+      } else if (usersByPhone.length > 1) {
+        logger.warn({ phone: dto.username, count: usersByPhone.length }, 'Multiple users found with same phone number during login');
+        throw AppError.badRequest('Invalid credentials');
+      }
+    }
 
     if (!user) {
       throw AppError.badRequest('Invalid credentials');
@@ -32,7 +50,6 @@ export class AuthService {
       throw AppError.badRequest('Invalid credentials');
     }
 
-    // Explicitly cast role to string to ensure compatibility
     const role = user.role as unknown as string;
 
     const token = jwt.sign(

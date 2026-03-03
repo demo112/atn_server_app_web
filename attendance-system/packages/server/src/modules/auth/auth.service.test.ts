@@ -13,7 +13,6 @@ vi.mock('../../common/db/prisma', async () => {
   };
 });
 
-// Mock bcrypt and jwt
 vi.mock('bcryptjs');
 vi.mock('jsonwebtoken');
 
@@ -50,6 +49,47 @@ describe('AuthService', () => {
       expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashed_password');
     });
 
+    it('should return token and user when credentials are valid (phone login)', async () => {
+      const mockUser = {
+        id: 2,
+        username: 'phone_user',
+        passwordHash: 'hashed_password',
+        role: 'user',
+        status: 'active',
+        employee: { name: 'Phone User', phone: '13800000000' }
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findMany.mockResolvedValue([mockUser as any]);
+      
+      (bcrypt.compare as any).mockResolvedValue(true);
+      (jwt.sign as any).mockReturnValue('mock_token_phone');
+
+      const result = await service.login({ username: '13800000000', password: 'password' });
+
+      expect(result.token).toBe('mock_token_phone');
+      expect(result.user.username).toBe('phone_user');
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { username: '13800000000' },
+        include: { employee: true }
+      });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+        where: { employee: { phone: '13800000000' } },
+        include: { employee: true }
+      });
+    });
+
+    it('should fail when multiple users share same phone', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findMany.mockResolvedValue([
+        { id: 1, username: 'u1' },
+        { id: 2, username: 'u2' }
+      ] as any);
+
+      await expect(service.login({ username: '13800000000', password: 'password' }))
+        .rejects.toThrow('Invalid credentials');
+    });
+
     it('should throw error when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
@@ -77,7 +117,6 @@ describe('AuthService', () => {
         status: 'inactive'
       } as any);
 
-      // Security: Should not reveal user existence status
       await expect(service.login({ username: 'testuser', password: 'password' }))
         .rejects.toThrow('Invalid credentials');
     });
